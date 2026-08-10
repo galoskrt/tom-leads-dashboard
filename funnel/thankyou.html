@@ -33,12 +33,14 @@ h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;
 .next .row{display:flex;gap:11px;align-items:flex-start;margin:9px 0;font-size:14.5px;color:var(--ink)}
 .next .n{width:24px;height:24px;border-radius:7px;background:var(--grad);color:#fff;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:2px}
 .social{display:flex;justify-content:center;gap:11px;margin-top:6px}
-.social a{width:40px;height:40px;border-radius:50%;background:rgba(15,18,22,.06);display:flex;align-items:center;justify-content:center;transition:.2s}
-.social a:hover{background:var(--accent);transform:translateY(-2px)}
-.social a:hover svg{fill:#fff}.social svg{width:19px;height:19px;fill:rgba(15,18,22,.55)}
+.social a{width:52px;height:52px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.social a:hover{transform:translateY(-3px) scale(1.07)}
+.social lottie-player{width:100%;height:100%}
+.social svg{width:19px;height:19px;fill:rgba(15,18,22,.55)}
 .disc{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:18px;max-width:460px}
 .disc b{color:var(--accent)}
 </style>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
 </head>
 <body>
 <div class="card">
@@ -61,9 +63,9 @@ h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;
   </div>
 
   <div class="social">
-    <a href="https://wa.me/972522707706" target="_blank" aria-label="וואטסאפ"><svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.15-1.7-.85-2-.94-.26-.1-.45-.15-.64.15-.19.28-.73.94-.9 1.13-.16.19-.33.21-.61.07-.3-.15-1.24-.46-2.36-1.46-.87-.78-1.46-1.74-1.63-2.03-.17-.29-.02-.44.13-.59.13-.13.29-.34.44-.51.14-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.08-.15-.64-1.55-.88-2.12-.23-.55-.47-.48-.64-.49h-.55c-.19 0-.5.07-.76.36-.26.29-1 .98-1 2.38 0 1.4 1.02 2.76 1.17 2.95.14.19 2.02 3.08 4.9 4.32.68.29 1.22.47 1.63.6.69.22 1.31.19 1.8.11.55-.08 1.7-.69 1.94-1.36.24-.67.24-1.24.17-1.36-.07-.12-.26-.19-.55-.34zM12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg></a>
-    <a href="https://www.instagram.com/tom_harush/" target="_blank" aria-label="אינסטגרם"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.17.05 1.8.25 2.23.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.42.37 1.06.42 2.23.06 1.27.07 1.65.07 4.87s0 3.6-.07 4.87c-.05 1.17-.25 1.8-.42 2.23a3.9 3.9 0 0 1-2.28 2.28c-.42.17-1.06.37-2.23.42-1.27.06-1.65.07-4.87.07s-3.6 0-4.87-.07c-1.17-.05-1.8-.25-2.23-.42a3.9 3.9 0 0 1-2.28-2.28c-.17-.42-.37-1.06-.42-2.23C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.87c.05-1.17.25-1.8.42-2.23A3.9 3.9 0 0 1 4.97 2.62c.42-.17 1.06-.37 2.23-.42C8.4 2.2 8.8 2.2 12 2.2zm0 3.05A6.75 6.75 0 1 0 18.75 12 6.75 6.75 0 0 0 12 5.25zm0 11.13A4.38 4.38 0 1 1 16.38 12 4.38 4.38 0 0 1 12 16.38zm6.99-11.4a1.58 1.58 0 1 1-1.58-1.57 1.58 1.58 0 0 1 1.58 1.57z"/></svg></a>
-    <a href="https://www.facebook.com/appartmentforsaleinramatgan" target="_blank" aria-label="פייסבוק"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></a>
+    <a href="https://wa.me/972522707706" target="_blank" aria-label="וואטסאפ"><lottie-player src="https://tom-harush.co.il/wp-content/uploads/wired-gradient-2543-logo-whatsapp-hover-pinch.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
+    <a href="https://www.instagram.com/tom_harush/" target="_blank" aria-label="אינסטגרם"><lottie-player src="https://tom-harush.co.il/wp-content/uploads/wired-gradient-2542-logo-instagram-hover-pinch-1.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
+    <a href="https://www.facebook.com/appartmentforsaleinramatgan" target="_blank" aria-label="פייסבוק"><lottie-player src="https://tom-harush.co.il/wp-content/uploads/wired-gradient-2669-logo-square-facebook-hover-cycle.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
   </div>
 
   <div class="disc"><b>*הקרקע עדיין אינה זמינה לבנייה מיידית.</b> יש ודאות מלאה לבנייה, אך הקרקע בשלב תכנוני. אין באמור הבטחת תשואה.</div>
