@@ -209,6 +209,12 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
 .float a .arw{width:34px}
 .rv{opacity:0;transform:translateY(26px);transition:.7s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
+/* background FX (test) */
+#bgfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:.9}
+.sec-dark{position:relative;isolation:isolate}
+.sec-dark::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 22% 26%,rgba(194,21,28,.22),transparent 42%),radial-gradient(circle at 82% 74%,rgba(21,122,58,.14),transparent 42%);animation:aura 16s ease-in-out infinite alternate}
+@keyframes aura{0%{transform:translate(-2%,1%) scale(1)}100%{transform:translate(3%,-2%) scale(1.18)}}
+@media(prefers-reduced-motion:reduce){#bgfx{display:none}.sec-dark::before{animation:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media(max-width:600px){
   h1{font-size:29px}.hero .sub{font-size:16px}.sec-t{font-size:24px}
@@ -396,6 +402,7 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   <img class="flogo" src="logo.png" alt="קבוצת תום הרוש"/>
   <div class="social">
     <a href="https://wa.me/972522707706" target="_blank" aria-label="וואטסאפ"><lottie-player src="lot-wa.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
+    <a href="tel:*9211" aria-label="חיוג *9211"><lottie-player src="lot-phone.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
     <a href="https://www.instagram.com/tom_harush/" target="_blank" aria-label="אינסטגרם"><lottie-player src="lot-ig.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
     <a href="https://www.facebook.com/appartmentforsaleinramatgan" target="_blank" aria-label="פייסבוק"><lottie-player src="lot-fb.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
   </div>
@@ -406,6 +413,7 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
 
 <div class="lb" id="lb" onclick="closeLb()"><button class="x" onclick="closeLb()">✕</button><img id="lbimg" src="" alt=""/></div>
 <div class="float" id="float"><a href="#join" onclick="scrollJoin(event)">קבל את המידע המלא על העסקה <svg class="arw" viewBox="0 0 34 11"><path d="M33 5.5H3M9 1.5 3 5.5l6 4"/></svg></a></div>
+<canvas id="bgfx"></canvas>
 
 <script>
 const PIXEL_ID='2142206053312773';
@@ -453,6 +461,17 @@ document.querySelectorAll('[data-jet]').forEach(initJet);
 // float + header
 const fl=document.getElementById('float'),join=document.getElementById('join');
 window.addEventListener('scroll',()=>{const y=scrollY;fl.classList.toggle('on',y>700&&(join.getBoundingClientRect().top>window.innerHeight));document.getElementById('hdr').style.boxShadow=y>10?'0 4px 20px rgba(16,16,16,.07)':'none';});
+// background FX — rising value particles (test)
+(function(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c=document.getElementById('bgfx'); if(!c) return; const x=c.getContext('2d');
+  let w,h,parts;
+  function size(){w=c.width=innerWidth;h=c.height=innerHeight;}
+  function mk(){return {x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+.6,s:Math.random()*.4+.12,o:Math.random()*.35+.14,c:Math.random()<.5?'194,21,28':'184,137,43'};}
+  function init(){parts=[];const n=Math.min(64,Math.floor(w/22));for(let i=0;i<n;i++)parts.push(mk());}
+  function loop(){x.clearRect(0,0,w,h);for(const p of parts){p.y-=p.s;p.x+=Math.sin((p.y+p.x)*0.004)*0.15;if(p.y<-8){p.y=h+8;p.x=Math.random()*w;}x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fillStyle='rgba('+p.c+','+p.o+')';x.fill();}requestAnimationFrame(loop);}
+  size();init();loop();addEventListener('resize',()=>{size();init();});
+})();
 </script>
 </body>
 </html>
