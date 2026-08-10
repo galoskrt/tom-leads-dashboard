@@ -52,6 +52,20 @@ header img{height:42px}
 .hero .sub{color:rgba(255,255,255,.92)}
 .hero .note{color:rgba(255,255,255,.76)}
 .trustband{background:#fff;border-bottom:1px solid var(--line);padding:22px 0}
+/* hero with VSL (hot, no bg image) */
+.hero-v{position:relative;text-align:center;padding:46px 0 34px;background:radial-gradient(ellipse 70% 60% at 76% -12%,rgba(194,21,28,.10),transparent 60%),radial-gradient(ellipse 60% 50% at 8% 112%,rgba(21,122,58,.07),transparent 55%),var(--bg)}
+.hero-v h1{color:var(--ink);text-shadow:none;font-size:40px;line-height:1.14;margin-bottom:14px}
+.hero-v .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-v .sub-v{font-size:17.5px;color:var(--muted);max-width:600px;margin:0 auto 24px;font-weight:500}
+.vsl{max-width:720px;margin:0 auto 24px;background:#0f1216;border-radius:20px;aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--line)}
+.vsl::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(194,21,28,.22),transparent 60%)}
+.vsl .play{position:relative;width:72px;height:72px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 10px 30px rgba(194,21,28,.5);transition:.2s}
+.vsl:hover .play{transform:scale(1.08)}
+.vsl .play::after{content:'';border-style:solid;border-width:12px 0 12px 19px;border-color:transparent transparent transparent #fff;margin-right:-4px}
+.vsl .vt{position:relative;font-weight:800;font-size:18px}
+.vsl small{position:relative;opacity:.72;font-size:13px;margin-top:5px}
+.hero-v .note-v{font-size:13.5px;color:var(--faint);margin-top:12px}
+@media(max-width:600px){.hero-v h1{font-size:29px}}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line-r);color:var(--accent);font-weight:800;font-size:12.5px;letter-spacing:.02em;padding:7px 16px;border-radius:30px;margin-bottom:18px;box-shadow:var(--sh-sm)}
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
 h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-bottom:16px}
@@ -230,17 +244,15 @@ footer .flogo{height:48px;margin:0 auto 18px;background:#fff;padding:10px 16px;b
   <a class="h-cta" href="#join" onclick="scrollJoin(event)">קבע פגישה <svg class="arw" viewBox="0 0 36 11"><path d="M35 5.5H3M9 1.5 3 5.5l6 4"/></svg></a>
 </div></header>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-bg"><img src="https://tom-harush.co.il/wp-content/uploads/%D7%94%D7%99%D7%A8%D7%95-2-%D7%A7%D7%93%D7%99%D7%9E%D7%94-%D7%A6%D7%95%D7%A8%D7%9F.jpg" alt="מתחם H קדימה־צורן מהאוויר"/></div>
-  <div class="hero-inner"><div class="wrap">
-    <span class="eyebrow"><span class="dot"></span>עסקת קרקע · מתחם H · קדימה־צורן</span>
-    <h1>כבר הבנת את ההזדמנות.<br>נשאר רק לוודא שזו <span class="hl">עסקה עם גב</span>.</h1>
-    <p class="sub">בשוק מלא בהבטחות, אנחנו מביאים עסקה עם ודאות בכתב. בוא נשב 30 דקות, נעבור יחד על כל פרט ומספר, ותחליט בראש שקט.</p>
-    <a class="btn" href="#join" onclick="scrollJoin(event)">קבע פגישה עכשיו <svg class="arw" viewBox="0 0 40 11"><path d="M39 5.5H3M10 1.5 3 5.5l7 4"/></svg></a>
-    <div class="note">שיחת התאמה של 30 דקות · בזום או פרונטלי · <span style="opacity:.85">*התמונה להמחשה בלבד</span></div>
-  </div></div>
-</div>
+<!-- HERO (VSL) -->
+<div class="hero-v"><div class="wrap">
+  <span class="eyebrow"><span class="dot"></span>עסקת קרקע · מתחם H · קדימה־צורן</span>
+  <h1>כבר הבנת את ההזדמנות.<br>נשאר רק לוודא שזו <span class="hl">עסקה עם גב</span>.</h1>
+  <p class="sub-v">צפה בסרטון הקצר של תום על העסקה, ואז נקבע 30 דקות לעבור יחד על כל פרט, מספר וביטחון.</p>
+  <div class="vsl rv"><div class="play"></div><div class="vt">תום מסביר את העסקה</div><small>הסרטון יתווסף בקרוב</small></div>
+  <a class="btn" href="#join" onclick="scrollJoin(event)">קבע פגישה עכשיו <svg class="arw" viewBox="0 0 40 11"><path d="M39 5.5H3M10 1.5 3 5.5l7 4"/></svg></a>
+  <div class="note-v">שיחת התאמה של 30 דקות · בזום או פרונטלי · ללא התחייבות</div>
+</div></div>
 <div class="trustband"><div class="wrap">
   <div class="trust">
     <div class="t rv"><div class="v" data-count="16">0</div><div class="l">שנות ניסיון בנדל"ן</div></div>
@@ -263,17 +275,20 @@ footer .flogo{height:48px;margin:0 auto 18px;background:#fff;padding:10px 16px;b
   </div>
 </div></section>
 
-<!-- VALUE PROOF (horizontal timeline) -->
+<!-- PLANNING TIMELINE (hot) -->
 <section class="sec sec-tint"><div class="wrap">
-  <div class="kicker">ההוכחה, מגובה שמאי</div>
-  <div class="sec-t rv">מ־2,300 ל־3,700 ש"ח למטר. בשנה אחת.</div>
-  <div class="sec-sub rv">לא תחזית. זה מה שכבר קרה למשקיעים שנכנסו לפני שנה.</div>
-  <div class="vgrid rv">
-    <div class="vcard"><lottie-player src="lot-year.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">לפני שנה</div><div class="p">2,300 <span>ש"ח/מ'</span></div></div></div>
-    <div class="vcard"><lottie-player src="lot-today.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">היום · פרי־סייל</div><div class="p">3,700 <span>ש"ח/מ'</span></div></div></div>
-    <div class="vcard g"><lottie-player src="lot-forecast.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">צפי שמרני, כל שנת תכנון</div><div class="p">35-50%+</div></div></div>
+  <div class="kicker">המסלול התכנוני, בשקיפות מלאה</div>
+  <div class="sec-t rv">מ־2,000 ל־3,300 ש"ח למטר. הנה בדיוק איך.</div>
+  <div class="sec-sub rv">לא תחזית. תיעוד ההתקדמות, שלב אחר שלב, מגובה הערכות שמאי.</div>
+  <div class="jtl" data-jet>
+    <div class="jtl-line"></div><div class="jtl-fill"></div>
+    <div class="jtl-item"><div class="jtl-node">1</div><div class="jtl-card"><h4>דצמבר 2024 · שינוי ייעוד</h4><p>הקרקע שינתה ייעוד מחקלאית ל<b>עירוב שימושים</b> (דיור מוגן, מסחר, תעשייה ומגורים). לא הבטחה לדירה, אלא קרקע שלעירייה יש אינטרס לקדם מהר יותר משאר הקרקעות באזור.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node">2</div><div class="jtl-card"><h4>תחילת 2025 · פתיחת פרי־סייל</h4><p>התחלנו למכור יחידות קרקע ב־<b>2,000 עד 2,300 ש"ח למטר</b>. שלב הכניסה הזול ביותר במסלול.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node">3</div><div class="jtl-card"><h4>אמצע 2025 · הערכה מחודשת</h4><p>לפי הערכות שמאי חדשות, המחיר עלה ל־<b>2,500 ש"ח למטר</b>. התכנון מתקדם, הערך עולה.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node">4</div><div class="jtl-card"><h4>סוף 2025 · 3,300 ש"ח למטר</h4><p>השמאים העריכו את המחיר ב־<b>3,300 ש"ח למטר</b>. אנחנו ממשיכים למכור, והחלקות מוגבלות בכמות.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node">↗</div><div class="jtl-card"><h4>היום · וממשיך לעלות</h4><p>ככל שהתכנון מתקדם, המחיר ממשיך לעלות. <b style="color:var(--accent)">מי שנכנס מוקדם נהנה מהפער הגדול ביותר.</b></p></div></div>
   </div>
-  <div class="tl-note rv" style="text-align:center;margin-top:22px;font-size:15px;color:var(--muted)">משקיעים שנכנסו בשלב הזה כבר ראו את הקרקע שלהם מזנקת בערך. אחת מהם נכנסה ב־<b style="color:var(--green)">230,000 ש"ח</b> וראתה הערכת שמאי של <b style="color:var(--green)">370,000 ש"ח</b> בתוך שנה.</div>
+  <div class="tl-note rv" style="text-align:center;margin:24px auto 0;font-size:15.5px;color:var(--muted);max-width:660px">זו עסקה פיננסית. השאלה אינה מתי בונים, אלא מתי התכנון מתקדם. <b style="color:var(--ink)">אפשר למכור בכל שלב ולהרוויח מהדרך</b>, וכל שלב תכנוני מעלה את הערך.</div>
 </div></section>
 
 <!-- TESTIMONIALS (dark) -->
@@ -345,17 +360,16 @@ footer .flogo{height:48px;margin:0 auto 18px;background:#fff;padding:10px 16px;b
 
 <!-- FAQ -->
 <section class="sec sec-gray"><div class="wrap faq">
-  <div class="kicker">בלי אותיות קטנות</div>
-  <div class="sec-t rv">שאלות שחשוב לענות עליהן</div>
-  <div class="sec-sub rv">התשובות הישרות, בדיוק כמו שהיינו עונים לך בשיחה.</div>
+  <div class="kicker">לגופו של עניין</div>
+  <div class="sec-t rv">שאלות של משקיעים, לא של מתעניינים</div>
+  <div class="sec-sub rv">אתה כבר מבין בהשקעות. הנה התשובות הישרות, בגובה העיניים, בלי מכירה.</div>
   <div class="rv">
-  <details open><summary>אני יכול לבנות על הקרקע עכשיו? <span class="pl">+</span></summary><div class="a">לא, ומחובתנו לומר זאת בגלוי. הקרקע בשלב תכנוני (פרי־סייל) ואינה זמינה לבנייה מיידית. יש ודאות תכנונית מלאה, אבל זו השקעה פיננסית למסלול, לא מגרש לבנייה מחר. הרווח מגיע מהתקדמות התכנון.</div></details>
-  <details><summary>מאיפה אני יודע שזו לא עוד נוכלות? <span class="pl">+</span></summary><div class="a">התחייבות רכישה חוזרת חתומה, שמאי חתום, ליווי עורכי דין, אישורים עירוניים, ועסקה קודמת מוכחת. זו ודאות מגובה במסמכים, לא הבטחה בעל פה.</div></details>
-  <details><summary>מתי זה בכלל ייבנה? אני לא רוצה כסף תקוע 20 שנה. <span class="pl">+</span></summary><div class="a">זו עסקה פיננסית, לא מגורים. הקרקע נרשמת על שמך בטאבו, ואפשר למכור בכל שלב, בדרך כלל ברווח מול מחיר הרכישה. אופק אופייני לאקזיט משמעותי הוא כ־5 עד 7 שנים, אבל אתה בשליטה.</div></details>
-  <details><summary>מה אם לא אצליח למכור? <span class="pl">+</span></summary><div class="a">בדיוק בשביל זה קיימת ההתחייבות בכתב: אם לא תמצא קונה, אנחנו מוכרים עבורך תוך 90 יום, ואם לא הצלחנו, קונים ממך חזרה בתוספת ריבית.</div></details>
-  <details><summary>אין לי מיליונים. כמה כסף צריך כדי להתחיל? <span class="pl">+</span></summary><div class="a">רף הכניסה נמוך. קונים לפי מטר, לפי התקציב שלך, בלי הלוואות ובלי משכנתא. יש שנכנסו עם 50 מטר, ויש עם דונם. בשיחה נתאים בדיוק לתקציב שלך.</div></details>
-  <details><summary>אם זה כזה טוב, למה זה זול? <span class="pl">+</span></summary><div class="a">כי זה שלב מוקדם. דירה חדשה בקדימה נמכרת בכ־32 אלף למטר, כשערך הקרקע עצמה כ־23 אלף. אתה קונה בדיוק את החלק שמייצר את הרווח, בשלב שבו הוא הכי זול.</div></details>
-  <details><summary>איזו הגנה יש לכסף שלי? <span class="pl">+</span></summary><div class="a">בדיוק כמו בעסקת דירה: חוזה בכתב, כספים בנאמנות עורך דין עד להשלמה, הערת אזהרה ואז רישום מלא בטאבו על שמך. ההגנות המשפטיות זהות לרכישת דירה יד שנייה.</div></details>
+  <details open><summary>מה בדיוק אני קונה בקרקע בעירוב שימושים? <span class="pl">+</span></summary><div class="a">אתה קונה זכויות בקרקע שכבר שינתה ייעוד לעירוב שימושים: מגורים, מסחר, תעשייה ודיור מוגן. ההקצאה הסופית נקבעת בתכנית המפורטת ובשומת השמאי, והערך נגזר מהזכויות, לא מסוג היחידה. לעירייה אינטרס לקדם קרקע בעירוב שימושים מהר יותר משאר הקרקעות באזור.</div></details>
+  <details><summary>על מה מבוססות הערכות השמאי, ולמה שאסמוך עליהן? <span class="pl">+</span></summary><div class="a">שמאי מוסמך, על בסיס עסקאות השוואה באזור ושלב התכנון. אנחנו נראה לך את השומות עצמן. המחיר עלה מ־2,000 עד 2,300 ל־3,300 ש"ח למטר בתוך כשנה, כל שלב מגובה בשומה. שקיפות מלאה, בלי אותיות קטנות.</div></details>
+  <details><summary>מה אופק האקזיט, ואיך הנזילות? <span class="pl">+</span></summary><div class="a">הקרקע נרשמת על שמך בטאבו. אפשר למכור בכל שלב תכנוני, בדרך כלל ברווח מול מחיר הרכישה. אופק אופייני לאקזיט משמעותי הוא כ־5 עד 7 שנים, אבל התזמון בשליטתך המלאה, ואתה מרוויח מהדרך.</div></details>
+  <details><summary>מה הסיכון התכנוני, ומה אם התכנון נתקע? <span class="pl">+</span></summary><div class="a">כל השקעה כרוכה בסיכון, ומחובתנו לומר זאת. עם זאת, הייעוד כבר שונה בדצמבר 2024, יש תכנית מאושרת ואינטרס עירוני ברור. ובכל מקרה, ההתחייבות בכתב לרכישה חוזרת מסירה את סיכון הנזילות מהשולחן שלך.</div></details>
+  <details><summary>במה זה שונה מעסקאות קרקע אחרות שכבר ראיתי? <span class="pl">+</span></summary><div class="a">שלושה דברים: הייעוד כבר שונה (לא ספקולציה על הפשרה עתידית), התחייבות בכתב לרכישה חוזרת, ואדם אחד אחראי מולך בשמו המלא. לא פלטפורמה אנונימית ולא הבטחה על הנייר.</div></details>
+  <details><summary>ומה לגבי מיסוי? <span class="pl">+</span></summary><div class="a">כמו בכל עסקת נדל"ן יש היבטי מס: מס רכישה בכניסה, ומס שבח במכירה. נעבור על התמונה המלאה בשיחה, ומומלץ ללוות את זה עם יועץ המס שלך. הכל גלוי ומחושב מראש.</div></details>
   </div>
 </div></section>
 
