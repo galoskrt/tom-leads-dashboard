@@ -272,7 +272,11 @@ function submitLead(){
 
   const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='שולח...';
   const temp = temperature();
+  // Unique lead id → idempotency (dedupe retries) + ties the lead across Sehel / dashboard / follow-up
+  const leadId = (window.crypto&&crypto.randomUUID)?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(16).slice(2));
+  window.__lid = leadId;
   const payload = {
+    lead_id: leadId,
     name, phone, email,
     temperature: temp, score: score(),
     q_a: buildQA(),
@@ -284,16 +288,19 @@ function submitLead(){
   px('Lead', {content_name:'survey', temperature:temp, value: temp==='hot'?2:1, currency:'ILS'});
   pxc('SurveyComplete', {temperature:temp, score:score()});
 
-  // Push to Worker (fans out to Sehel + Zapier + dashboard). Never block the user.
+  // Always keep a local copy first — zero loss even offline / Worker down.
+  try{ const q=JSON.parse(localStorage.getItem('th_leads')||'[]'); q.push(payload); localStorage.setItem('th_leads',JSON.stringify(q)); }catch(e){}
+
+  // Hand off to the Worker (fans out to Sehel + dashboard + Zapier follow-up).
+  // keepalive:true guarantees the request completes even while the browser navigates to the next page.
   const go = () => routeTo(temp);
   if(WORKER_URL && WORKER_URL.indexOf('__')!==0){
-    fetch(WORKER_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
-      .then(go).catch(go);
-    setTimeout(go, 2500); // safety: redirect even if the request hangs
+    let done=false; const once=()=>{ if(done)return; done=true; go(); };
+    fetch(WORKER_URL, {method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+      .then(once).catch(once);
+    setTimeout(once, 2500); // safety: never trap the user if the request hangs
   } else {
-    // Worker not wired yet — keep the lead locally so nothing is lost, then route.
-    try{ const q=JSON.parse(localStorage.getItem('th_leads')||'[]'); q.push(payload); localStorage.setItem('th_leads',JSON.stringify(q)); }catch(e){}
-    setTimeout(go, 900);
+    setTimeout(go, 900); // Worker not wired yet — lead is already saved locally above.
   }
   idx = TOTAL+2; show('done');
 }
@@ -304,7 +311,8 @@ function buildQA(){
 function routeTo(temp){
   const url = (temp==='hot'?HOT_URL:COLD_URL);
   const sep = url.includes('?')?'&':'?';
-  location.href = `${url}${sep}t=${temp}&s=${score()}`;
+  const lid = window.__lid?`&lid=${encodeURIComponent(window.__lid)}`:'';
+  location.href = `${url}${sep}t=${temp}&s=${score()}${lid}`;
 }
 
 // init
