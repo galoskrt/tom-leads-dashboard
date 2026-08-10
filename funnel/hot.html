@@ -3,137 +3,425 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>קבע פגישה — עסקת הקרקע · קבוצת תום הרוש</title>
+<title>קבע פגישה · עסקת הקרקע במתחם H — קבוצת תום הרוש</title>
 <meta name="robots" content="noindex"/>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap');
 :root{
-  --bg:#F7F7F7;--card:#FFFFFF;--ink:#0a0a0a;--muted:rgba(10,10,10,.55);
-  --line:rgba(194,21,28,.16);--accent:#C2151C;--accent2:#7F0224;
-  --grad:linear-gradient(135deg,#C2151C,#A20C22,#7F0224);--tint:rgba(194,21,28,.06);
-  --shadow:0 10px 40px rgba(16,16,16,.10);--wa:#25d366;--ok:#157a3a;
+  --bg:#F6F7F9; --gray:#ECEEF1; --card:#FFFFFF; --dark:#0f1216; --dark2:#181c22;
+  --ink:#0f1216; --muted:rgba(15,18,22,.60); --faint:rgba(15,18,22,.42);
+  --line:rgba(15,18,22,.10); --line-r:rgba(194,21,28,.20); --dline:rgba(255,255,255,.12);
+  --accent:#C2151C; --accent2:#7F0224; --green:#157a3a; --gold:#B8892B;
+  --grad:linear-gradient(135deg,#C2151C,#A20C22,#7F0224);
+  --tint:rgba(194,21,28,.055); --tintg:rgba(21,122,58,.07);
+  --sh:0 14px 44px rgba(16,16,16,.10); --sh-sm:0 6px 20px rgba(16,16,16,.07); --wa:#25d366;
+  --rad:18px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Heebo','Assistant','Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;overflow-x:hidden}
-.wrap{max-width:760px;margin:0 auto;padding:0 18px}
-header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40;box-shadow:0 2px 12px rgba(16,16,16,.05)}
-header .wrap{display:flex;align-items:center;justify-content:space-between;padding:11px 18px}
-header img{height:44px}
-.h-wa{display:inline-flex;align-items:center;gap:6px;background:var(--wa);color:#fff;text-decoration:none;font-weight:800;font-size:13px;padding:8px 13px;border-radius:10px}
+html{scroll-behavior:smooth;overflow-x:clip}
+body{font-family:'Heebo','Assistant','Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;overflow-x:clip}
+.wrap{max-width:840px;margin:0 auto;padding:0 20px}
+img{max-width:100%;display:block}
+.arw{width:36px;height:11px;stroke:currentColor;stroke-width:1.5;fill:none;flex:0 0 auto;stroke-linecap:round;stroke-linejoin:round}
+/* section backgrounds for rhythm */
+.sec{padding:52px 0}
+.sec-gray{background:var(--gray)}
+.sec-dark{background:var(--dark);color:#fff}
+.sec-tint{background:linear-gradient(180deg,transparent,var(--tint),transparent)}
+.sec-tintg{background:linear-gradient(180deg,transparent,var(--tintg),transparent)}
+/* header */
+header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);transition:.3s}
+header .wrap{display:flex;align-items:center;justify-content:space-between;padding:10px 20px}
+header img{height:42px}
+.h-cta{display:inline-flex;align-items:center;gap:9px;background:var(--grad);color:#fff;text-decoration:none;font-weight:800;font-size:13.5px;padding:9px 17px;border-radius:11px;box-shadow:0 6px 18px rgba(194,21,28,.28);transition:.16s}
+.h-cta:hover{transform:translateY(-1px)}
+.h-cta .arw{width:24px}
 /* hero */
-.hero{background:radial-gradient(ellipse at 70% -20%,rgba(194,21,28,.10),transparent 60%),var(--bg);padding:34px 0 26px;text-align:center}
-.eyebrow{display:inline-block;background:var(--tint);color:var(--accent);font-weight:800;font-size:12.5px;letter-spacing:.03em;padding:6px 14px;border-radius:20px;margin-bottom:16px}
-h1{font-size:33px;font-weight:900;line-height:1.2;margin-bottom:14px}
-h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.lead{font-size:17px;color:var(--muted);max-width:560px;margin:0 auto 24px}
-.cta{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--grad);color:#fff;text-decoration:none;border:none;cursor:pointer;font-family:inherit;font-size:18px;font-weight:800;padding:17px 34px;border-radius:14px;box-shadow:0 10px 30px rgba(194,21,28,.32);transition:.16s}
-.cta:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(194,21,28,.44)}
-.cta .arw{transform:scaleX(-1);font-size:19px}
-.cta-note{font-size:13px;color:var(--muted);margin-top:12px}
-/* sections */
-section{padding:30px 0}
-.sec-t{font-size:24px;font-weight:900;text-align:center;margin-bottom:20px}
-.sec-t .hl{color:var(--accent)}
-.vsl{background:#111;border-radius:18px;aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.vsl .play{width:66px;height:66px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 8px 24px rgba(194,21,28,.5)}
-.vsl .play::after{content:'';border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent #fff;margin-right:-4px}
-.vsl small{opacity:.7;font-size:13px;margin-top:4px}
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 12px;text-align:center;box-shadow:var(--shadow)}
-.stat .v{font-size:24px;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.stat .l{font-size:12.5px;color:var(--muted);margin-top:5px;font-weight:600}
-/* proof list */
-.plist{background:#fff;border:1px solid var(--line);border-radius:18px;padding:8px 20px;box-shadow:var(--shadow)}
-.pitem{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line);font-size:15.5px}
-.pitem:last-child{border-bottom:none}
-.pitem .ck{color:var(--ok);font-weight:900;flex:0 0 auto;font-size:18px;margin-top:1px}
-.pitem b{color:var(--accent)}
-/* calendar */
-.cal-wrap{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:var(--shadow);overflow:hidden}
-.cal-wrap iframe{width:100%;height:640px;border:0;border-radius:12px;display:block}
+.hero{position:relative;text-align:center;overflow:hidden;isolation:isolate;color:#fff}
+.hero-bg{position:absolute;inset:0;z-index:-1}
+.hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,17,22,.34),rgba(14,17,22,.18) 45%,rgba(14,17,22,.52))}
+.hero-inner{padding:72px 0 58px;background:radial-gradient(ellipse 92% 76% at 50% 44%,rgba(8,10,14,.48),transparent 72%)}
+.hero h1{text-shadow:0 2px 30px rgba(0,0,0,.6),0 1px 4px rgba(0,0,0,.45)}
+.hero .sub{text-shadow:0 1px 14px rgba(0,0,0,.5)}
+.hero .eyebrow{text-shadow:none}
+.hero .eyebrow{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+.hero h1{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+.hero .hl{background:linear-gradient(135deg,#ff6167,#ff9a45);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .hl-g{color:#63e487}
+.hero .sub{color:rgba(255,255,255,.92)}
+.hero .note{color:rgba(255,255,255,.76)}
+.trustband{background:#fff;border-bottom:1px solid var(--line);padding:22px 0}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line-r);color:var(--accent);font-weight:800;font-size:12.5px;letter-spacing:.02em;padding:7px 16px;border-radius:30px;margin-bottom:18px;box-shadow:var(--sh-sm)}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
+h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-bottom:16px}
+.hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hl-g{color:var(--green)}
+.hero .sub{font-size:18px;color:rgba(255,255,255,.95);max-width:610px;margin:0 auto 26px;font-weight:500;text-shadow:0 1px 14px rgba(0,0,0,.55)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;background:var(--grad);color:#fff;text-decoration:none;border:none;cursor:pointer;font-family:inherit;font-size:18px;font-weight:800;padding:17px 36px;border-radius:15px;box-shadow:0 12px 32px rgba(194,21,28,.34);transition:.18s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(194,21,28,.46)}
+.btn .arw{width:40px}
+.hero .note{font-size:13.5px;color:rgba(255,255,255,.85);margin-top:13px;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.fail .fi lottie-player,.jtl-lot lottie-player{width:100%;height:100%}
+.tl-lot{width:58px;height:58px;margin:0 auto 8px;position:relative;z-index:2}
+/* trust bar */
+.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
+.trust .t{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px 10px;box-shadow:var(--sh-sm)}
+.trust .v{font-size:24px;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.trust .l{font-size:12px;color:var(--muted);margin-top:6px;font-weight:600;line-height:1.4}
+/* section headers */
+.kicker{text-align:center;color:var(--accent);font-weight:800;font-size:13px;letter-spacing:.06em;margin-bottom:8px}
+.sec-dark .kicker{color:#ff6b6b}
+.sec-t{font-size:31px;font-weight:900;text-align:center;line-height:1.2;letter-spacing:-.01em;margin-bottom:10px}
+.sec-sub{text-align:center;color:var(--muted);max-width:610px;margin:0 auto 30px;font-size:16px}
+.sec-dark .sec-sub{color:rgba(255,255,255,.62)}
+/* thought bubble (problem) */
+.think{max-width:660px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:30px 30px 26px;box-shadow:var(--sh);position:relative;font-size:19px;line-height:1.8;color:#2a2f36;font-weight:500}
+.think::after{content:'';position:absolute;bottom:-16px;right:60px;width:30px;height:30px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.think .lead-in{display:block;color:var(--accent);font-weight:800;font-size:15px;margin-bottom:12px;letter-spacing:.01em}
+.think .dots{display:flex;gap:6px;margin-top:16px}
+.think .dots i{width:8px;height:8px;border-radius:50%;background:var(--line-r)}
+.think-foot{text-align:center;margin-top:34px;font-size:17px;font-weight:700;color:var(--ink)}
+.think-foot b{color:var(--accent)}
+/* fails grid */
+.fails{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fail{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--sh-sm);transition:.2s}
+.fail:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.fail .fi{width:66px;height:66px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.fail .fi svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fail b{display:block;font-size:17px;margin-bottom:5px}
+.fail p{color:var(--muted);font-size:14.5px;line-height:1.65}
+/* JET scroll-fill timeline */
+.jtl{position:relative;padding-right:60px;max-width:680px;margin:0 auto}
+.jtl-line{position:absolute;right:29px;top:8px;bottom:8px;width:4px;background:var(--line-r);border-radius:4px}
+.sec-dark .jtl-line{background:rgba(255,255,255,.14)}
+.jtl-fill{position:absolute;right:29px;top:8px;width:4px;background:var(--grad);border-radius:4px;height:0}
+.jtl-item{position:relative;margin-bottom:22px}
+.jtl-item:last-child{margin-bottom:0}
+.jtl-node{position:absolute;right:-46px;top:0;width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid var(--line-r);display:flex;align-items:center;justify-content:center;transition:.35s;color:var(--faint);font-weight:900;font-size:18px}
+.sec-dark .jtl-node{background:#fff;border-color:rgba(194,21,28,.4)}
+.sec-dark .jtl-item.on .jtl-node{background:#fff;border-color:rgba(194,21,28,.95);color:var(--accent);box-shadow:0 0 24px rgba(194,21,28,.55),0 8px 20px rgba(0,0,0,.4)}
+.jtl-node lottie-player{width:32px;height:32px}
+.jtl-item.on .jtl-node{border-color:transparent;background:var(--grad);color:#fff;box-shadow:0 8px 22px rgba(194,21,28,.4);transform:scale(1.06)}
+.jtl-node svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.jtl-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--sh-sm);transition:.4s cubic-bezier(.2,.7,.2,1);opacity:.5;transform:translateX(12px)}
+.sec-dark .jtl-card{background:linear-gradient(180deg,#1c222c,#12161d);border:1px solid rgba(255,255,255,.13);box-shadow:0 12px 34px rgba(0,0,0,.5)}
+.sec-dark .jtl-item.on .jtl-card{border-color:rgba(194,21,28,.55);box-shadow:0 16px 46px rgba(0,0,0,.6),0 0 26px rgba(194,21,28,.20)}
+.jtl-item.on .jtl-card{opacity:1;transform:none;box-shadow:var(--sh);border-color:var(--line-r)}
+.jtl-card h4{font-size:18px;font-weight:800;margin-bottom:5px}
+.jtl-card p{color:var(--muted);font-size:14.7px}
+.sec-dark .jtl-card p{color:rgba(255,255,255,.66)}
+/* value proof timeline (horizontal) */
+.tl{background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px 24px 24px;box-shadow:var(--sh);position:relative;overflow:hidden;max-width:720px;margin:0 auto}
+.tl-track{display:flex;justify-content:space-between;position:relative;margin:20px 0 0}
+.tl-track::before{content:'';position:absolute;top:29px;right:6%;left:6%;height:4px;background:var(--line-r);border-radius:4px;opacity:.5}
+.tl-track::after{content:'';position:absolute;top:29px;right:6%;height:4px;background:linear-gradient(90deg,var(--accent),var(--gold),var(--green));border-radius:4px;width:0;transition:width 1.6s ease}
+.tl.on .tl-track::after{width:88%}
+.tl-pt{position:relative;z-index:2;text-align:center;flex:1}
+.tl-pt .dot{width:42px;height:42px;border-radius:50%;background:#fff;border:4px solid var(--accent);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--accent);box-shadow:0 4px 12px rgba(194,21,28,.2)}
+.tl-pt.g .dot{border-color:var(--green);color:var(--green)}
+.tl-pt .y{font-size:12.5px;color:var(--faint);font-weight:700}
+.tl-pt .p{font-size:18px;font-weight:900;margin-top:3px}
+.tl-note{text-align:center;margin-top:20px;font-size:15px;color:var(--muted)}
+.tl-note b{color:var(--green)}
+/* value 3-cards (was timeline) */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:760px;margin:0 auto}
+.vcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 16px;text-align:center;box-shadow:var(--sh-sm);transition:.2s}
+.vcard:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:var(--line-r)}
+.vcard lottie-player{width:76px;height:76px;margin:0 auto 10px}
+.vcard .y{font-size:12.5px;color:var(--faint);font-weight:700}
+.vcard .p{font-size:23px;font-weight:900;margin-top:4px;color:var(--ink)}
+.vcard .p span{font-size:12px;font-weight:600;color:var(--muted)}
+.vcard.g .p{color:var(--green)}
+@media(max-width:600px){
+  .vgrid{grid-template-columns:1fr;gap:11px}
+  .vcard{display:flex;align-items:center;gap:16px;text-align:right;padding:16px 18px}
+  .vcard lottie-player{margin:0;flex:0 0 auto;width:62px;height:62px}
+  .vcard .p{font-size:20px}
+}
+/* testimonials */
+.revs{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px 16px;-webkit-overflow-scrolling:touch}
+.revs::-webkit-scrollbar{height:6px}.revs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:6px}
+.revs img{scroll-snap-align:center;flex:0 0 78%;max-width:340px;height:auto;background:#fff;border-radius:16px;box-shadow:0 12px 34px rgba(0,0,0,.4);cursor:zoom-in;object-fit:contain}
+@media(min-width:720px){.revs img{flex-basis:32%}}
+/* stories */
+.stories{display:flex;flex-direction:column;align-items:center;position:relative}
+.story{position:sticky;width:100%;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 -4px 24px rgba(16,16,16,.08),0 16px 44px rgba(16,16,16,.12);margin-bottom:44px}
+.stories .story:nth-child(1){top:92px}
+.stories .story:nth-child(2){top:110px}
+.stories .story:nth-child(3){top:128px}
+.stories .story:last-child{margin-bottom:0}
+@media(max-width:600px){.story{padding:22px;margin-bottom:34px}.stories .story:nth-child(1){top:78px}.stories .story:nth-child(2){top:92px}.stories .story:nth-child(3){top:106px}}
+.story .top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.story .av{width:52px;height:52px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;flex:0 0 auto}
+.story .nm{font-weight:800;font-size:17px}.story .ro{font-size:13px;color:var(--faint)}
+.story .big{background:var(--tintg);border:1px solid rgba(21,122,58,.18);color:var(--green);font-weight:900;font-size:15px;border-radius:12px;padding:9px 14px;display:inline-block;margin:4px 0 12px}
+.story p{font-size:15.5px;color:var(--ink);line-height:1.75}.story p b{color:var(--accent)}
+/* tom */
+.tom{display:grid;grid-template-columns:1fr 240px;gap:28px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--sh)}
+.tom img{width:100%;border-radius:16px;object-fit:contain;background:linear-gradient(160deg,#faf2f2,#fff)}
+.tom h3{font-size:23px;font-weight:900;margin-bottom:10px}
+.tom h3 span{color:var(--accent)}
+.tom p{color:var(--muted);font-size:15.5px;margin-bottom:9px}.tom p b{color:var(--ink)}
+.tom .sig{color:var(--green);font-weight:800;font-size:15.5px;margin-top:4px}
+@media(max-width:620px){.tom{grid-template-columns:1fr;text-align:center}.tom img{max-width:230px;margin:0 auto}}
+/* faq */
+.faq details{background:#fff;border:1px solid var(--line);border-radius:15px;margin-bottom:11px;box-shadow:var(--sh-sm);overflow:hidden;transition:.2s}
+.faq details[open]{border-color:var(--line-r);box-shadow:var(--sh)}
+.faq summary{list-style:none;cursor:pointer;padding:18px 20px;font-weight:800;font-size:16.5px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .pl{width:26px;height:26px;flex:0 0 auto;border-radius:8px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;transition:.25s}
+.faq details[open] summary .pl{transform:rotate(45deg)}
+.faq .a{padding:0 20px 18px;color:var(--muted);font-size:15px;line-height:1.7}
+/* convert (survey-language, inviting) */
+.join-card{max-width:520px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:34px 30px;box-shadow:var(--sh);text-align:center}
+.join-card .kicker{margin-bottom:6px}
+.join-card h2{font-size:26px;font-weight:900;margin-bottom:10px}
+.join-card p{color:var(--muted);font-size:16px;margin-bottom:22px}
+.jfield{text-align:right;margin-bottom:8px}
+.jfield label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.jfield input{width:100%;background:#fff;border:1.6px solid var(--line);border-radius:13px;padding:15px;font-family:inherit;font-size:16px;color:var(--ink);outline:none;transition:.16s}
+.jfield input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(194,21,28,.10)}
+.jfield input.err{border-color:var(--accent)}
+.jerr{color:var(--accent);font-size:12.5px;font-weight:700;min-height:16px;text-align:right;margin:4px 0 10px}
+.join-card .btn{width:100%}
+.join-card .note{font-size:13px;color:var(--faint);margin-top:14px}
+/* calendar embed (hot) */
+.cal-wrap{background:#fff;border:1px solid var(--line);border-radius:20px;padding:10px;box-shadow:var(--sh);overflow:hidden;max-width:760px;margin:0 auto}
+.cal-wrap iframe{width:100%;height:660px;border:0;border-radius:12px;display:block}
 @media(max-width:560px){.cal-wrap iframe{height:600px}}
-/* wa block */
-.wa-block{background:var(--tint);border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center}
-.wa-btn{display:inline-flex;align-items:center;gap:9px;background:var(--wa);color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:14px 26px;border-radius:13px;box-shadow:0 8px 22px rgba(37,211,102,.3)}
 /* footer */
-footer{background:#fff;border-top:1px solid var(--line);padding:22px 0;margin-top:20px;text-align:center}
-.disc{font-size:12.5px;color:var(--muted);line-height:1.6}
-.disc b{color:var(--accent)}
-.copy{font-size:12px;color:var(--muted);margin-top:10px}
-@media(max-width:560px){h1{font-size:27px}.lead{font-size:15.5px}.sec-t{font-size:21px}.stat .v{font-size:20px}}
+footer{background:var(--dark);color:rgba(255,255,255,.66);padding:34px 0 26px;text-align:center}
+footer .flogo{height:48px;margin:0 auto 18px;background:#fff;padding:10px 16px;border-radius:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.foot-title{font-size:15px;font-weight:700;color:rgba(255,255,255,.85);max-width:440px;margin:0 auto 12px;line-height:1.55}
+.social{display:flex;justify-content:center;gap:10px;margin:2px 0 18px}
+.social a{width:48px;height:48px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.social a:hover{transform:translateY(-3px) scale(1.07)}
+.social lottie-player{width:100%;height:100%}
+.social svg{width:20px;height:20px;fill:#fff}
+.disc{font-size:12.5px;line-height:1.65;max-width:640px;margin:0 auto}
+.disc b{color:#ff6b6b}
+.foot-links{margin-top:12px;font-size:12.5px}
+.foot-links a{color:rgba(255,255,255,.55);text-decoration:underline;margin:0 8px}
+.copy{font-size:11.5px;color:rgba(255,255,255,.4);margin-top:12px}
+/* lightbox + float */
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.lb.on{display:flex}.lb img{max-width:96vw;max-height:92vh;border-radius:10px}
+.lb .x{position:absolute;top:18px;left:18px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:24px;cursor:pointer}
+.float{position:fixed;left:0;right:0;bottom:0;z-index:55;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px;transform:translateY(120%);transition:.35s;box-shadow:0 -6px 24px rgba(16,16,16,.1)}
+.float.on{transform:translateY(0)}
+.float a{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--grad);color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:14px;border-radius:13px;max-width:820px;margin:0 auto;box-shadow:0 8px 22px rgba(194,21,28,.32)}
+.float a .arw{width:34px}
+.rv{opacity:0;transform:translateY(26px);transition:.7s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(max-width:600px){
+  h1{font-size:29px}.hero .sub{font-size:16px}.sec-t{font-size:24px}
+  .trust{grid-template-columns:1fr 1fr}.fails{grid-template-columns:1fr}
+  .tl-pt .p{font-size:14px}.tl-pt .dot{width:34px;height:34px;font-size:12px}
+  .think{font-size:16.5px;padding:24px}.join-card h2{font-size:22px}
+}
 </style>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
 </head>
 <body>
-<header><div class="wrap">
+<header id="hdr"><div class="wrap">
   <img src="logo.png" alt="קבוצת תום הרוש"/>
-  <a class="h-wa" href="https://wa.me/972522707706?text=%D7%94%D7%99%D7%99%2C%20%D7%94%D7%92%D7%A2%D7%AA%D7%99%20%D7%9E%D7%94%D7%A9%D7%90%D7%9C%D7%95%D7%9F%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%A2%D7%A1%D7%A7%D7%AA%20%D7%94%D7%A7%D7%A8%D7%A7%D7%A2" target="_blank" onclick="pxContact()">וואטסאפ</a>
+  <a class="h-cta" href="#join" onclick="scrollJoin(event)">קבע פגישה <svg class="arw" viewBox="0 0 36 11"><path d="M35 5.5H3M9 1.5 3 5.5l6 4"/></svg></a>
 </div></header>
 
-<div class="hero"><div class="wrap">
-  <span class="eyebrow">עסקת קרקע · מתחם H · קדימה צורן</span>
-  <h1>הצעד הבא שלך: <span class="hl">פגישת התאמה אישית</span> על העסקה</h1>
-  <p class="lead">ראינו שאתה בדיוק בפרופיל המתאים. בפגישה קצרה נעבור יחד על כל הפרטים, המספרים והביטחונות, ותחליט בראש שקט אם זה בשבילך.</p>
-  <a class="cta" href="#calendar" onclick="pxSchedule()">קבע פגישה עכשיו <span class="arw">▸</span></a>
-  <div class="cta-note">שיחה ללא התחייבות · הפגישה בזום או פרונטלית</div>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"><img src="https://tom-harush.co.il/wp-content/uploads/%D7%94%D7%99%D7%A8%D7%95-2-%D7%A7%D7%93%D7%99%D7%9E%D7%94-%D7%A6%D7%95%D7%A8%D7%9F.jpg" alt="מתחם H קדימה־צורן מהאוויר"/></div>
+  <div class="hero-inner"><div class="wrap">
+    <span class="eyebrow"><span class="dot"></span>עסקת קרקע · מתחם H · קדימה־צורן</span>
+    <h1>כבר הבנת את ההזדמנות.<br>נשאר רק לוודא שזו <span class="hl">עסקה עם גב</span>.</h1>
+    <p class="sub">בשוק מלא בהבטחות, אנחנו מביאים עסקה עם ודאות בכתב. בוא נשב 30 דקות, נעבור יחד על כל פרט ומספר, ותחליט בראש שקט.</p>
+    <a class="btn" href="#join" onclick="scrollJoin(event)">קבע פגישה עכשיו <svg class="arw" viewBox="0 0 40 11"><path d="M39 5.5H3M10 1.5 3 5.5l7 4"/></svg></a>
+    <div class="note">שיחת התאמה של 30 דקות · בזום או פרונטלי · <span style="opacity:.85">*התמונה להמחשה בלבד</span></div>
+  </div></div>
+</div>
+<div class="trustband"><div class="wrap">
+  <div class="trust">
+    <div class="t rv"><div class="v" data-count="16">0</div><div class="l">שנות ניסיון בנדל"ן</div></div>
+    <div class="t rv"><div class="v" data-count="1000" data-suffix="+">0</div><div class="l">יחידות דיור שנמסרו</div></div>
+    <div class="t rv"><div class="v" data-count="1000" data-suffix="+">0</div><div class="l">רוכשים קיבלו מפתח</div></div>
+    <div class="t rv"><div class="v">בכתב</div><div class="l">התחייבות לרכישה חוזרת</div></div>
+  </div>
 </div></div>
 
-<section><div class="wrap">
-  <div class="vsl">
-    <div class="play"></div>
-    <div style="font-weight:800;font-size:17px">סרטון קצר מתום על העסקה</div>
-    <small>יתווסף בקרוב</small>
+<!-- WHY NOW (hot) -->
+<section class="sec sec-gray"><div class="wrap">
+  <div class="kicker">למה דווקא עכשיו</div>
+  <div class="sec-t rv">חלון הכניסה פתוח. אבל לא לאורך זמן.</div>
+  <div class="sec-sub rv">זה שלב פרי־סייל. המחיר היום הוא הנמוך במסלול, והמחזור הנוכחי מוגבל.</div>
+  <div class="fails">
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-forecast.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>המחיר עולה עם התכנון</b><p>צפי שמרני של 35 עד 50 אחוז בכל שנת תכנון. מי שנכנס מוקדם נהנה מהפער הגדול ביותר.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-cert1.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>ודאות בכתב, לא הבטחה</b><p>התחייבות לרכישה חוזרת, שמאי חתום וליווי עורכי דין. אתה נכנס עם גב מלא.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-year.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>המחזור הנוכחי מוגבל</b><p>מספר היחידות בסבב הזה מצומצם, וההקצאה לפי סדר הגעה. שיחה עכשיו שומרת לך מקום.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-cert4.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>תום מלווה אותך אישית</b><p>לא פלטפורמה אנונימית. תום עומד מאחורי כל עסקה בשמו המלא, ומחבר אליך עוד לפני החוזים.</p></div>
   </div>
 </div></section>
 
-<section><div class="wrap">
-  <div class="stats">
-    <div class="stat"><div class="v">230K→370K</div><div class="l">מסלול הצמיחה של יחידת קרקע</div></div>
-    <div class="stat"><div class="v">+1,500</div><div class="l">יחידות דיור בליווי הקבוצה</div></div>
-    <div class="stat"><div class="v">תוכנית מאושרת</div><div class="l">ודאות תכנונית מלאה</div></div>
+<!-- VALUE PROOF (horizontal timeline) -->
+<section class="sec sec-tint"><div class="wrap">
+  <div class="kicker">ההוכחה, מגובה שמאי</div>
+  <div class="sec-t rv">מ־2,300 ל־3,700 ש"ח למטר. בשנה אחת.</div>
+  <div class="sec-sub rv">לא תחזית. זה מה שכבר קרה למשקיעים שנכנסו לפני שנה.</div>
+  <div class="vgrid rv">
+    <div class="vcard"><lottie-player src="lot-year.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">לפני שנה</div><div class="p">2,300 <span>ש"ח/מ'</span></div></div></div>
+    <div class="vcard"><lottie-player src="lot-today.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">היום · פרי־סייל</div><div class="p">3,700 <span>ש"ח/מ'</span></div></div></div>
+    <div class="vcard g"><lottie-player src="lot-forecast.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">צפי שמרני, כל שנת תכנון</div><div class="p">35-50%+</div></div></div>
+  </div>
+  <div class="tl-note rv" style="text-align:center;margin-top:22px;font-size:15px;color:var(--muted)">משקיעים שנכנסו בשלב הזה כבר ראו את הקרקע שלהם מזנקת בערך. אחת מהם נכנסה ב־<b style="color:var(--green)">230,000 ש"ח</b> וראתה הערכת שמאי של <b style="color:var(--green)">370,000 ש"ח</b> בתוך שנה.</div>
+</div></section>
+
+<!-- TESTIMONIALS (dark) -->
+<section class="sec sec-dark"><div class="wrap">
+  <div class="kicker">לקוחות מספרים</div>
+  <div class="sec-t rv">תשמעו מה יש למשקיעים וללקוחות שלנו להגיד</div>
+  <div class="sec-sub rv">ביקורות אמיתיות, בשמות מלאים. גלול הצידה לעוד ‹</div>
+  <div class="revs rv">
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A6%D7%99%D7%9C%D7%95%D7%9D-%D7%9E%D7%A1%D7%9A-2025-12-04-174252-min.png" alt="המלצת לקוח" loading="lazy"/>
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A6%D7%99%D7%9C%D7%95%D7%9D-%D7%9E%D7%A1%D7%9A-2025-12-04-174307-min.png" alt="המלצת לקוח" loading="lazy"/>
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A6%D7%99%D7%9C%D7%95%D7%9D-%D7%9E%D7%A1%D7%9A-2025-12-04-174320-min.png" alt="המלצת לקוח" loading="lazy"/>
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A6%D7%99%D7%9C%D7%95%D7%9D-%D7%9E%D7%A1%D7%9A-2025-12-04-174438-min.png" alt="המלצת לקוח" loading="lazy"/>
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A6%D7%99%D7%9C%D7%95%D7%9D-%D7%9E%D7%A1%D7%9A-2025-12-04-174513-min.png" alt="המלצת לקוח" loading="lazy"/>
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A6%D7%99%D7%9C%D7%95%D7%9D-%D7%9E%D7%A1%D7%9A-2025-12-04-174334-min.png" alt="המלצת לקוח" loading="lazy"/>
   </div>
 </div></section>
 
-<section><div class="wrap">
-  <div class="sec-t">למה <span class="hl">דווקא עכשיו</span></div>
-  <div class="plist">
-    <div class="pitem"><span class="ck">✓</span><div><b>שלב פרי סייל.</b> הכניסה היום היא במחיר הנמוך ביותר במסלול, לפני עליית הערך הצפויה.</div></div>
-    <div class="pitem"><span class="ck">✓</span><div><b>ליווי מקצועי מלא.</b> שמאי, עורכי דין וצוות מומחים שמלווים כל שלב, בשקיפות מלאה.</div></div>
-    <div class="pitem"><span class="ck">✓</span><div><b>רף כניסה נגיש.</b> אלטרנטיבה אמיתית לכסף ששוכב בפיקדון ומאבד ערך.</div></div>
-    <div class="pitem"><span class="ck">✓</span><div><b>המחזור הנוכחי מוגבל.</b> מספר היחידות בסבב הזה מצומצם, וההקצאה לפי סדר הגעה.</div></div>
+<!-- CERTAINTY (dark JET timeline) -->
+<section class="sec sec-dark" style="background:radial-gradient(ellipse 70% 55% at 50% 22%,rgba(194,21,28,.16),transparent 62%),linear-gradient(180deg,#141922,#0f1216)"><div class="wrap">
+  <div class="kicker">הביטחון שלך</div>
+  <div class="sec-t rv">כאן ההבטחה הופכת לוודאות</div>
+  <div class="sec-sub rv">ארבע שכבות שמגנות על הכסף שלך. הכל בכתב, הכל בדוק.</div>
+  <div class="jtl" data-jet>
+    <div class="jtl-line"></div><div class="jtl-fill"></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert1.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>התחייבות בכתב לרכישה חוזרת</h4><p>אם לא תמצא קונה, אנחנו מוכרים עבורך תוך 90 יום. ואם לא הצלחנו, קונים ממך חזרה בתוספת ריבית. הסיכון מוסר מהשולחן.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert2.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>שמאי חתום ועורכי דין</h4><p>הערכת שמאי חתומה, ליווי משפטי מלא, וכספים בנאמנות עו״ד עד להשלמה. בדיוק כמו רכישת דירה.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert3.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>תכנית שאושרה על ידי המדינה</h4><p>הקרקע בתוך תכנית מאושרת מדצמבר 2024, עם זכויות בנייה. לא "שדה חקלאי", אלא נכס עם מסלול תכנוני אמיתי.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert4.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>אדם אחד אחראי מולך, בשמו המלא</h4><p>לא פלטפורמה אנונימית. תום הרוש עומד מאחורי כל עסקה, מלווה אותך אישית, ומחבר אליך עוד לפני שמוציאים חוזים.</p></div></div>
   </div>
 </div></section>
 
-<section id="calendar"><div class="wrap">
-  <div class="sec-t">בחר את <span class="hl">המועד הנוח לך</span></div>
-  <p class="lead" style="margin-bottom:18px">בחר יום ושעה מהיומן, ותקבל אישור מיידי. נתראה בפגישה.</p>
-  <div class="cal-wrap">
+<!-- STORIES -->
+<section class="sec sec-tintg"><div class="wrap">
+  <div class="kicker">זה קרה באמת</div>
+  <div class="sec-t rv">משקיעים כמוך, שכבר עשו את הצעד</div>
+  <div class="sec-sub rv">שלושה סיפורים אמיתיים. גלול לגלות.</div>
+  <div class="stories rv">
+    <div class="story">
+      <div class="top"><div class="av">ז</div><div><div class="nm">זלטה, בת 44</div><div class="ro">משקיעה, נכנסה לפני כשנה</div></div></div>
+      <div class="big">140,000 ש"ח בשנה אחת</div>
+      <p>זלטה נכנסה איתנו לעסקה לפני כשנה, ורכשה קרקע ב־<b>230,000 ש"ח</b>, כשהמחיר היה 2,300 ש"ח למטר. השנה ישבנו יחד בפגישה אצל השמאי, כי רצתה להוסיף עוד 75 מטר. ואז זה עלה: השמאי קבע שהמחיר למטר כבר עומד על <b>3,700 ש"ח</b>. כלומר הכסף שלה עשה כ־140,000 ש"ח בשנה, בלי שנגעה בו.</p>
+    </div>
+    <div class="story">
+      <div class="top"><div class="av">ד</div><div><div class="nm">דני ואורית</div><div class="ro">חלמו על בית ליד אגם בפורטוגל</div></div></div>
+      <div class="big">החלום חזר לשולחן</div>
+      <p>לדני ואורית היה חלום לעבור לגור ליד אגם בפורטוגל, אבל ה־<b>400,000 ש"ח</b> שחסכו פשוט לא הספיקו. במקום להשאיר אותם נשחקים בבנק, הם הכניסו אותם לקרקע במודל שלנו. לפי מסלול ההשבחה, בעוד כמה שנות תכנון הסכום צפוי לצמוח משמעותית. <b>הכסף עובד עכשיו, במקום לחכות.</b></p>
+    </div>
+    <div class="story">
+      <div class="top"><div class="av">מ</div><div><div class="nm">משה, בן 61</div><div class="ro">פנסיונר, חיפש ביטחון לילדים</div></div></div>
+      <div class="big">ישן טוב בלילה</div>
+      <p>משה פדה קרן השתלמות ולא רצה "להמר" בשוק ההון. מה שסגר לו את העסקה היה דווקא <b>ההתחייבות בכתב</b>: לדעת שאם ירצה אפשר למכור, ואם לא, קונים ממנו חזרה. הוא נכנס עם 50 מטר בלבד, לפי התקציב, בלי הלוואות. "בפעם הראשונה", אמר, "הכסף שלי עובד, ואני עדיין ישן טוב בלילה".</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- TOM (first person) -->
+<section class="sec"><div class="wrap">
+  <div class="tom rv">
+    <div>
+      <div class="kicker" style="text-align:right;margin-bottom:6px">הפנים של העסקה</div>
+      <h3>אני <span>תום הרוש</span></h3>
+      <p>כ־16 שנה שאני חי ונושם נדל"ן: השקעות, תיווך, יזמות והתחדשות עירונית ברמת גן, גבעתיים, תל אביב והשרון. אני מוביל בערכי אמון, שקיפות ויושרה, ומאמין בחיבור כן בין אנשים עוד לפני שמוציאים חוזים.</p>
+      <p>יחד עם השותפים יזמנו, הקמנו ומסרנו מעל <b>1,000 יחידות דיור</b>, ומעל <b>1,000 רוכשים</b> כבר קיבלו מאיתנו מפתח לנכס שלהם.</p>
+      <div class="sig">אני עולה בעצמי לכל שיחה. זו לא חברה אנונימית.</div>
+    </div>
+    <img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%A2%D7%99%D7%A6%D7%95%D7%91-%D7%9C%D7%9C%D7%90-%D7%A9%D7%9D-17.png" alt="תום הרוש" loading="lazy"/>
+  </div>
+</div></section>
+
+<!-- FAQ -->
+<section class="sec sec-gray"><div class="wrap faq">
+  <div class="kicker">בלי אותיות קטנות</div>
+  <div class="sec-t rv">שאלות שחשוב לענות עליהן</div>
+  <div class="sec-sub rv">התשובות הישרות, בדיוק כמו שהיינו עונים לך בשיחה.</div>
+  <div class="rv">
+  <details open><summary>אני יכול לבנות על הקרקע עכשיו? <span class="pl">+</span></summary><div class="a">לא, ומחובתנו לומר זאת בגלוי. הקרקע בשלב תכנוני (פרי־סייל) ואינה זמינה לבנייה מיידית. יש ודאות תכנונית מלאה, אבל זו השקעה פיננסית למסלול, לא מגרש לבנייה מחר. הרווח מגיע מהתקדמות התכנון.</div></details>
+  <details><summary>מאיפה אני יודע שזו לא עוד נוכלות? <span class="pl">+</span></summary><div class="a">התחייבות רכישה חוזרת חתומה, שמאי חתום, ליווי עורכי דין, אישורים עירוניים, ועסקה קודמת מוכחת. זו ודאות מגובה במסמכים, לא הבטחה בעל פה.</div></details>
+  <details><summary>מתי זה בכלל ייבנה? אני לא רוצה כסף תקוע 20 שנה. <span class="pl">+</span></summary><div class="a">זו עסקה פיננסית, לא מגורים. הקרקע נרשמת על שמך בטאבו, ואפשר למכור בכל שלב, בדרך כלל ברווח מול מחיר הרכישה. אופק אופייני לאקזיט משמעותי הוא כ־5 עד 7 שנים, אבל אתה בשליטה.</div></details>
+  <details><summary>מה אם לא אצליח למכור? <span class="pl">+</span></summary><div class="a">בדיוק בשביל זה קיימת ההתחייבות בכתב: אם לא תמצא קונה, אנחנו מוכרים עבורך תוך 90 יום, ואם לא הצלחנו, קונים ממך חזרה בתוספת ריבית.</div></details>
+  <details><summary>אין לי מיליונים. כמה כסף צריך כדי להתחיל? <span class="pl">+</span></summary><div class="a">רף הכניסה נמוך. קונים לפי מטר, לפי התקציב שלך, בלי הלוואות ובלי משכנתא. יש שנכנסו עם 50 מטר, ויש עם דונם. בשיחה נתאים בדיוק לתקציב שלך.</div></details>
+  <details><summary>אם זה כזה טוב, למה זה זול? <span class="pl">+</span></summary><div class="a">כי זה שלב מוקדם. דירה חדשה בקדימה נמכרת בכ־32 אלף למטר, כשערך הקרקע עצמה כ־23 אלף. אתה קונה בדיוק את החלק שמייצר את הרווח, בשלב שבו הוא הכי זול.</div></details>
+  <details><summary>איזו הגנה יש לכסף שלי? <span class="pl">+</span></summary><div class="a">בדיוק כמו בעסקת דירה: חוזה בכתב, כספים בנאמנות עורך דין עד להשלמה, הערת אזהרה ואז רישום מלא בטאבו על שמך. ההגנות המשפטיות זהות לרכישת דירה יד שנייה.</div></details>
+  </div>
+</div></section>
+
+<!-- BOOKING (hot — calendar only, no exits) -->
+<section class="sec" id="join"><div class="wrap">
+  <div class="kicker">הצעד האחרון</div>
+  <div class="sec-t rv">בחר את המועד שנוח לך</div>
+  <div class="sec-sub rv">30 דקות עם תום. נעבור יחד על כל הפרטים, המספרים והביטחונות, ותחליט בראש שקט. בזום או פרונטלי.</div>
+  <div class="cal-wrap rv" onclick="pxSchedule()">
     <iframe src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0-EdP01QMTlukqeIu39AOwZmcF6lf9WgSvNUO83C63YDCfxY08zFEDF34lwJU2YYHWNIjT3LHA?gv=true" loading="lazy"></iframe>
   </div>
 </div></section>
 
-<section><div class="wrap">
-  <div class="wa-block">
-    <div style="font-weight:800;font-size:18px;margin-bottom:6px">מעדיף לדבר לפני שתקבע?</div>
-    <div style="color:var(--muted);margin-bottom:16px">שלח הודעה בוואטסאפ ונחזור אליך עם כל הפרטים.</div>
-    <a class="wa-btn" href="https://wa.me/972522707706?text=%D7%94%D7%99%D7%99%2C%20%D7%A8%D7%95%D7%A6%D7%94%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%A2%D7%A1%D7%A7%D7%AA%20%D7%94%D7%A7%D7%A8%D7%A7%D7%A2%20%D7%91%D7%9E%D7%AA%D7%97%D7%9D%20H" target="_blank" onclick="pxContact()">💬 דברו איתנו בוואטסאפ</a>
+<footer>
+  <img class="flogo" src="logo.png" alt="קבוצת תום הרוש"/>
+  <div class="foot-title">אפשר לדבר איתנו בכל דרך, חפשו אותנו גם ברשתות החברתיות</div>
+  <div class="social">
+    <a href="https://wa.me/972522707706" target="_blank" aria-label="וואטסאפ"><lottie-player src="lot-s-wa.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
+    <a href="tel:*9211" aria-label="חיוג *9211"><lottie-player src="lot-s-phone.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
+    <a href="https://www.instagram.com/tom_harush/" target="_blank" aria-label="אינסטגרם"><lottie-player src="lot-s-ig.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
+    <a href="https://www.facebook.com/appartmentforsaleinramatgan" target="_blank" aria-label="פייסבוק"><lottie-player src="lot-s-fb.json" background="transparent" speed="1" autoplay loop></lottie-player></a>
   </div>
-</div></section>
-
-<footer><div class="wrap">
-  <div class="disc"><b>*הקרקע עדיין אינה זמינה לבנייה מיידית.</b><br>יש ודאות מלאה לבנייה, אך הקרקע נמצאת בשלב תכנוני (פרי סייל) ואינה מאושרת לבנייה מיידית. אין באמור הבטחת תשואה.</div>
+  <div class="disc"><b>*הקרקע עדיין אינה זמינה לבנייה מיידית.</b><br>יש ודאות מלאה לבנייה, אך הקרקע בשלב תכנוני (פרי־סייל) ואינה מאושרת לבנייה מיידית ברגע השיווק. התמונות להמחשה בלבד. אין באמור הבטחת תשואה. כל השקעה כרוכה בסיכון. המידע אינו מהווה ייעוץ או שיווק השקעות.</div>
+  <div class="foot-links"><a href="privacy.html">מדיניות פרטיות</a></div>
   <div class="copy">© קבוצת תום הרוש · הבית לעסקאות נדל"ן וקרקע</div>
-</div></footer>
+</footer>
+
+<div class="lb" id="lb" onclick="closeLb()"><button class="x" onclick="closeLb()">✕</button><img id="lbimg" src="" alt=""/></div>
+<div class="float" id="float"><a href="#join" onclick="scrollJoin(event)">קבע פגישה עכשיו <svg class="arw" viewBox="0 0 34 11"><path d="M33 5.5H3M9 1.5 3 5.5l6 4"/></svg></a></div>
 
 <script>
 const PIXEL_ID='2142206053312773';
+const SMOOVE_WEBHOOK='__SMOOVE_WEBHOOK__';
+const THANKYOU='thankyou.html';
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init',PIXEL_ID);
-fbq('track','PageView');
-fbq('track','ViewContent',{content_name:'hot_page',temperature:'hot'});
-let _sch=false;
-function pxSchedule(){ if(_sch)return; _sch=true; try{fbq('track','Schedule',{content_name:'hot_page',temperature:'hot'});}catch(e){} }
-function pxContact(){ try{fbq('track','Contact',{content_name:'hot_page',temperature:'hot'});}catch(e){} }
+fbq('init',PIXEL_ID);fbq('track','PageView');fbq('track','ViewContent',{content_name:'hot_page',temperature:'hot'});
+let _sch=false;function pxSchedule(){if(_sch)return;_sch=true;try{fbq('track','Schedule',{content_name:'hot_page',temperature:'hot'});}catch(e){}}
+function scrollJoin(e){if(e)e.preventDefault();document.getElementById('join').scrollIntoView({behavior:'smooth'});}
+// lightbox
+document.querySelectorAll('.lbx').forEach(img=>img.addEventListener('click',()=>{document.getElementById('lbimg').src=img.src;document.getElementById('lb').classList.add('on');}));
+function closeLb(){document.getElementById('lb').classList.remove('on');}
+// reveal
+const io=new IntersectionObserver((es)=>{es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}})},{threshold:.12});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+// count up
+function countUp(el){const t=+el.dataset.count,suf=el.dataset.suffix||'';let st=performance.now(),d=1400;function f(now){let p=Math.min((now-st)/d,1);p=1-Math.pow(1-p,3);el.textContent=Math.round(t*p).toLocaleString()+suf;if(p<1)requestAnimationFrame(f);}requestAnimationFrame(f);}
+const cio=new IntersectionObserver((es)=>{es.forEach(x=>{if(x.isIntersecting){countUp(x.target);cio.unobserve(x.target);}})},{threshold:.6});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+// horizontal proof timeline fill
+const tio=new IntersectionObserver((es)=>{es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('on');tio.unobserve(x.target);}})},{threshold:.4});
+const tl=document.getElementById('tl');if(tl)tio.observe(tl);
+// JET scroll-fill timelines
+function initJet(el){
+  const fill=el.querySelector('.jtl-fill'), items=[...el.querySelectorAll('.jtl-item')];
+  function upd(){
+    const r=el.getBoundingClientRect(), center=window.innerHeight*0.55, total=el.offsetHeight;
+    let filled=Math.min(Math.max(center-r.top,0),total);
+    fill.style.height=filled+'px';
+    items.forEach(it=>{const nr=it.querySelector('.jtl-node').getBoundingClientRect();it.classList.toggle('on',nr.top<center);});
+  }
+  window.addEventListener('scroll',upd,{passive:true});window.addEventListener('resize',upd);upd();
+}
+document.querySelectorAll('[data-jet]').forEach(initJet);
+// float + header
+const fl=document.getElementById('float'),join=document.getElementById('join');
+window.addEventListener('scroll',()=>{const y=scrollY;fl.classList.toggle('on',y>700&&(join.getBoundingClientRect().top>window.innerHeight));document.getElementById('hdr').style.boxShadow=y>10?'0 4px 20px rgba(16,16,16,.07)':'none';});
 </script>
 </body>
 </html>
