@@ -99,7 +99,9 @@ h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-
 .jtl-item{position:relative;margin-bottom:22px}
 .jtl-item:last-child{margin-bottom:0}
 .jtl-node{position:absolute;right:-46px;top:0;width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid var(--line-r);display:flex;align-items:center;justify-content:center;transition:.35s;color:var(--faint);font-weight:900;font-size:18px}
-.sec-dark .jtl-node{background:var(--dark2)}
+.sec-dark .jtl-node{background:#fff;border-color:rgba(194,21,28,.4)}
+.sec-dark .jtl-item.on .jtl-node{background:#fff;border-color:rgba(194,21,28,.95);color:var(--accent);box-shadow:0 0 24px rgba(194,21,28,.55),0 8px 20px rgba(0,0,0,.4)}
+.jtl-node lottie-player{width:32px;height:32px}
 .jtl-item.on .jtl-node{border-color:transparent;background:var(--grad);color:#fff;box-shadow:0 8px 22px rgba(194,21,28,.4);transform:scale(1.06)}
 .jtl-node svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .jtl-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--sh-sm);transition:.4s cubic-bezier(.2,.7,.2,1);opacity:.5;transform:translateX(12px)}
@@ -315,10 +317,10 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   <div class="sec-sub rv">ארבע שכבות שמגנות על הכסף שלך. הכל בכתב, הכל בדוק.</div>
   <div class="jtl" data-jet>
     <div class="jtl-line"></div><div class="jtl-fill"></div>
-    <div class="jtl-item"><div class="jtl-node"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><div class="jtl-card"><h4>התחייבות בכתב לרכישה חוזרת</h4><p>אם לא תמצא קונה, אנחנו מוכרים עבורך תוך 90 יום. ואם לא הצלחנו, קונים ממך חזרה בתוספת ריבית. הסיכון מוסר מהשולחן.</p></div></div>
-    <div class="jtl-item"><div class="jtl-node"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg></div><div class="jtl-card"><h4>שמאי חתום ועורכי דין</h4><p>הערכת שמאי חתומה, ליווי משפטי מלא, וכספים בנאמנות עו״ד עד להשלמה. בדיוק כמו רכישת דירה.</p></div></div>
-    <div class="jtl-item"><div class="jtl-node"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M15 9h.01"/></svg></div><div class="jtl-card"><h4>תכנית שאושרה על ידי המדינה</h4><p>הקרקע בתוך תכנית מאושרת מדצמבר 2024, עם זכויות בנייה. לא "שדה חקלאי", אלא נכס עם מסלול תכנוני אמיתי.</p></div></div>
-    <div class="jtl-item"><div class="jtl-node"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg></div><div class="jtl-card"><h4>אדם אחד אחראי מולך, בשמו המלא</h4><p>לא פלטפורמה אנונימית. תום הרוש עומד מאחורי כל עסקה, מלווה אותך אישית, ומחבר אליך עוד לפני שמוציאים חוזים.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert1.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>התחייבות בכתב לרכישה חוזרת</h4><p>אם לא תמצא קונה, אנחנו מוכרים עבורך תוך 90 יום. ואם לא הצלחנו, קונים ממך חזרה בתוספת ריבית. הסיכון מוסר מהשולחן.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert2.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>שמאי חתום ועורכי דין</h4><p>הערכת שמאי חתומה, ליווי משפטי מלא, וכספים בנאמנות עו״ד עד להשלמה. בדיוק כמו רכישת דירה.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert3.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>תכנית שאושרה על ידי המדינה</h4><p>הקרקע בתוך תכנית מאושרת מדצמבר 2024, עם זכויות בנייה. לא "שדה חקלאי", אלא נכס עם מסלול תכנוני אמיתי.</p></div></div>
+    <div class="jtl-item"><div class="jtl-node"><lottie-player src="lot-cert4.json" background="transparent" speed="1" autoplay loop></lottie-player></div><div class="jtl-card"><h4>אדם אחד אחראי מולך, בשמו המלא</h4><p>לא פלטפורמה אנונימית. תום הרוש עומד מאחורי כל עסקה, מלווה אותך אישית, ומחבר אליך עוד לפני שמוציאים חוזים.</p></div></div>
   </div>
 </div></section>
 
