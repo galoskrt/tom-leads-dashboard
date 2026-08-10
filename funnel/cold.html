@@ -40,8 +40,11 @@ header img{height:42px}
 .hero{position:relative;text-align:center;overflow:hidden;isolation:isolate;color:#fff}
 .hero-bg{position:absolute;inset:0;z-index:-1}
 .hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
-.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,15,20,.70),rgba(12,15,20,.46) 42%,rgba(12,15,20,.86))}
-.hero-inner{padding:72px 0 58px}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,17,22,.34),rgba(14,17,22,.18) 45%,rgba(14,17,22,.52))}
+.hero-inner{padding:72px 0 58px;background:radial-gradient(ellipse 92% 76% at 50% 44%,rgba(8,10,14,.48),transparent 72%)}
+.hero h1{text-shadow:0 2px 30px rgba(0,0,0,.6),0 1px 4px rgba(0,0,0,.45)}
+.hero .sub{text-shadow:0 1px 14px rgba(0,0,0,.5)}
+.hero .eyebrow{text-shadow:none}
 .hero .eyebrow{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
 .hero h1{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.4)}
 .hero .hl{background:linear-gradient(135deg,#ff6167,#ff9a45);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -100,7 +103,8 @@ h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-
 .jtl-item.on .jtl-node{border-color:transparent;background:var(--grad);color:#fff;box-shadow:0 8px 22px rgba(194,21,28,.4);transform:scale(1.06)}
 .jtl-node svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .jtl-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--sh-sm);transition:.4s cubic-bezier(.2,.7,.2,1);opacity:.5;transform:translateX(12px)}
-.sec-dark .jtl-card{background:var(--dark2);border-color:var(--dline)}
+.sec-dark .jtl-card{background:linear-gradient(180deg,#1c222c,#12161d);border:1px solid rgba(255,255,255,.13);box-shadow:0 12px 34px rgba(0,0,0,.5)}
+.sec-dark .jtl-item.on .jtl-card{border-color:rgba(194,21,28,.55);box-shadow:0 16px 46px rgba(0,0,0,.6),0 0 26px rgba(194,21,28,.20)}
 .jtl-item.on .jtl-card{opacity:1;transform:none;box-shadow:var(--sh);border-color:var(--line-r)}
 .jtl-card h4{font-size:18px;font-weight:800;margin-bottom:5px}
 .jtl-card p{color:var(--muted);font-size:14.7px}
@@ -118,16 +122,34 @@ h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-
 .tl-pt .p{font-size:18px;font-weight:900;margin-top:3px}
 .tl-note{text-align:center;margin-top:20px;font-size:15px;color:var(--muted)}
 .tl-note b{color:var(--green)}
+/* value 3-cards (was timeline) */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:760px;margin:0 auto}
+.vcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px 16px;text-align:center;box-shadow:var(--sh-sm);transition:.2s}
+.vcard:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:var(--line-r)}
+.vcard lottie-player{width:76px;height:76px;margin:0 auto 10px}
+.vcard .y{font-size:12.5px;color:var(--faint);font-weight:700}
+.vcard .p{font-size:23px;font-weight:900;margin-top:4px;color:var(--ink)}
+.vcard .p span{font-size:12px;font-weight:600;color:var(--muted)}
+.vcard.g .p{color:var(--green)}
+@media(max-width:600px){
+  .vgrid{grid-template-columns:1fr;gap:11px}
+  .vcard{display:flex;align-items:center;gap:16px;text-align:right;padding:16px 18px}
+  .vcard lottie-player{margin:0;flex:0 0 auto;width:62px;height:62px}
+  .vcard .p{font-size:20px}
+}
 /* testimonials */
 .revs{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px 16px;-webkit-overflow-scrolling:touch}
 .revs::-webkit-scrollbar{height:6px}.revs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:6px}
 .revs img{scroll-snap-align:center;flex:0 0 78%;max-width:340px;height:auto;background:#fff;border-radius:16px;box-shadow:0 12px 34px rgba(0,0,0,.4);cursor:zoom-in;object-fit:contain}
 @media(min-width:720px){.revs img{flex-basis:32%}}
 /* stories */
-.stories{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px 14px;-webkit-overflow-scrolling:touch}
-.stories::-webkit-scrollbar{height:6px}.stories::-webkit-scrollbar-thumb{background:var(--line-r);border-radius:6px}
-.story{scroll-snap-align:center;flex:0 0 88%;max-width:600px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:var(--sh)}
-@media(min-width:720px){.story{flex-basis:70%}}
+.stories{display:flex;flex-direction:column;align-items:center;position:relative}
+.story{position:sticky;width:100%;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 -4px 24px rgba(16,16,16,.08),0 16px 44px rgba(16,16,16,.12);margin-bottom:44px}
+.stories .story:nth-child(1){top:92px}
+.stories .story:nth-child(2){top:110px}
+.stories .story:nth-child(3){top:128px}
+.stories .story:last-child{margin-bottom:0}
+@media(max-width:600px){.story{padding:22px;margin-bottom:34px}.stories .story:nth-child(1){top:78px}.stories .story:nth-child(2){top:92px}.stories .story:nth-child(3){top:106px}}
 .story .top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .story .av{width:52px;height:52px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;flex:0 0 auto}
 .story .nm{font-weight:800;font-size:17px}.story .ro{font-size:13px;color:var(--faint)}
@@ -263,14 +285,12 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   <div class="kicker">ההוכחה, מגובה שמאי</div>
   <div class="sec-t rv">מ־2,300 ל־3,700 ש"ח למטר. בשנה אחת.</div>
   <div class="sec-sub rv">לא תחזית. זה מה שכבר קרה למשקיעים שנכנסו לפני שנה.</div>
-  <div class="tl rv" id="tl">
-    <div class="tl-track">
-      <div class="tl-pt"><lottie-player class="tl-lot" src="lot-year.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="y">לפני שנה</div><div class="p">2,300<span style="font-size:12px;font-weight:600">/מ'</span></div></div>
-      <div class="tl-pt"><lottie-player class="tl-lot" src="lot-today.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="y">היום · פרי־סייל</div><div class="p">3,700<span style="font-size:12px;font-weight:600">/מ'</span></div></div>
-      <div class="tl-pt g"><lottie-player class="tl-lot" src="lot-forecast.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="y">צפי שמרני, כל שנת תכנון</div><div class="p hl-g">+35-50%</div></div>
-    </div>
-    <div class="tl-note rv">משקיעים שנכנסו בשלב הזה כבר ראו את הקרקע שלהם מזנקת בערך. אחת מהם נכנסה ב־<b>230,000 ש"ח</b> וראתה הערכת שמאי של <b>370,000 ש"ח</b> בתוך שנה.</div>
+  <div class="vgrid rv">
+    <div class="vcard"><lottie-player src="lot-year.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">לפני שנה</div><div class="p">2,300 <span>ש"ח/מ'</span></div></div></div>
+    <div class="vcard"><lottie-player src="lot-today.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">היום · פרי־סייל</div><div class="p">3,700 <span>ש"ח/מ'</span></div></div></div>
+    <div class="vcard g"><lottie-player src="lot-forecast.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="meta"><div class="y">צפי שמרני, כל שנת תכנון</div><div class="p">35-50%+</div></div></div>
   </div>
+  <div class="tl-note rv" style="text-align:center;margin-top:22px;font-size:15px;color:var(--muted)">משקיעים שנכנסו בשלב הזה כבר ראו את הקרקע שלהם מזנקת בערך. אחת מהם נכנסה ב־<b style="color:var(--green)">230,000 ש"ח</b> וראתה הערכת שמאי של <b style="color:var(--green)">370,000 ש"ח</b> בתוך שנה.</div>
 </div></section>
 
 <!-- TESTIMONIALS (dark) -->
@@ -289,7 +309,7 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
 </div></section>
 
 <!-- CERTAINTY (dark JET timeline) -->
-<section class="sec sec-dark" style="background:linear-gradient(180deg,var(--dark),#141922)"><div class="wrap">
+<section class="sec sec-dark" style="background:radial-gradient(ellipse 70% 55% at 50% 22%,rgba(194,21,28,.16),transparent 62%),linear-gradient(180deg,#141922,#0f1216)"><div class="wrap">
   <div class="kicker">הביטחון שלך</div>
   <div class="sec-t rv">כאן ההבטחה הופכת לוודאות</div>
   <div class="sec-sub rv">ארבע שכבות שמגנות על הכסף שלך. הכל בכתב, הכל בדוק.</div>
@@ -306,7 +326,7 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
 <section class="sec sec-tintg"><div class="wrap">
   <div class="kicker">זה קרה באמת</div>
   <div class="sec-t rv">משקיעים כמוך, שכבר עשו את הצעד</div>
-  <div class="sec-sub rv">גלול הצידה לעוד סיפור ‹</div>
+  <div class="sec-sub rv">שלושה סיפורים אמיתיים. גלול לגלות.</div>
   <div class="stories rv">
     <div class="story">
       <div class="top"><div class="av">ז</div><div><div class="nm">זלטה, בת 44</div><div class="ro">משקיעה, נכנסה לפני כשנה</div></div></div>
@@ -373,8 +393,8 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   <img class="flogo" src="logo.png" alt="קבוצת תום הרוש"/>
   <div class="social">
     <a href="https://wa.me/972522707706" target="_blank" aria-label="וואטסאפ"><svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.15-1.7-.85-2-.94-.26-.1-.45-.15-.64.15-.19.28-.73.94-.9 1.13-.16.19-.33.21-.61.07-.3-.15-1.24-.46-2.36-1.46-.87-.78-1.46-1.74-1.63-2.03-.17-.29-.02-.44.13-.59.13-.13.29-.34.44-.51.14-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.08-.15-.64-1.55-.88-2.12-.23-.55-.47-.48-.64-.49h-.55c-.19 0-.5.07-.76.36-.26.29-1 .98-1 2.38 0 1.4 1.02 2.76 1.17 2.95.14.19 2.02 3.08 4.9 4.32.68.29 1.22.47 1.63.6.69.22 1.31.19 1.8.11.55-.08 1.7-.69 1.94-1.36.24-.67.24-1.24.17-1.36-.07-.12-.26-.19-.55-.34zM12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg></a>
-    <a href="#" target="_blank" aria-label="אינסטגרם"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.17.05 1.8.25 2.23.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.42.37 1.06.42 2.23.06 1.27.07 1.65.07 4.87s0 3.6-.07 4.87c-.05 1.17-.25 1.8-.42 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.17-1.06.37-2.23.42-1.27.06-1.65.07-4.87.07s-3.6 0-4.87-.07c-1.17-.05-1.8-.25-2.23-.42-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.17-.42-.37-1.06-.42-2.23C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.87c.05-1.17.25-1.8.42-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.17 1.06-.37 2.23-.42C8.4 2.2 8.8 2.2 12 2.2zm0 3.05A6.75 6.75 0 1 0 18.75 12 6.75 6.75 0 0 0 12 5.25zm0 11.13A4.38 4.38 0 1 1 16.38 12 4.38 4.38 0 0 1 12 16.38zm6.99-11.4a1.58 1.58 0 1 1-1.58-1.57 1.58 1.58 0 0 1 1.58 1.57z"/></svg></a>
-    <a href="#" target="_blank" aria-label="פייסבוק"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></a>
+    <a href="https://www.instagram.com/tom_harush/" target="_blank" aria-label="אינסטגרם"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.17.05 1.8.25 2.23.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.42.37 1.06.42 2.23.06 1.27.07 1.65.07 4.87s0 3.6-.07 4.87c-.05 1.17-.25 1.8-.42 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.17-1.06.37-2.23.42-1.27.06-1.65.07-4.87.07s-3.6 0-4.87-.07c-1.17-.05-1.8-.25-2.23-.42-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.17-.42-.37-1.06-.42-2.23C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.87c.05-1.17.25-1.8.42-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.17 1.06-.37 2.23-.42C8.4 2.2 8.8 2.2 12 2.2zm0 3.05A6.75 6.75 0 1 0 18.75 12 6.75 6.75 0 0 0 12 5.25zm0 11.13A4.38 4.38 0 1 1 16.38 12 4.38 4.38 0 0 1 12 16.38zm6.99-11.4a1.58 1.58 0 1 1-1.58-1.57 1.58 1.58 0 0 1 1.58 1.57z"/></svg></a>
+    <a href="https://www.facebook.com/appartmentforsaleinramatgan" target="_blank" aria-label="פייסבוק"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></a>
   </div>
   <div class="disc"><b>*הקרקע עדיין אינה זמינה לבנייה מיידית.</b><br>יש ודאות מלאה לבנייה, אך הקרקע בשלב תכנוני (פרי־סייל) ואינה מאושרת לבנייה מיידית ברגע השיווק. התמונות להמחשה בלבד. אין באמור הבטחת תשואה. כל השקעה כרוכה בסיכון. המידע אינו מהווה ייעוץ או שיווק השקעות.</div>
   <div class="foot-links"><a href="privacy.html">מדיניות פרטיות</a></div>
