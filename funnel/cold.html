@@ -37,9 +37,18 @@ header img{height:42px}
 .h-cta:hover{transform:translateY(-1px)}
 .h-cta .arw{width:24px}
 /* hero */
-.hero{position:relative;padding:46px 0 36px;text-align:center;background:
-  radial-gradient(ellipse 70% 60% at 78% -10%,rgba(194,21,28,.10),transparent 60%),
-  radial-gradient(ellipse 60% 50% at 8% 110%,rgba(21,122,58,.07),transparent 55%),var(--bg)}
+.hero{position:relative;text-align:center;overflow:hidden;isolation:isolate;color:#fff}
+.hero-bg{position:absolute;inset:0;z-index:-1}
+.hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,15,20,.70),rgba(12,15,20,.46) 42%,rgba(12,15,20,.86))}
+.hero-inner{padding:72px 0 58px}
+.hero .eyebrow{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+.hero h1{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+.hero .hl{background:linear-gradient(135deg,#ff6167,#ff9a45);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .hl-g{color:#63e487}
+.hero .sub{color:rgba(255,255,255,.92)}
+.hero .note{color:rgba(255,255,255,.76)}
+.trustband{background:#fff;border-bottom:1px solid var(--line);padding:22px 0}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line-r);color:var(--accent);font-weight:800;font-size:12.5px;letter-spacing:.02em;padding:7px 16px;border-radius:30px;margin-bottom:18px;box-shadow:var(--sh-sm)}
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
 h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-bottom:16px}
@@ -50,10 +59,8 @@ h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-
 .btn:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(194,21,28,.46)}
 .btn .arw{width:40px}
 .hero .note{font-size:13.5px;color:var(--faint);margin-top:13px}
-.hero-img{margin:30px auto 0;max-width:700px;position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line)}
-.hero-img img{width:100%;aspect-ratio:16/8;object-fit:cover;cursor:zoom-in;display:block}
-.hero-img .cap{position:absolute;bottom:0;right:0;left:0;background:linear-gradient(0deg,rgba(0,0,0,.66),transparent);color:#fff;font-size:12.5px;font-weight:600;padding:26px 16px 11px;text-align:right}
-.hero-img .cap b{font-weight:800}
+.fail .fi lottie-player,.jtl-lot lottie-player{width:100%;height:100%}
+.tl-lot{width:58px;height:58px;margin:0 auto 8px;position:relative;z-index:2}
 /* trust bar */
 .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
 .trust .t{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px 10px;box-shadow:var(--sh-sm)}
@@ -77,7 +84,7 @@ h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-
 .fails{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .fail{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--sh-sm);transition:.2s}
 .fail:hover{transform:translateY(-3px);box-shadow:var(--sh)}
-.fail .fi{width:46px;height:46px;border-radius:13px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:13px}
+.fail .fi{width:66px;height:66px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
 .fail .fi svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .fail b{display:block;font-size:17px;margin-bottom:5px}
 .fail p{color:var(--muted);font-size:14.5px;line-height:1.65}
@@ -101,8 +108,8 @@ h1{font-size:39px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-
 /* value proof timeline (horizontal) */
 .tl{background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px 24px 24px;box-shadow:var(--sh);position:relative;overflow:hidden;max-width:720px;margin:0 auto}
 .tl-track{display:flex;justify-content:space-between;position:relative;margin:20px 0 0}
-.tl-track::before{content:'';position:absolute;top:19px;right:6%;left:6%;height:4px;background:var(--line-r);border-radius:4px;opacity:.5}
-.tl-track::after{content:'';position:absolute;top:19px;right:6%;height:4px;background:linear-gradient(90deg,var(--accent),var(--gold),var(--green));border-radius:4px;width:0;transition:width 1.6s ease}
+.tl-track::before{content:'';position:absolute;top:29px;right:6%;left:6%;height:4px;background:var(--line-r);border-radius:4px;opacity:.5}
+.tl-track::after{content:'';position:absolute;top:29px;right:6%;height:4px;background:linear-gradient(90deg,var(--accent),var(--gold),var(--green));border-radius:4px;width:0;transition:width 1.6s ease}
 .tl.on .tl-track::after{width:88%}
 .tl-pt{position:relative;z-index:2;text-align:center;flex:1}
 .tl-pt .dot{width:42px;height:42px;border-radius:50%;background:#fff;border:4px solid var(--accent);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--accent);box-shadow:0 4px 12px rgba(194,21,28,.2)}
@@ -185,6 +192,7 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   .think{font-size:16.5px;padding:24px}.join-card h2{font-size:22px}
 }
 </style>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
 </head>
 <body>
 <header id="hdr"><div class="wrap">
@@ -193,13 +201,17 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
 </div></header>
 
 <!-- HERO -->
-<div class="hero"><div class="wrap">
-  <span class="eyebrow"><span class="dot"></span>עסקת קרקע · מתחם H · קדימה־צורן</span>
-  <h1>הכסף ששוכב בבנק <span class="hl">מאבד ערך כל יום</span>.<br>יש דרך להפוך אותו <span class="hl-g">להון אמיתי</span>.</h1>
-  <p class="sub">בלי הלוואות, בלי משכנתא, ובלי הימור. קרקע עם זכויות בנייה בתוך תכנית שאושרה על ידי המדינה, במחיר של שלב פרי־סייל. בגובה העיניים, בקצב שלך.</p>
-  <a class="btn" href="#join" onclick="scrollJoin(event)">קבל את המידע המלא <svg class="arw" viewBox="0 0 40 11"><path d="M39 5.5H3M10 1.5 3 5.5l7 4"/></svg></a>
-  <div class="note">קריאה של 3 דקות · בלי התחייבות</div>
-  <div class="hero-img rv"><img class="lbx" src="https://tom-harush.co.il/wp-content/uploads/%D7%94%D7%99%D7%A8%D7%95-2-%D7%A7%D7%93%D7%99%D7%9E%D7%94-%D7%A6%D7%95%D7%A8%D7%9F.jpg" alt="אזור מתחם H מהאוויר" loading="lazy"/><span class="cap">מתחם H · קדימה־צורן · <b>התמונה להמחשה בלבד</b></span></div>
+<div class="hero">
+  <div class="hero-bg"><img src="https://tom-harush.co.il/wp-content/uploads/%D7%94%D7%99%D7%A8%D7%95-2-%D7%A7%D7%93%D7%99%D7%9E%D7%94-%D7%A6%D7%95%D7%A8%D7%9F.jpg" alt="מתחם H קדימה־צורן מהאוויר"/></div>
+  <div class="hero-inner"><div class="wrap">
+    <span class="eyebrow"><span class="dot"></span>עסקת קרקע · מתחם H · קדימה־צורן</span>
+    <h1>הכסף ששוכב בבנק <span class="hl">מאבד ערך כל יום</span>.<br>יש דרך להפוך אותו <span class="hl-g">להון אמיתי</span>.</h1>
+    <p class="sub">בלי הלוואות, בלי משכנתא, ובלי הימור. קרקע עם זכויות בנייה בתוך תכנית שאושרה על ידי המדינה, במחיר של שלב פרי־סייל.</p>
+    <a class="btn" href="#join" onclick="scrollJoin(event)">קבל את המידע המלא <svg class="arw" viewBox="0 0 40 11"><path d="M39 5.5H3M10 1.5 3 5.5l7 4"/></svg></a>
+    <div class="note">קריאה של 3 דקות · בלי התחייבות · <span style="opacity:.85">*התמונה להמחשה בלבד</span></div>
+  </div></div>
+</div>
+<div class="trustband"><div class="wrap">
   <div class="trust">
     <div class="t rv"><div class="v" data-count="16">0</div><div class="l">שנות ניסיון בנדל"ן</div></div>
     <div class="t rv"><div class="v" data-count="1000" data-suffix="+">0</div><div class="l">יחידות דיור שנמסרו</div></div>
@@ -226,10 +238,10 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   <div class="sec-t rv">כל האלטרנטיבות פשוט לא עבדו בשבילך</div>
   <div class="sec-sub rv">וזו לא אשמתך. אף אחת מהן לא נבנתה בשביל מי שרוצה ודאות בלי חוב.</div>
   <div class="fails">
-    <div class="fail rv"><div class="fi"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div><b>הכסף בעו״ש נשחק</b><p>פיקדון של 3-4 אחוז שהאינפלציה אוכלת. אתה יודע שזה הפסד, אבל לא מצאת אלטרנטיבה שגם מובנת וגם בטוחה.</p></div>
-    <div class="fail rv"><div class="fi"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></svg></div><b>דירה להשקעה משעבדת</b><p>2 עד 3 מיליון משכנתא, שעבוד לשנים, ותשואה של אחוזים בודדים. מרגיש כמו לעבוד בשביל הבנק.</p></div>
-    <div class="fail rv"><div class="fi"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg></div><b>שוק ההון וקריפטו מלחיצים</b><p>תנודתי, בלי שליטה ובלי גב. מרגיש כמו הימור, לא כמו השקעה שאפשר לישון איתה בשקט.</p></div>
-    <div class="fail rv"><div class="fi"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div><b>עסקאות מהפרסום מפחידות</b><p>הרשת מלאה בהבטחות, וכבר נכווית או שמעת על מי שנכווה. כל הבטחה מדליקה נורה אדומה.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-oash.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>הכסף בעו״ש נשחק</b><p>פיקדון של 3-4 אחוז שהאינפלציה אוכלת. אתה יודע שזה הפסד, אבל לא מצאת אלטרנטיבה שגם מובנת וגם בטוחה.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-dira.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>דירה להשקעה משעבדת</b><p>2 עד 3 מיליון משכנתא, שעבוד לשנים, ותשואה של אחוזים בודדים. מרגיש כמו לעבוד בשביל הבנק.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-shuk.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>שוק ההון וקריפטו מלחיצים</b><p>תנודתי, בלי שליטה ובלי גב. מרגיש כמו הימור, לא כמו השקעה שאפשר לישון איתה בשקט.</p></div>
+    <div class="fail rv"><div class="fi"><lottie-player src="lot-ads.json" background="transparent" speed="1" autoplay loop></lottie-player></div><b>עסקאות מהפרסום מפחידות</b><p>הרשת מלאה בהבטחות, וכבר נכווית או שמעת על מי שנכווה. כל הבטחה מדליקה נורה אדומה.</p></div>
   </div>
 </div></section>
 
@@ -253,9 +265,9 @@ footer .flogo{height:44px;margin:0 auto 16px;opacity:.95}
   <div class="sec-sub rv">לא תחזית. זה מה שכבר קרה למשקיעים שנכנסו לפני שנה.</div>
   <div class="tl rv" id="tl">
     <div class="tl-track">
-      <div class="tl-pt"><div class="dot">₪</div><div class="y">לפני שנה</div><div class="p">2,300<span style="font-size:12px;font-weight:600">/מ'</span></div></div>
-      <div class="tl-pt"><div class="dot">↗</div><div class="y">היום · פרי־סייל</div><div class="p">3,700<span style="font-size:12px;font-weight:600">/מ'</span></div></div>
-      <div class="tl-pt g"><div class="dot">✓</div><div class="y">צפי שמרני, כל שנת תכנון</div><div class="p hl-g">+35-50%</div></div>
+      <div class="tl-pt"><lottie-player class="tl-lot" src="lot-year.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="y">לפני שנה</div><div class="p">2,300<span style="font-size:12px;font-weight:600">/מ'</span></div></div>
+      <div class="tl-pt"><lottie-player class="tl-lot" src="lot-today.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="y">היום · פרי־סייל</div><div class="p">3,700<span style="font-size:12px;font-weight:600">/מ'</span></div></div>
+      <div class="tl-pt g"><lottie-player class="tl-lot" src="lot-forecast.json" background="transparent" speed="1" autoplay loop></lottie-player><div class="y">צפי שמרני, כל שנת תכנון</div><div class="p hl-g">+35-50%</div></div>
     </div>
     <div class="tl-note rv">משקיעים שנכנסו בשלב הזה כבר ראו את הקרקע שלהם מזנקת בערך. אחת מהם נכנסה ב־<b>230,000 ש"ח</b> וראתה הערכת שמאי של <b>370,000 ש"ח</b> בתוך שנה.</div>
   </div>
