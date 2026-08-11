@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ניהול לידים · קדימה צורן · קבוצת תום הרוש</title>
+<meta name="robots" content="noindex"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap');
+:root{--bg:#F4F5F7;--card:#fff;--ink:#0f1216;--muted:#6b7280;--accent:#C2151C;--green:#157a3a;--blue:#2d6cb5;
+--line:rgba(15,18,22,.09);--grad:linear-gradient(135deg,#C2151C,#8f1018);--sh:0 8px 28px rgba(16,16,16,.08)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--ink);min-height:100dvh}
+/* login */
+#login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:22px}
+#login .box{background:#fff;border-radius:22px;box-shadow:var(--sh);padding:36px 30px;max-width:400px;width:100%;text-align:center}
+#login img{height:46px;margin-bottom:18px}
+#login h1{font-size:22px;font-weight:900;margin-bottom:6px}
+#login p{color:var(--muted);font-size:14.5px;margin-bottom:20px}
+#login input{width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;text-align:center;margin-bottom:12px}
+#login button,.btn{background:var(--grad);color:#fff;border:0;border-radius:12px;padding:13px 22px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;width:100%;transition:.15s}
+#login button:hover,.btn:hover{transform:translateY(-1px)}
+#login .err{color:var(--accent);font-size:13px;min-height:18px;margin-top:6px}
+/* app */
+#app{display:none}
+header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header .l{display:flex;align-items:center;gap:12px}
+header img{height:34px}
+header .ttl{font-weight:900;font-size:16px}
+header .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted)}
+header .r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spend{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
+.spend input{width:90px;border:0;font-family:inherit;font-size:14px;font-weight:700;text-align:left;color:var(--accent)}
+.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-family:inherit;font-weight:700;font-size:13.5px;cursor:pointer}
+.wrap{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
+/* metrics */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:var(--sh)}
+.kpi .lab{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.kpi .num{font-size:26px;font-weight:900;line-height:1}
+.kpi .cost{font-size:12.5px;color:var(--accent);font-weight:700;margin-top:5px;min-height:16px}
+.kpi.hl{background:linear-gradient(160deg,#fff5f5,#fff);border-color:rgba(194,21,28,.25)}
+/* table */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);overflow:hidden}
+.card .hd{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.card .hd b{font-size:15.5px}
+.card .hd span{color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:11px 14px;text-align:right;border-bottom:1px solid var(--line);vertical-align:middle}
+th{background:#fafafa;color:var(--muted);font-weight:700;font-size:12px;position:sticky;top:59px;z-index:5}
+tr.lead:hover{background:#fafafb;cursor:pointer}
+.nm{font-weight:800}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:800}
+.badge.hot{background:rgba(194,21,28,.1);color:var(--accent)}
+.badge.cold{background:rgba(45,108,181,.12);color:var(--blue)}
+select.st{font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid var(--line);border-radius:9px;padding:6px 8px;background:#fff;cursor:pointer;max-width:140px}
+.ms{display:flex;gap:4px;margin-top:4px}
+.dot{width:8px;height:8px;border-radius:50%;background:#e2e2e2}
+.dot.on{background:var(--green)}
+.detail{background:#fbfbfc}
+.detail td{padding:14px 18px}
+.hist{font-size:12.5px;color:var(--muted)}
+.hist .row{padding:4px 0;border-bottom:1px dashed var(--line)}
+.hist b{color:var(--ink)}
+.notebox{display:flex;gap:8px;margin-top:10px}
+.notebox input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13.5px}
+.notebox button{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:0 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.empty{padding:50px 20px;text-align:center;color:var(--muted)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;z-index:50}
+.toast.show{opacity:1;transform:none}
+@media(max-width:640px){.hideM{display:none}.wrap{padding:14px}}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="box">
+    <img src="logo.png" alt="קבוצת תום הרוש" onerror="this.style.display='none'"/>
+    <h1>ניהול לידים · קדימה צורן</h1>
+    <p>הזן את מפתח הגישה כדי להיכנס למערכת.</p>
+    <input id="tok" type="password" placeholder="מפתח גישה" autocomplete="off"/>
+    <button onclick="doLogin()">כניסה</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="l">
+      <img src="logo.png" alt="" onerror="this.style.display='none'"/>
+      <div class="ttl">ניהול לידים<small>עסקת קרקע · מתחם H, קדימה צורן</small></div>
+    </div>
+    <div class="r">
+      <label class="spend">תקציב פרסום ₪ <input id="spend" type="number" min="0" placeholder="0" oninput="saveSpend();render()"/></label>
+      <button class="ghost" onclick="load()">רענן</button>
+      <button class="ghost" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <div class="hd"><b>לידים</b><span id="cnt"></span></div>
+      <div id="tableWrap"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='https://tom-funnel.tom-harush.workers.dev';
+let TOKEN=localStorage.getItem('thg_dash_tok')||'';
+let LEADS=[], STATUSES={}, OPEN=null;
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800);}
+function saveSpend(){localStorage.setItem('thg_dash_spend',document.getElementById('spend').value||'');}
+
+async function doLogin(){
+  const v=document.getElementById('tok').value.trim();
+  if(!v){return;}
+  const err=document.getElementById('loginErr'); err.textContent='בודק...';
+  try{
+    const r=await fetch(API+'/leads?limit=1',{headers:{Authorization:'Bearer '+v}});
+    if(r.status===200){ TOKEN=v; localStorage.setItem('thg_dash_tok',v); err.textContent=''; boot(); }
+    else { err.textContent='מפתח שגוי'; }
+  }catch(e){ err.textContent='שגיאת חיבור'; }
+}
+function logout(){localStorage.removeItem('thg_dash_tok');location.reload();}
+
+function boot(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('spend').value=localStorage.getItem('thg_dash_spend')||'';
+  load();
+}
+
+async function load(){
+  try{
+    const r=await fetch(API+'/leads?limit=2000',{headers:{Authorization:'Bearer '+TOKEN}});
+    if(r.status===401){logout();return;}
+    const j=await r.json();
+    LEADS=j.leads||[]; STATUSES=j.statuses||{};
+    render();
+  }catch(e){ toast('שגיאה בטעינת לידים'); }
+}
+
+function count(fn){return LEADS.filter(fn).length;}
+function money(n){return '₪'+Number(n).toLocaleString('he-IL');}
+
+function render(){
+  const spend=Number(document.getElementById('spend').value||0);
+  const total=LEADS.length;
+  const rel=count(l=>l.milestones&&l.milestones.relevant);
+  const booked=count(l=>l.milestones&&l.milestones.booked);
+  const att=count(l=>l.milestones&&l.milestones.attended);
+  const deal=count(l=>l.milestones&&l.milestones.deal);
+  const hot=count(l=>l.temperature==='hot');
+  const per=n=>(spend>0&&n>0)?money(Math.round(spend/n))+' לליד':'';
+  const cards=[
+    {lab:'סה"כ לידים',num:total,cost:per(total)},
+    {lab:'לידים רלוונטיים',num:rel,cost:per(rel),hl:1},
+    {lab:'קבעו פגישה',num:booked,cost:per(booked)},
+    {lab:'הגיעו לפגישה',num:att,cost:per(att),hl:1},
+    {lab:'עסקאות',num:deal,cost:per(deal)},
+    {lab:'חמים / קרים',num:hot+' / '+(total-hot),cost:''},
+  ];
+  document.getElementById('kpis').innerHTML=cards.map(c=>
+    `<div class="kpi${c.hl?' hl':''}"><div class="lab">${c.lab}</div><div class="num">${c.num}</div><div class="cost">${c.cost}</div></div>`).join('');
+
+  document.getElementById('cnt').textContent=total?`${total} לידים`:'';
+  if(!total){document.getElementById('tableWrap').innerHTML='<div class="empty">אין עדיין לידים. ברגע שיגיע הראשון מהמשפך או משכל, הוא יופיע כאן.</div>';return;}
+
+  const opts=(cur)=>Object.entries(STATUSES).map(([k,v])=>`<option value="${k}"${k===cur?' selected':''}>${v.name}</option>`).join('');
+  let rows='';
+  for(const l of LEADS){
+    const tmp=l.temperature==='hot'?'<span class="badge hot">חם</span>':'<span class="badge cold">קר</span>';
+    const m=l.milestones||{};
+    const dots=`<div class="ms" title="רלוונטי · פגישה · הגיע · עסקה">
+      <span class="dot${m.relevant?' on':''}"></span><span class="dot${m.booked?' on':''}"></span><span class="dot${m.attended?' on':''}"></span><span class="dot${m.deal?' on':''}"></span></div>`;
+    const when=l.history&&l.history.length?new Date(l.history[l.history.length-1].at).toLocaleDateString('he-IL'):'';
+    rows+=`<tr class="lead" onclick="toggle('${l.lead_id}',event)">
+      <td><div class="nm">${esc(l.name||'—')}</div>${dots}</td>
+      <td class="hideM">${esc(l.phone||'')}</td>
+      <td class="hideM">${esc(l.source||'')}</td>
+      <td>${tmp}</td>
+      <td onclick="event.stopPropagation()"><select class="st" onchange="setStatus('${l.lead_id}',this.value)">${opts(l.status)}</select></td>
+      <td class="hideM">${when}</td>
+    </tr>`;
+    if(OPEN===l.lead_id){
+      const hist=(l.history||[]).slice().reverse().map(h=>`<div class="row"><b>${esc(h.name)}</b> · ${new Date(h.at).toLocaleString('he-IL')}${h.by?' · '+(h.by==='sehel'?'שכל':h.by==='dashboard'?'דשבורד':h.by):''}${h.note?' · '+esc(h.note):''}</div>`).join('');
+      rows+=`<tr class="detail"><td colspan="6">
+        <div class="hist"><b>היסטוריה</b>${hist||'<div class="row">—</div>'}</div>
+        <div class="notebox"><input id="note_${l.lead_id}" placeholder="הוסף הערה..." onclick="event.stopPropagation()"/><button onclick="addNote('${l.lead_id}','${l.status}')">שמור הערה</button></div>
+      </td></tr>`;
+    }
+  }
+  document.getElementById('tableWrap').innerHTML=
+    `<div style="overflow-x:auto"><table><thead><tr><th>שם</th><th class="hideM">טלפון</th><th class="hideM">מקור</th><th>טמפ'</th><th>סטטוס</th><th class="hideM">עודכן</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toggle(id,e){OPEN=OPEN===id?null:id;render();}
+
+async function post(body){
+  const r=await fetch(API+'/lead-status',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify(body)});
+  return r.ok?await r.json():null;
+}
+async function setStatus(id,status){
+  const res=await post({lead_id:id,status});
+  if(res&&res.ok){const i=LEADS.findIndex(l=>l.lead_id===id);if(i>=0)LEADS[i]=res.lead;render();toast('הסטטוס עודכן');}
+  else toast('שגיאה בעדכון');
+}
+async function addNote(id,status){
+  const inp=document.getElementById('note_'+id); const note=inp.value.trim(); if(!note)return;
+  const res=await post({lead_id:id,status,note});
+  if(res&&res.ok){const i=LEADS.findIndex(l=>l.lead_id===id);if(i>=0)LEADS[i]=res.lead;render();toast('הערה נשמרה');}
+  else toast('שגיאה');
+}
+
+// init
+if(TOKEN){ fetch(API+'/leads?limit=1',{headers:{Authorization:'Bearer '+TOKEN}}).then(r=>{if(r.status===200)boot();}); }
+document.getElementById('tok').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
