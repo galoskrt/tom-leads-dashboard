@@ -66,6 +66,18 @@ select.st{font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid 
 .notebox input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13.5px}
 .notebox button{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:0 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
 .empty{padding:50px 20px;text-align:center;color:var(--muted)}
+.addbtn{background:var(--grad);color:#fff;border:0;border-radius:10px;padding:9px 15px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;transition:.15s}
+.addbtn:hover{transform:translateY(-1px)}
+.modal{display:none;position:fixed;inset:0;background:rgba(15,18,22,.5);z-index:40;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.mbox{background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;box-shadow:var(--sh)}
+.mhd{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:17px;margin-bottom:14px}
+.mhd .x{background:none;border:0;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.mbox input{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:14.5px;margin-bottom:10px}
+.temp-sel{display:flex;gap:18px;margin:2px 0 12px;font-size:14px;font-weight:700}
+.temp-sel label{cursor:pointer;display:flex;align-items:center;gap:5px}
+.aerr{color:var(--accent);font-size:13px;min-height:16px;margin-bottom:6px}
+.mnote{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;z-index:50}
 .toast.show{opacity:1;transform:none}
 @media(max-width:640px){.hideM{display:none}.wrap{padding:14px}}
@@ -92,6 +104,7 @@ select.st{font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid 
     </div>
     <div class="r">
       <label class="spend">תקציב פרסום ₪ <input id="spend" type="number" min="0" placeholder="0" oninput="saveSpend();render()"/></label>
+      <button class="addbtn" onclick="openAdd()">+ הוסף ליד</button>
       <button class="ghost" onclick="load()">רענן</button>
       <button class="ghost" onclick="logout()">יציאה</button>
     </div>
@@ -103,6 +116,22 @@ select.st{font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid 
       <div class="hd"><b>לידים</b><span id="cnt"></span></div>
       <div id="tableWrap"></div>
     </div>
+  </div>
+</div>
+
+<div class="modal" id="addModal">
+  <div class="mbox">
+    <div class="mhd">הוספת ליד קדימה<button class="x" onclick="closeAdd()">×</button></div>
+    <input id="a_name" placeholder="שם מלא" autocomplete="off"/>
+    <input id="a_phone" placeholder="טלפון" inputmode="tel" autocomplete="off"/>
+    <input id="a_email" placeholder="אימייל (לא חובה)" autocomplete="off"/>
+    <div class="temp-sel">
+      <label><input type="radio" name="atmp" value="cold" checked/> קר</label>
+      <label><input type="radio" name="atmp" value="hot"/> חם</label>
+    </div>
+    <div class="aerr" id="addErr"></div>
+    <button class="btn" onclick="submitAdd()">הוסף ליד</button>
+    <div class="mnote">הליד יישמר בדשבורד ויידחף אוטומטית לשכל (קדימה צורן).</div>
   </div>
 </div>
 
@@ -216,6 +245,26 @@ async function addNote(id,status){
   if(res&&res.ok){const i=LEADS.findIndex(l=>l.lead_id===id);if(i>=0)LEADS[i]=res.lead;render();toast('הערה נשמרה');}
   else toast('שגיאה');
 }
+
+// add lead (manual Kadima entry → Worker → dashboard + auto-push to Sehel)
+function openAdd(){document.getElementById('addModal').classList.add('show');setTimeout(()=>document.getElementById('a_name').focus(),50);}
+function closeAdd(){document.getElementById('addModal').classList.remove('show');['a_name','a_phone','a_email'].forEach(i=>document.getElementById(i).value='');document.getElementById('addErr').textContent='';}
+async function submitAdd(){
+  const name=document.getElementById('a_name').value.trim();
+  const phone=document.getElementById('a_phone').value.trim();
+  const email=document.getElementById('a_email').value.trim();
+  const temp=document.querySelector('input[name="atmp"]:checked').value;
+  const err=document.getElementById('addErr');
+  if(!name||!phone){err.textContent='שם וטלפון חובה';return;}
+  err.textContent='מוסיף...';
+  try{
+    const r=await fetch(API+'/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,phone,email,temperature:temp,source:'הזנה ידנית'})});
+    const j=await r.json();
+    if(j&&j.ok){closeAdd();toast(j.dedup?'הליד כבר קיים במערכת':'הליד נוסף ונדחף לשכל');load();}
+    else{err.textContent='שגיאה בהוספה';}
+  }catch(e){err.textContent='שגיאת חיבור';}
+}
+document.getElementById('addModal').addEventListener('click',e=>{if(e.target.id==='addModal')closeAdd();});
 
 // init
 if(TOKEN){ fetch(API+'/leads?limit=1',{headers:{Authorization:'Bearer '+TOKEN}}).then(r=>{if(r.status===200)boot();}); }
