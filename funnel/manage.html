@@ -203,7 +203,8 @@ function render(){
   const opts=(cur)=>Object.entries(STATUSES).map(([k,v])=>`<option value="${k}"${k===cur?' selected':''}>${v.name}</option>`).join('');
   let rows='';
   for(const l of LEADS){
-    const tmp=l.temperature==='hot'?'<span class="badge hot">חם</span>':'<span class="badge cold">קר</span>';
+    const sc=(l.score!=null&&l.score!=='')?' · '+l.score+'/6':'';
+    const tmp=l.temperature==='hot'?`<span class="badge hot">חם${sc}</span>`:`<span class="badge cold">קר${sc}</span>`;
     const m=l.milestones||{};
     const dots=`<div class="ms" title="רלוונטי · פגישה · הגיע · עסקה">
       <span class="dot${m.relevant?' on':''}"></span><span class="dot${m.booked?' on':''}"></span><span class="dot${m.attended?' on':''}"></span><span class="dot${m.deal?' on':''}"></span></div>`;
