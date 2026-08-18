@@ -1063,16 +1063,32 @@ function saveLead(){
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
   const data={name,phone:document.getElementById('fp').value.trim(),business:document.getElementById('fb').value.trim(),status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,updatedAt:nowIso()};
-  let saved;
+  let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
-  else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);}
-  // מסנכרן שינוי סטטוס חזרה ל-Worker (המקור האמיתי היחיד שמזין את שקלול העלויות).
-  if(saved&&saved.lead_id&&data.status!==prevStatus)pushStatusToWorker(saved);
+  else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
+  // כלל ברזל: כל ליד חדש שמוזן ידנית נדחף לשכל תחת "מתעניינים קדימה צורן" עם תיוג "ידני".
+  if(isNew)pushManualLeadToWorker(saved);
+  // סנכרון שינוי סטטוס חזרה ל-Worker (המקור האמיתי היחיד שמזין את שקלול העלויות).
+  else if(saved&&saved.lead_id&&data.status!==prevStatus)pushStatusToWorker(saved);
   closeLead();render();scheduleSave();
 }
-// כותב סטטוס + סכום/מטרים ל-Worker. רק לידים שהגיעו מהמשפך (יש להם lead_id) — לידים ידניים לא משפיעים על המדידה.
+// דוחף ליד ידני חדש למנוע: נכנס לשכל (תחת הקטגוריה, תיוג "ידני") ומקבל lead_id שממנו ימשיך להסתנכרן.
+// מסומן manual=true בשרת → נספר ב-CRM אבל לא נכנס לחישוב עלות הליד מהפרסום.
+async function pushManualLeadToWorker(l){
+  if(!l.phone){toast('ℹ️ ליד ללא טלפון נשמר בדשבורד בלבד (לא נדחף לשכל)',5000);return;}
+  try{
+    const r=await fetch(`${WORKER_URL}/lead`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:l.name,phone:l.phone,email:l.email||'',manual:true,source:'ידני'})});
+    const j=await r.json();
+    if(j&&j.lead_id){
+      l.lead_id=j.lead_id;scheduleSave();
+      if(l.status&&l.status!=='new'&&ST[l.status])await pushStatusToWorker(l); // אם כבר נקבע סטטוס בזמן ההזנה
+    }
+  }catch(e){console.warn('manual lead push',e);}
+}
+// כותב סטטוס + סכום/מטרים ל-Worker (המקור הקנוני). עובד גם על לידים ידניים (יש להם lead_id אחרי הדחיפה).
 async function pushStatusToWorker(l){
-  if(!ST[l.status])return;
+  if(!ST[l.status]||!l.lead_id)return;
   try{
     await fetch(`${WORKER_URL}/lead-status`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},
       body:JSON.stringify({lead_id:l.lead_id,status:l.status,note:l.notes||undefined,deal_amount:l.status==='deal'?(l.dealAmount||0):undefined,deal_meters:l.status==='deal'?(l.dealMeters||0):undefined})});
