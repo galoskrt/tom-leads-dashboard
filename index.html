@@ -331,7 +331,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
         <th onclick="sortBy('createdAt')">#</th>
         <th onclick="sortBy('name')">שם</th>
         <th onclick="sortBy('phone')">טלפון</th>
-        <th onclick="sortBy('business')">תחום</th>
+        <th onclick="sortBy('score')">חום · ניקוד</th>
         <th onclick="sortBy('status')">סטטוס</th>
         <th onclick="sortBy('remAt')">פולואפ</th>
         <th>WA</th>
@@ -979,7 +979,7 @@ function render(){
       <td data-label="#">${rows.length-i}</td>
       <td data-label="שם"><b>${esc(l.name)}</b>${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span></td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
-      <td data-label="תחום" style="font-size:12px;color:var(--text2)">${esc(l.business||'—')}${l.creative?`<br><span style="font-size:11px;color:var(--accent)">📢 ${esc(l.creative)}</span>`:''}</td>
+      <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');return t?`<br><span style="font-size:11px;color:var(--accent)">📢 ${esc(t)}</span>`:'';})()}</td>
       <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span></td>
       <td data-label="פולואפ" class="td-rem">${dot}<span style="font-size:12px;color:${remClr}">${remTxt}</span></td>
       <td data-label="WA" class="td-wa">${waBtn}</td>
@@ -1004,6 +1004,16 @@ function renderStats(){
 // ═══════════════════════════════════════════════
 // LEAD MODAL
 // ═══════════════════════════════════════════════
+// שיוך מודעה/קמפיין בשפה פשוטה (לא UTM גולמי). main→ראשי, rmk→רימרקטינג, image9→תמונה 9.
+function adLabel(l){
+  if(!l) return {camp:'',ad:''};
+  const camp=String(l.campaign||(l.utm&&l.utm.campaign)||'').toLowerCase();
+  const campName={main:'ראשי',rmk:'רימרקטינג',remarketing:'רימרקטינג'}[camp]||(camp?camp:'');
+  const cr=String(l.creative||(l.utm&&l.utm.content)||l.ad||'');
+  const m=cr.match(/image[\s_-]?(\d+)/i);
+  const adName=m?('תמונה '+m[1]):(cr||'');
+  return {camp:campName, ad:adName};
+}
 function openLead(id){
   eid=id||null;
   const l=id?leads.find(x=>x.id===id):null;
@@ -1033,10 +1043,10 @@ function openLead(id){
   document.getElementById('fmeters').value=l?.dealMeters||'';
   const adInfoBox=document.getElementById('adInfoBox');
   // איש המכירות רואה רק את התווית הנקייה של הקריאייטיב (image1/image2…), לא את מחרוזת ה-UTM הגולמית.
-  const creativeLabel=l&&(l.creative||(l.utm&&l.utm.content)||l.ad);
-  if(creativeLabel){
+  const _al=adLabel(l);
+  if(_al.camp||_al.ad){
     adInfoBox.style.display='block';
-    document.getElementById('adInfoTxt').textContent=`📢 קריאייטיב: ${creativeLabel}`;
+    document.getElementById('adInfoTxt').textContent='📢 '+[_al.camp?('קמפיין: '+_al.camp):'',_al.ad?('מודעה: '+_al.ad):''].filter(Boolean).join('  ·  ');
   }else{
     adInfoBox.style.display='none';
   }
