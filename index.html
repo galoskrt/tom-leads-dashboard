@@ -1245,7 +1245,7 @@ async function renderStatsModal(){
     <div class="stat-card"><div class="v">${nis(c.revenue)}</div><div class="l">סה"כ הכנסות</div></div>
     <div class="stat-card"><div class="v">${c.revenue?roas.toFixed(2)+'x':'—'}</div><div class="l">ROAS</div></div>
     <div class="stat-card"><div class="v">${(c.meters||0).toLocaleString()}</div><div class="l">מטרים שנרכשו</div></div>
-    <div class="stat-card"><div class="v">${c.hot||0}/${c.cold||0}</div><div class="l">חמים / קרים</div></div>
+    <div class="stat-card"><div class="v" style="font-size:19px">חם <span style="color:#c2151c">${c.hot||0}</span> &nbsp; קר <span style="color:#2563eb">${c.cold||0}</span></div><div class="l">טמפרטורה</div></div>
   </div>`;
 
   if(paused){
