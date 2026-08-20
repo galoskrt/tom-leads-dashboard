@@ -354,7 +354,12 @@ tbody td{padding:12px 11px;vertical-align:middle}
     <div class="f"><label>טלפון</label><input id="fp" type="tel" placeholder="050-0000000"/></div>
   </div>
   <div class="fg one">
-    <div class="f"><label>תחום / סוג עסק</label><input id="fb" placeholder="עורך דין, נדל״ן, קוסמטיקאית..."/></div>
+    <div class="f"><label>אימייל</label><input id="fe" type="email" placeholder="name@email.com"/></div>
+  </div>
+  <div class="fg one">
+    <div class="f"><label>תשובות מהשאלון</label>
+      <div id="fqa" style="background:rgba(128,128,128,.08);border:1px solid var(--line,#e2e2e2);border-radius:8px;padding:8px 12px;font-size:13px;line-height:1.5;max-height:200px;overflow:auto">—</div>
+    </div>
   </div>
   <div class="fg">
     <div class="f">
@@ -1008,7 +1013,10 @@ function openLead(id){
   document.getElementById('bwa').style.display=(l&&l.phone)?'inline-flex':'none';
   document.getElementById('fn').value=l?.name||'';
   document.getElementById('fp').value=l?.phone||'';
-  document.getElementById('fb').value=l?.business||'';
+  document.getElementById('fe').value=l?.email||'';
+  { const qa=(l?.q_a||'').trim(); const el=document.getElementById('fqa');
+    if(qa){ el.innerHTML=qa.split(/\n+/).filter(Boolean).map(ln=>{ const i=ln.indexOf(':'); const q=i>0?ln.slice(0,i).trim():''; const a=i>0?ln.slice(i+1).trim():ln.trim(); return `<div style="padding:6px 0;border-bottom:1px solid var(--line,#eee)">${q?`<div style="font-weight:600;color:var(--accent,#c2151c);font-size:12px">${esc(q)}</div>`:''}<div style="margin-top:2px">${esc(a)}</div></div>`; }).join(''); }
+    else el.innerHTML='<span style="color:var(--text2,#888)">אין תשובות שאלון (ליד ידני או ישן)</span>'; }
   document.getElementById('fst2').value=l?.status||'new';
   document.getElementById('fsrc').value=l?.source||'FB ADS';
   document.getElementById('fdoc').value=l?.doc||'';
@@ -1062,7 +1070,7 @@ function saveLead(){
   const remAt=rd?new Date(`${rd}T${rt}`).toISOString():'';
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
-  const data={name,phone:document.getElementById('fp').value.trim(),business:document.getElementById('fb').value.trim(),status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,updatedAt:nowIso()};
+  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,updatedAt:nowIso()};
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
   else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
