@@ -879,10 +879,18 @@ async function syncWorker(){
         existing.campaign=utm.campaign||existing.campaign||'';
         // ה-Worker קנוני לסטטוס (מזין גם עדכוני שכל/Cal.com האוטומטיים).
         if(w.status&&w.status!==existing.status&&ST[w.status]){existing.status=w.status;existing.updatedAt=nowIso();updated++;}
+        // Cal.com booking details are canonical — pull them so the meeting box auto-fills.
+        if(w.meetDate&&existing.meetDate!==w.meetDate){existing.meetDate=w.meetDate;existing.updatedAt=nowIso();updated++;}
+        if(w.meetTime&&existing.meetTime!==w.meetTime){existing.meetTime=w.meetTime;existing.updatedAt=nowIso();updated++;}
+        if(w.meetPlace&&!existing.meetPlace){existing.meetPlace=w.meetPlace;updated++;}
+        if(w.meetDoc&&!existing.meetDoc){existing.meetDoc=w.meetDoc;}
+        if(w.calBooking)existing.calBooking=w.calBooking;
+        if(w.booked)existing.booked=true;
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
           doc:'',notes:'',remAt:'',remNote:'',history:[],returnsCount:0,dealAmount:0,dealMeters:0,
+          meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
