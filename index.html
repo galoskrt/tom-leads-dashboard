@@ -1346,7 +1346,7 @@ async function funnelSection(){
   }
 
   if(anyView){
-    h += `<table class="tbl"><thead><tr><th>שלב</th><th>ממומן</th><th>אורגני</th><th>סה"כ</th></tr></thead><tbody>`;
+    h += `<table class="stats-table"><thead><tr><th>שלב</th><th>ממומן</th><th>אורגני</th><th>סה"כ</th></tr></thead><tbody>`;
     [['כניסות לדף','view'],['התחילו לענות','start'],['סיימו','done']].forEach(function(r){
       const o = T[r[1]];
       h += `<tr><td>${r[0]}</td><td>${o.paid}</td><td>${o.org}</td><td><b>${o.paid+o.org}</b></td></tr>`;
@@ -1359,7 +1359,7 @@ async function funnelSection(){
   const steps = T.steps; let tot = 0, mx = 0;
   for(const k in steps){ tot += steps[k]; if(steps[k] > mx) mx = steps[k]; }
   if(tot){
-    h += `<h3 style="margin:22px 0 10px">איפה נוטשים את השאלון</h3><table class="tbl"><tbody>`;
+    h += `<h3 style="margin:22px 0 10px">איפה נוטשים את השאלון</h3><table class="stats-table"><tbody>`;
     Object.keys(steps).map(Number).sort((a,b)=>a-b).forEach(function(i){
       const n = steps[String(i)], w = mx ? Math.round(n/mx*100) : 0;
       h += `<tr><td style="width:34%">${THG_STEPS[i]||('שלב '+i)}</td>
@@ -1376,7 +1376,7 @@ async function funnelSection(){
   if(v.played){
     const q = (a,b)=> b ? Math.round(a/b*100)+'%' : '·';
     h += `<h3 style="margin:22px 0 10px">הסרטון</h3>
-      <table class="tbl"><thead><tr><th>מדד</th><th>כמה</th><th>מתוך המפעילים</th></tr></thead><tbody>
+      <table class="stats-table"><thead><tr><th>מדד</th><th>כמה</th><th>מתוך המפעילים</th></tr></thead><tbody>
       <tr><td>הפעילו</td><td>${v.played}</td><td>100%</td></tr>
       <tr><td>עברו רבע</td><td>${v.p25}</td><td>${q(v.p25,v.played)}</td></tr>
       <tr><td>עברו חצי</td><td>${v.p50}</td><td>${q(v.p50,v.played)}</td></tr>
