@@ -1302,7 +1302,94 @@ async function renderStatsModal(){
     ההוצאה מצומצמת ל-2 הקמפיינים של המשפך בלבד (ראשי + רימרקטינג), לא להיסטוריית החשבון.
   </div>`;
 
+  h += await funnelSection();
+
   body.innerHTML=h;
+}
+
+/* ── איפה נוטשים, ומאיפה הגיעו ────────────────────────────────────────
+   חוק ברזל של דיוק דיגיטלי למשפכי שאלון. משפך שיודע כמה נטשו ולא איפה
+   לא ניתן לאופטימיזציה, ומדידה שמותנית בליד עיוורת לרוב האנשים, שהם
+   בדיוק אלה שצריך להבין. הנתונים כאן אנונימיים לגמרי.               */
+const THG_STEPS = ['פתיחה'].concat(Array.from({length:12},(_,i)=>'שאלה '+(i+1)));
+function thgMMSS(s){ s=Math.max(0,Math.round(Number(s)||0));
+  return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+
+async function funnelSection(){
+  let d;
+  try{
+    const r = await fetch(`${WORKER_URL}/funnel-stats?days=14`,
+      { headers:{ 'Authorization':`Bearer ${DASH_TOKEN}` } });
+    if(!r.ok) return '';
+    d = await r.json();
+  }catch(e){ return ''; }
+  const days = (d && d.days) || [];
+  if(!days.length) return '';
+
+  const T = { view:{paid:0,org:0}, click:{paid:0,org:0}, start:{paid:0,org:0},
+              done:{paid:0,org:0}, steps:{}, contact:0,
+              vsl:{played:0,p25:0,p50:0,p75:0,p95:0,serious:0,skim:0,dragged:0,len:0} };
+  days.forEach(function(r){
+    ['view','click','start','done'].forEach(function(k){
+      T[k].paid += (r[k]&&r[k].paid)||0; T[k].org += (r[k]&&r[k].org)||0; });
+    for(const s in (r.steps||{})) T.steps[s] = (T.steps[s]||0) + r.steps[s];
+    T.contact += r.contact||0;
+    for(const f in T.vsl){ if(f==='len'){ if((r.vsl||{}).len) T.vsl.len=r.vsl.len; }
+                           else T.vsl[f] += ((r.vsl||{})[f])||0; }
+  });
+
+  const anyView = T.view.paid + T.view.org;
+  let h = `<h3 style="margin:22px 0 10px">מקור התנועה ונקודות הנטישה</h3>`;
+  if(!anyView && !Object.keys(T.steps).length){
+    return h + `<div class="adinfo-box">המדידה נוספה ב-09/09/2026 והיא מתמלאת מהמבקר הבא.
+      היא סופרת גם את מי שלא השאיר פרטים, וזה רוב האנשים.</div>`;
+  }
+
+  if(anyView){
+    h += `<table class="tbl"><thead><tr><th>שלב</th><th>ממומן</th><th>אורגני</th><th>סה"כ</th></tr></thead><tbody>`;
+    [['כניסות לדף','view'],['התחילו לענות','start'],['סיימו','done']].forEach(function(r){
+      const o = T[r[1]];
+      h += `<tr><td>${r[0]}</td><td>${o.paid}</td><td>${o.org}</td><td><b>${o.paid+o.org}</b></td></tr>`;
+    });
+    h += `</tbody></table><div class="adinfo-box" style="margin-top:8px;font-size:12px">
+      ממומן נקבע לפי fbclid או utm שהגיעו בכתובת ונשמר 30 יום. כל השאר אורגני:
+      ביו, הודעות, סטורי או כניסה ישירה. <b>בלי ההפרדה הזאת כל אחוז מערבב שתי תנועות שונות.</b></div>`;
+  }
+
+  const steps = T.steps; let tot = 0, mx = 0;
+  for(const k in steps){ tot += steps[k]; if(steps[k] > mx) mx = steps[k]; }
+  if(tot){
+    h += `<h3 style="margin:22px 0 10px">איפה נוטשים את השאלון</h3><table class="tbl"><tbody>`;
+    Object.keys(steps).map(Number).sort((a,b)=>a-b).forEach(function(i){
+      const n = steps[String(i)], w = mx ? Math.round(n/mx*100) : 0;
+      h += `<tr><td style="width:34%">${THG_STEPS[i]||('שלב '+i)}</td>
+        <td><div style="background:#ECEEF1;border-radius:6px;height:10px;overflow:hidden">
+        <span style="display:block;height:100%;width:${w}%;background:var(--accent);border-radius:6px"></span>
+        </div></td><td style="width:22%"><b>${n}</b> ${Math.round(n/tot*100)}%</td></tr>`;
+    });
+    h += `</tbody></table><div class="adinfo-box" style="margin-top:8px;font-size:12px">
+      כל נוטש נספר פעם אחת, בשלב הרחוק ביותר שאליו הגיע.
+      <b>השורה הגבוהה ביותר היא המקום שבו כדאי להוריד חיכוך.</b></div>`;
+  }
+
+  const v = T.vsl;
+  if(v.played){
+    const q = (a,b)=> b ? Math.round(a/b*100)+'%' : '·';
+    h += `<h3 style="margin:22px 0 10px">הסרטון</h3>
+      <table class="tbl"><thead><tr><th>מדד</th><th>כמה</th><th>מתוך המפעילים</th></tr></thead><tbody>
+      <tr><td>הפעילו</td><td>${v.played}</td><td>100%</td></tr>
+      <tr><td>עברו רבע</td><td>${v.p25}</td><td>${q(v.p25,v.played)}</td></tr>
+      <tr><td>עברו חצי</td><td>${v.p50}</td><td>${q(v.p50,v.played)}</td></tr>
+      <tr><td>עברו שלושה רבעים</td><td>${v.p75}</td><td>${q(v.p75,v.played)}</td></tr>
+      <tr><td>ראו עד הסוף</td><td>${v.p95}</td><td>${q(v.p95,v.played)}</td></tr>
+      <tr><td>צפו ברצינות</td><td>${v.serious}</td><td>${q(v.serious,v.played)}</td></tr>
+      <tr><td>גררו את הסרגל</td><td>${v.dragged}</td><td>${q(v.dragged,v.played)}</td></tr>
+      <tr><td>רפרפו ועזבו</td><td>${v.skim}</td><td>${q(v.skim,v.played)}</td></tr>
+      </tbody></table><div class="adinfo-box" style="margin-top:8px;font-size:12px">
+      אורך הסרטון ${thgMMSS(v.len)}. <b>אחוז לבדו לא מבדיל בין מי שצפה לבין מי שגרר את הסרגל</b>,
+      ולכן נמדדות גם שניות הצפייה שנצברו בפועל, וההפרש ביניהן הוא הסיווג.</div>`;
+  }
+  return h;
 }
 
 // מסכי הגדרות/קמפיינים של Meta (client-side token) הוסרו — שקלול העלויות עבר ל-renderStatsModal
