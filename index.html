@@ -579,7 +579,7 @@ let leads=[], deletedIds=new Set(), eid=null, waLid=null;
 let settings={};
 let srt={k:'createdAt',d:-1};
 let sessionPass=null, fileSha=null, snapSha=null;
-let saveTimer=null, syncInt=null;
+let saveTimer=null, syncInt=null, liveInt=null;
 let snaps=[];
 
 // ═══════════════════════════════════════════════
@@ -649,6 +649,7 @@ async function doLogin(){
 function logout(){
   sessionStorage.removeItem('gal_s'); sessionPass=null; leads=[];
   if(syncInt)clearInterval(syncInt);
+  if(liveInt)clearInterval(liveInt);
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('lp').value=''; document.getElementById('loginErr').textContent='';
@@ -842,6 +843,17 @@ async function syncNow(){
 function startSync(){
   if(syncInt)clearInterval(syncInt);
   syncInt=setInterval(syncNow,5*60*1000);
+  // רענון-רקע צמוד: מושך לידים חיים מהוורקר כל 60 שנ' (קליל, בלי סבב GitHub ובלי טוסט),
+  // כדי שהדשבורד מעודכן תמיד בלי Ctrl+F5. מדלג כשכרטיס פתוח או באמצע הקלדה, כדי לא להפריע.
+  if(liveInt)clearInterval(liveInt);
+  liveInt=setInterval(()=>{
+    if(!sessionPass)return;
+    const modalOpen=['leadOv','waOv','statsOv'].some(id=>document.getElementById(id)&&document.getElementById(id).classList.contains('open'));
+    if(modalOpen)return;
+    const ae=document.activeElement;
+    if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))return;
+    syncWorker().catch(()=>{});
+  },60000);
   setTimeout(takeSnapshot,5000); // first snapshot shortly after login
   setInterval(takeSnapshot,60*60*1000); // hourly to localStorage
   setInterval(saveSnapsToGH,6*60*60*1000); // every 6h to GitHub
