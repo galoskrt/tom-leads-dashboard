@@ -361,6 +361,11 @@ tbody td{padding:12px 11px;vertical-align:middle}
       <div id="fqa" style="background:rgba(128,128,128,.08);border:1px solid var(--line,#e2e2e2);border-radius:8px;padding:8px 12px;font-size:13px;line-height:1.5;max-height:300px;overflow:auto">—</div>
     </div>
   </div>
+  <div class="fg one">
+    <div class="f"><label>אוטומציות שנשלחו אוטומטית (סמוב · קהילה)</label>
+      <div id="fauto" style="background:rgba(128,128,128,.08);border:1px solid var(--line,#e2e2e2);border-radius:8px;padding:8px 12px;font-size:13px;line-height:1.5;max-height:220px;overflow:auto">—</div>
+    </div>
+  </div>
   <div class="fg">
     <div class="f">
       <label>סטטוס</label>
@@ -898,11 +903,14 @@ async function syncWorker(){
         if(w.meetDoc&&!existing.meetDoc){existing.meetDoc=w.meetDoc;}
         if(w.calBooking)existing.calBooking=w.calBooking;
         if(w.booked)existing.booked=true;
+        // תצוגה בלבד, קנוני מה-Worker, מתרענן בכל סנכרון (בלי updated++ כדי לא ליצור שמירות מיותרות).
+        existing.followupLog=w.followupLog||[]; existing.subscribed=!!w.subscribed; if(w.joinClickedAt)existing.joinClickedAt=w.joinClickedAt;
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
           doc:'',notes:'',remAt:'',remNote:'',history:[],returnsCount:0,dealAmount:0,dealMeters:0,
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
+          followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinClickedAt:w.joinClickedAt||'',
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
@@ -1099,6 +1107,7 @@ function openLead(id){
   document.getElementById('hres').value='ענה';
   document.getElementById('hnote').value='';
   renderHist(l?.history||[]);
+  renderAuto(l);
   document.getElementById('leadOv').classList.add('open');
   setTimeout(()=>document.getElementById('fn').focus(),80);
 }
@@ -1169,6 +1178,37 @@ function renderHist(h){
   const el=document.getElementById('hlist');
   if(!h.length){el.innerHTML='<div style="color:var(--gray);font-size:12px;margin-bottom:5px">אין היסטוריה</div>';return}
   el.innerHTML=[...h].reverse().map(x=>`<div class="hitem"><span class="hdate">${x.date.split('-').reverse().join('/')}</span><span class="hres" style="color:${x.res.startsWith('✅')||x.res==='ענה'?'var(--green)':'var(--red)'}">${x.res}</span><span class="hnote">${esc(x.note||'')}</span></div>`).join('');
+}
+// ─── אוטומציות שהמכונה שלחה (סמוב/קהילה), לתצוגה בכרטיס. הנתון קנוני מה-Worker (followupLog). ───
+const AUTO_NAMES={
+  cold_join:'הזמנה לקהילה',
+  cold_thanks:'תודה + הצטרפות',
+  hot_booked:'אישור קביעת פגישה',
+  hot_nudge:'נדנוד לקביעת פגישה',
+  rem_week:'תזכורת · שבוע לפני',
+  rem_24h:'תזכורת · 24 שעות',
+  rem_2h:'תזכורת · שעתיים',
+  rem_10min:'תזכורת · 10 דקות'
+};
+function renderAuto(l){
+  const el=document.getElementById('fauto');
+  if(!el)return;
+  const log=(l&&l.followupLog)||[];
+  let html;
+  if(log.length){
+    html=[...log].reverse().map(x=>{
+      const nm=AUTO_NAMES[x.key]||x.key;
+      const when=x.at?fmtDt(x.at):'';
+      const via=x.via==='smoove'?'סמוב':(x.via==='hook'?'הוק':(x.via==='outbox'?'ממתין לשליחה':(x.via||'')));
+      return `<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#eee)"><span style="color:var(--accent,#c2151c);font-weight:800">✓</span><span style="font-weight:700">${esc(nm)}</span><span style="color:var(--text2,#888);font-size:11px;margin-right:auto">${esc(when)}${via?' · '+esc(via):''}</span></div>`;
+    }).join('');
+  } else {
+    html='<span style="color:var(--text2,#888)">עדיין לא נשלחו אוטומציות</span>';
+  }
+  let comm='';
+  if(l&&l.subscribed) comm='<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● נכנס לקהילת המשקיעים</div>';
+  else if(l&&l.joinClickedAt) comm=`<div style="margin-top:7px;color:#7c3aed;font-weight:800">● לחץ על הזמנה לקהילה · ${esc(fmtDt(l.joinClickedAt))}</div>`;
+  el.innerHTML=html+comm;
 }
 function clearRem(){document.getElementById('rdate').value='';document.getElementById('rtime').value='10:00';document.getElementById('rnote').value='';document.getElementById('savedRem').style.display='none';}
 
