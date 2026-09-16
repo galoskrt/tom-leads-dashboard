@@ -400,6 +400,15 @@ tbody td{padding:12px 11px;vertical-align:middle}
     </div>
   </div>
 
+  <div class="fg one">
+    <div class="f">
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;margin-bottom:0">
+        <input type="checkbox" id="fjoined" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0">
+        <span>הצטרף לקהילת הוואטסאפ <span style="font-weight:400;color:var(--text2);font-size:11px">(סמנו רק כשידוע ב-100% שהליד נכנס)</span></span>
+      </label>
+    </div>
+  </div>
+
   <!-- RELEVANT (מופיע רק בסטטוס רלוונטי בתהליך) -->
   <div class="relevant-box" id="relevantBox" style="display:none">
     <h4>✅ פרטי התהליך</h4>
@@ -904,13 +913,14 @@ async function syncWorker(){
         if(w.calBooking)existing.calBooking=w.calBooking;
         if(w.booked)existing.booked=true;
         // תצוגה בלבד, קנוני מה-Worker, מתרענן בכל סנכרון (בלי updated++ כדי לא ליצור שמירות מיותרות).
-        existing.followupLog=w.followupLog||[]; existing.subscribed=!!w.subscribed; if(w.joinClickedAt)existing.joinClickedAt=w.joinClickedAt;
+        existing.followupLog=w.followupLog||[]; existing.subscribed=!!w.subscribed;
+        if('joinedCommunity' in w){existing.joinedCommunity=w.joinedCommunity; if(w.joinedCommunityAt)existing.joinedCommunityAt=w.joinedCommunityAt;}
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
           doc:'',notes:'',remAt:'',remNote:'',history:[],returnsCount:0,dealAmount:0,dealMeters:0,
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
-          followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinClickedAt:w.joinClickedAt||'',
+          followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinedCommunity:!!w.joinedCommunity,joinedCommunityAt:w.joinedCommunityAt||'',
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
@@ -1009,7 +1019,7 @@ function render(){
       <td data-label="שם"><b>${esc(l.name)}</b>${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span></td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
       <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(l.vslWatched>0)?`<br><span style="font-size:11px;color:#7c3aed;font-weight:800">▶ VSL ${l.vslWatched}%</span>`:''}</td>
-      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span></td>
+      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}</td>
       <td data-label="פולואפ" class="td-rem">${dot}<span style="font-size:12px;color:${remClr}">${remTxt}</span></td>
       <td data-label="WA" class="td-wa"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${waBtn}${commBtn}</div></td>
       <td data-label="מסמך">${doc}</td>
@@ -1107,6 +1117,7 @@ function openLead(id){
   document.getElementById('hres').value='ענה';
   document.getElementById('hnote').value='';
   renderHist(l?.history||[]);
+  document.getElementById('fjoined').checked=!!(l&&l.joinedCommunity);
   renderAuto(l);
   document.getElementById('leadOv').classList.add('open');
   setTimeout(()=>document.getElementById('fn').focus(),80);
@@ -1127,15 +1138,25 @@ function saveLead(){
   const remAt=rd?new Date(`${rd}T${rt}`).toISOString():'';
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
-  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,updatedAt:nowIso()};
+  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,updatedAt:nowIso()};
+  const prevJoined=prev?!!prev.joinedCommunity:false;
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
   else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
+  // חותמת זמן לכניסה לקהילה: נקבעת פעם אחת כשמסמנים, מתאפסת אם מבטלים.
+  if(saved){ if(data.joinedCommunity&&!saved.joinedCommunityAt)saved.joinedCommunityAt=nowIso(); if(!data.joinedCommunity)saved.joinedCommunityAt=''; }
   // כלל ברזל: כל ליד חדש שמוזן ידנית נדחף לשכל תחת "מתעניינים קדימה צורן" עם תיוג "ידני".
   if(isNew)pushManualLeadToWorker(saved);
   // סנכרון שינוי סטטוס חזרה ל-Worker (המקור האמיתי היחיד שמזין את שקלול העלויות).
   else if(saved&&saved.lead_id&&data.status!==prevStatus)pushStatusToWorker(saved);
+  // סימון "נכנס לקהילה" נשמר גם בשרת (בלי תופעות לוואי), כך שגם הדשבורד וגם הניתוח קוראים אותו.
+  if(saved&&saved.lead_id&&data.joinedCommunity!==prevJoined)pushJoinedToWorker(saved);
   closeLead();render();scheduleSave();
+}
+async function pushJoinedToWorker(l){
+  if(!l.lead_id)return;
+  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,joinedCommunity:!!l.joinedCommunity,by:'dashboard'})}); }
+  catch(e){console.warn('join flag push',e);}
 }
 // דוחף ליד ידני חדש למנוע: נכנס לשכל (תחת הקטגוריה, תיוג "ידני") ומקבל lead_id שממנו ימשיך להסתנכרן.
 // מסומן manual=true בשרת → נספר ב-CRM אבל לא נכנס לחישוב עלות הליד מהפרסום.
@@ -1206,8 +1227,8 @@ function renderAuto(l){
     html='<span style="color:var(--text2,#888)">עדיין לא נשלחו אוטומציות</span>';
   }
   let comm='';
-  if(l&&l.subscribed) comm='<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● נכנס לקהילת המשקיעים</div>';
-  else if(l&&l.joinClickedAt) comm=`<div style="margin-top:7px;color:#7c3aed;font-weight:800">● לחץ על הזמנה לקהילה · ${esc(fmtDt(l.joinClickedAt))}</div>`;
+  if(l&&l.joinedCommunity) comm=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● הליד נכנס לקהילת הוואטסאפ${l.joinedCommunityAt?' · '+esc(fmtDt(l.joinedCommunityAt)):''}</div>`;
+  else if(l&&l.subscribed) comm='<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● נכנס לקהילת המשקיעים</div>';
   el.innerHTML=html+comm;
 }
 function clearRem(){document.getElementById('rdate').value='';document.getElementById('rtime').value='10:00';document.getElementById('rnote').value='';document.getElementById('savedRem').style.display='none';}
