@@ -1016,7 +1016,7 @@ function render(){
     const commBtn=`<button class="btn btn-sm" title="העתק קישור לקהילת הוואטספ, לשליחה בלייב בשיחת התיאום" style="padding:5px 9px;font-size:11px;background:var(--accent);color:#fff" onclick="copyCommunity(this)">קהילה</button>`;
     return`<tr onclick="openLead('${l.id}')">
       <td data-label="#">${rows.length-i}</td>
-      <td data-label="שם"><b>${esc(l.name)}</b>${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span></td>
+      <td data-label="שם"><b>${esc(l.name)}</b>${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
       <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(l.vslWatched>0)?`<br><span style="font-size:11px;color:#7c3aed;font-weight:800">▶ VSL ${l.vslWatched}%</span>`:''}</td>
       <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}</td>
@@ -1070,7 +1070,7 @@ function openLead(id){
   eid=id||null;
   const l=id?leads.find(x=>x.id===id):null;
   const retBadge=l?.returnsCount>0?` <span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">↩ חזר ×${l.returnsCount+1}</span>`:'';
-  document.getElementById('leadTitle').innerHTML=(l?`עריכה — ${esc(l.name)} `:'ליד חדש ')+retBadge+' <span id="savedEl" style="display:none;font-size:12px;color:var(--green)">✓ נשמר</span>';
+  document.getElementById('leadTitle').innerHTML=(l?`עריכה — ${esc(l.name)} `:'ליד חדש ')+retBadge+' <span id="savedEl" style="display:none;font-size:12px;color:var(--green)">✓ נשמר</span>'+((l&&l.createdAt)?`<span style="font-size:11px;color:var(--text2);font-weight:400"> · הגיע ${esc(fmtDt(l.createdAt))}</span>`:'');
   document.getElementById('bdel').style.display=l?'inline-flex':'none';
   document.getElementById('bwa').style.display=(l&&l.phone)?'inline-flex':'none';
   document.getElementById('fn').value=l?.name||'';
