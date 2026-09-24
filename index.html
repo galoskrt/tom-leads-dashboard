@@ -915,12 +915,16 @@ async function syncWorker(){
         // תצוגה בלבד, קנוני מה-Worker, מתרענן בכל סנכרון (בלי updated++ כדי לא ליצור שמירות מיותרות).
         existing.followupLog=w.followupLog||[]; existing.subscribed=!!w.subscribed;
         if('joinedCommunity' in w){existing.joinedCommunity=w.joinedCommunity; if(w.joinedCommunityAt)existing.joinedCommunityAt=w.joinedCommunityAt;}
+        existing.vslWatched=w.vslWatched; existing.vslSecs=w.vslSecs; existing.vslLen=w.vslLen;
+        if(w.pageBehavior)existing.pageBehavior=w.pageBehavior;
+        existing.communityClicked=!!w.communityClicked; existing.funnelCompleted=!!w.funnelCompleted; if(w.communityClickedAt)existing.communityClickedAt=w.communityClickedAt;
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
           doc:'',notes:'',remAt:'',remNote:'',history:[],returnsCount:0,dealAmount:0,dealMeters:0,
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
           followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinedCommunity:!!w.joinedCommunity,joinedCommunityAt:w.joinedCommunityAt||'',
+          vslWatched:w.vslWatched,vslSecs:w.vslSecs,vslLen:w.vslLen,pageBehavior:w.pageBehavior||null,communityClicked:!!w.communityClicked,funnelCompleted:!!w.funnelCompleted,communityClickedAt:w.communityClickedAt||'',
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
@@ -1018,8 +1022,8 @@ function render(){
       <td data-label="#">${rows.length-i}</td>
       <td data-label="שם"><b>${esc(l.name)}</b>${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
-      <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(l.vslWatched>0)?`<br><span style="font-size:11px;color:#7c3aed;font-weight:800">▶ VSL ${l.vslWatched}%</span>`:''}</td>
-      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}</td>
+      <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(()=>{const vv=vslVerdict(l);return vv?`<br><span style="font-size:11px;color:${vv.c};font-weight:800">▶ ${vv.t} ${vv.pct}%</span>`:'';})()}</td>
+      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
       <td data-label="פולואפ" class="td-rem">${dot}<span style="font-size:12px;color:${remClr}">${remTxt}</span></td>
       <td data-label="WA" class="td-wa"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${waBtn}${commBtn}</div></td>
       <td data-label="מסמך">${doc}</td>
@@ -1211,6 +1215,33 @@ const AUTO_NAMES={
   rem_2h:'תזכורת · שעתיים',
   rem_10min:'תזכורת · 10 דקות'
 };
+// ─── תובנות התנהגות פר-ליד (גל 24/09): רצינות צפייה ב-VSL, עומק/זמן גלילה, ומקור קביעת הפגישה ───
+function thgSecs(s){s=Math.round(s||0);const m=Math.floor(s/60),ss=s%60;return m>0?(m+':'+(ss<10?'0':'')+ss+' דק'):(s+' שנ');}
+function vslVerdict(l){
+  let pct=(l&&l.vslWatched!=null)?l.vslWatched:null; const secs=(l&&l.vslSecs)||0;
+  if(pct==null && !secs) return null; pct=pct||0;
+  if(pct>=70 && secs>=20) return {t:'צפה ברצינות',c:'#16a34a',pct,secs};
+  if(pct<25 || secs<10) return {t:'דפדף ונטש',c:'#c2151c',pct,secs};
+  return {t:'צפייה חלקית',c:'#d97706',pct,secs};
+}
+function behaviorVerdict(b){
+  if(!b) return null; const d=b.maxScroll||0, a=b.activeSec||0; let v;
+  if(d>=70 && a>=45) v={t:'קרא לעומק',c:'#16a34a'};
+  else if(d>=70 && a<20) v={t:'סקימה מהירה',c:'#d97706'};
+  else if(d<30 && a<15) v={t:'נטישה מהירה',c:'#c2151c'};
+  else v={t:'עיון חלקי',c:'#d97706'};
+  v.d=d; v.a=a; v.scrolls=b.scrolls||0; return v;
+}
+function bookingInsight(l){
+  if(!l||(!l.booked && !l.calBooking)) return null;
+  const cb=l.calBooking; let when=cb&&cb.bookedAt?cb.bookedAt:null, src, c;
+  if(cb){
+    const hn=(l.followupLog||[]).find(x=>x.key==='hot_nudge');
+    if(hn && when && Date.parse(when)>Date.parse(hn.at)){src='מהנדנוד בוואטסאפ';c='#d97706';}
+    else {src='מהדף החם ישירות';c='#16a34a';}
+  } else { src='טלפונית / ידני'; c='#2563eb'; when=null; }
+  return {src,c,when};
+}
 function renderAuto(l){
   const el=document.getElementById('fauto');
   if(!el)return;
@@ -1229,7 +1260,17 @@ function renderAuto(l){
   let comm='';
   if(l&&l.joinedCommunity) comm=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● הליד נכנס לקהילת הוואטסאפ${l.joinedCommunityAt?' · '+esc(fmtDt(l.joinedCommunityAt)):''}</div>`;
   else if(l&&l.subscribed) comm='<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● נכנס לקהילת המשקיעים</div>';
-  el.innerHTML=html+comm;
+  let ins='';
+  if(l&&(l.communityClicked||l.funnelCompleted)) ins+=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● השלים את המשפך · נכנס לקהילה מהדף${l.communityClickedAt?' · '+esc(fmtDt(l.communityClickedAt)):''}</div>`;
+  const vv=vslVerdict(l);
+  if(vv) ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:${vv.c}">▶ VSL: ${vv.t}</span> <span style="color:var(--text2,#888);font-size:11px">צפה ${vv.pct}%${vv.secs?(' · '+thgSecs(vv.secs)):''}${l&&l.vslLen?(' מתוך '+thgSecs(l.vslLen)):''}</span></div>`;
+  ['cold','hot'].forEach(pg=>{
+    const bv=behaviorVerdict(l&&l.pageBehavior&&l.pageBehavior[pg]);
+    if(bv) ins+=`<div style="margin-top:5px"><span style="font-weight:800;color:${bv.c}">${pg==='cold'?'דף קר':'דף חם'}: ${bv.t}</span> <span style="color:var(--text2,#888);font-size:11px">עומק ${bv.d}% · ${thgSecs(bv.a)}${bv.scrolls?(' · '+bv.scrolls+' גלילות'):''}</span></div>`;
+  });
+  const bi=bookingInsight(l);
+  if(bi) ins+=`<div style="margin-top:5px"><span style="font-weight:800;color:${bi.c}">קביעת פגישה: ${bi.src}</span>${bi.when?` <span style="color:var(--text2,#888);font-size:11px">נקבעה ${esc(fmtDt(bi.when))}</span>`:''}</div>`;
+  el.innerHTML=html+comm+ins;
 }
 function clearRem(){document.getElementById('rdate').value='';document.getElementById('rtime').value='10:00';document.getElementById('rnote').value='';document.getElementById('savedRem').style.display='none';}
 
