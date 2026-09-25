@@ -383,6 +383,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
         <option value="hot_followup">פולואפ חם</option>
         <option value="deal">סגר עסקה</option>
         <option value="not_relevant">לא רלוונטי</option>
+        <option value="revival">להחייאה</option>
         <option value="invalid">מספר לא תקין</option>
       </select>
     </div>
@@ -435,6 +436,27 @@ tbody td{padding:12px 11px;vertical-align:middle}
     <div class="fg one">
       <div class="f"><label>הערות להיערכות</label><textarea id="mnotes" placeholder="מה להכין, מה לשאול, נקודות חשובות..."></textarea></div>
     </div>
+  </div>
+
+  <!-- NOT-RELEVANT REASON + AI REVIVAL (מופיע בסטטוס לא רלוונטי / להחייאה) -->
+  <div class="meeting-box" id="nrBox" style="display:none">
+    <h4>🔴 למה לא רלוונטי? (חובה למלא לפני שמירה)</h4>
+    <div class="fg one"><div class="f"><label>קטגוריה</label>
+      <select id="nrCat">
+        <option value="">בחר קטגוריה...</option>
+        <option value="תזמון">תזמון (אחרי החגים / עסוק / בעוד כמה חודשים)</option>
+        <option value="מחיר">מחיר / תקציב</option>
+        <option value="אוסף מידע">רק אוסף מידע / היה בהרבה פגישות</option>
+        <option value="חשדנות">חשדנות</option>
+        <option value="טון">טון / סירוב חד</option>
+        <option value="פסילה אמיתית">פסילה אמיתית (מתחרה / לקוח סמוי / מספר בדוי / מחוץ לקהל)</option>
+      </select>
+    </div></div>
+    <div class="fg one"><div class="f"><label>למה לדעתך הוא לא רלוונטי? (פרט והרחב)</label><textarea id="nrWhy" placeholder="מה גרם לך לחשוב שהוא לא רלוונטי..."></textarea></div></div>
+    <div class="fg one"><div class="f"><label>מה הליד אמר בשיחה?</label><textarea id="nrSaid" placeholder="במילים שלו, מה אמר / ביקש / התנגד..."></textarea></div></div>
+    <div class="fg one"><div class="f"><label>איך היה הפתיח שלך / איך נפתחה השיחה?</label><textarea id="nrOpener" placeholder="מה אמרת בפתיחה, איך ניגשת אליו..."></textarea></div></div>
+    <button type="button" class="btn btn-primary" id="nrBtn" onclick="generateRevival()" style="margin-top:2px">✨ צור אסטרטגיית החייאה (AI)</button>
+    <div id="nrResult" style="margin-top:12px"></div>
   </div>
 
   <!-- WON (מופיע רק בסטטוס סגר עסקה) -->
@@ -918,6 +940,7 @@ async function syncWorker(){
         existing.vslWatched=w.vslWatched; existing.vslSecs=w.vslSecs; existing.vslLen=w.vslLen;
         if(w.pageBehavior)existing.pageBehavior=w.pageBehavior;
         existing.communityClicked=!!w.communityClicked; existing.funnelCompleted=!!w.funnelCompleted; if(w.communityClickedAt)existing.communityClickedAt=w.communityClickedAt;
+        if(w.revival)existing.revival=w.revival; if(w.notRelevantReason)existing.notRelevantReason=w.notRelevantReason;
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
@@ -925,6 +948,7 @@ async function syncWorker(){
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
           followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinedCommunity:!!w.joinedCommunity,joinedCommunityAt:w.joinedCommunityAt||'',
           vslWatched:w.vslWatched,vslSecs:w.vslSecs,vslLen:w.vslLen,pageBehavior:w.pageBehavior||null,communityClicked:!!w.communityClicked,funnelCompleted:!!w.funnelCompleted,communityClickedAt:w.communityClickedAt||'',
+          revival:w.revival||null,notRelevantReason:w.notRelevantReason||null,
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
@@ -952,6 +976,7 @@ const ST={
   hot_followup:{l:'פולואפ חם',c:'s-hot-fu'},
   deal:{l:'סגר עסקה',c:'s-meeting-won'},
   not_relevant:{l:'לא רלוונטי',c:'s-irrelevant'},
+  revival:{l:'להחייאה',c:'s-hot-fu'},
   invalid:{l:'מספר לא תקין',c:'s-invalid'},
 };
 // מיפוי סטטוסים ישנים (מהגרסה הקודמת של הדשבורד) → ל-13 החדשים, מוחל פעם אחת ב-loadData.
@@ -965,7 +990,7 @@ const ST_MIGRATE={
 const ST_PRI={
   booked:1, attended:2, hot_followup:3, booked_noshow:4, answered:5, cold_followup:6,
   new:7, no_answer_1:8, no_answer_2:9, no_answer_3:10, no_answer_4:11,
-  deal:12, not_relevant:13, invalid:14,
+  revival:5.5, deal:12, not_relevant:13, invalid:14,
 };
 // סטטוסים שעבורם נפתחת תיבת "פרטי הפגישה" (תאריך/שעה/מיקום/הערות היערכות)
 const MEETING_STATUSES=['booked','booked_noshow','attended','deal'];
@@ -1122,6 +1147,12 @@ function openLead(id){
   document.getElementById('hnote').value='';
   renderHist(l?.history||[]);
   document.getElementById('fjoined').checked=!!(l&&l.joinedCommunity);
+  const _nr=(l&&l.notRelevantReason)||{};
+  document.getElementById('nrCat').value=_nr.category||'';
+  document.getElementById('nrWhy').value=_nr.why||'';
+  document.getElementById('nrSaid').value=_nr.saidInCall||'';
+  document.getElementById('nrOpener').value=_nr.opener||'';
+  renderRevival(l&&l.revival);
   renderAuto(l);
   document.getElementById('leadOv').classList.add('open');
   setTimeout(()=>document.getElementById('fn').focus(),80);
@@ -1132,17 +1163,21 @@ function onStChange(){
   // תיבת "המשך התהליך" נפתחת בסטטוסים שבהם הליד בשיחה/נענה (לא פגישה, לא סגירה).
   document.getElementById('relevantBox').style.display=['answered','cold_followup','hot_followup'].includes(st)?'block':'none';
   document.getElementById('wonBox').style.display=st==='deal'?'block':'none';
+  document.getElementById('nrBox').style.display=(st==='not_relevant'||st==='revival')?'block':'none';
 }
 function closeLead(){document.getElementById('leadOv').classList.remove('open');eid=null;}
 function saveLead(){
   const name=document.getElementById('fn').value.trim();
   if(!name){toast('❌ שם הוא שדה חובה');return}
+  const _st=document.getElementById('fst2').value;
+  const _nr={category:document.getElementById('nrCat').value,why:document.getElementById('nrWhy').value.trim(),saidInCall:document.getElementById('nrSaid').value.trim(),opener:document.getElementById('nrOpener').value.trim()};
+  if(_st==='not_relevant'&&(!_nr.category||!_nr.why||!_nr.saidInCall||!_nr.opener)){toast('❌ אי אפשר לסמן "לא רלוונטי" בלי למלא: קטגוריה, למה, מה הליד אמר בשיחה, ואיך היה הפתיח',6000);return}
   const rd=document.getElementById('rdate').value;
   const rt=document.getElementById('rtime').value||'10:00';
   const remAt=rd?new Date(`${rd}T${rt}`).toISOString():'';
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
-  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,updatedAt:nowIso()};
+  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
@@ -1271,6 +1306,44 @@ function renderAuto(l){
   const bi=bookingInsight(l);
   if(bi) ins+=`<div style="margin-top:5px"><span style="font-weight:800;color:${bi.c}">קביעת פגישה: ${bi.src}</span>${bi.when?` <span style="color:var(--text2,#888);font-size:11px">נקבעה ${esc(fmtDt(bi.when))}</span>`:''}</div>`;
   el.innerHTML=html+comm+ins;
+}
+// ─── מנוע החייאת לידים (AI): הצגת תוצאה + יצירה מול הוורקר ───
+function copyTxt(t,btn){try{navigator.clipboard.writeText(t);if(btn){const o=btn.textContent;btn.textContent='✓ הועתק';setTimeout(()=>btn.textContent=o,1500);}}catch(e){}}
+function renderRevival(rev){
+  const el=document.getElementById('nrResult'); if(!el)return;
+  if(!rev){el.innerHTML='';return;}
+  if(rev.revivable===false){
+    el.innerHTML=`<div style="background:#fdecec;border:1px solid #f3b0b4;border-radius:10px;padding:12px 14px"><div style="font-weight:800;color:#c2151c;margin-bottom:5px">⛔ לא מומלץ להחיות</div><div style="font-size:13px;line-height:1.6">${esc(rev.rationale||'')}</div></div>`;
+    return;
+  }
+  el.innerHTML=`<div style="background:#f2f8f4;border:1px solid #d7e8dd;border-radius:10px;padding:12px 14px">
+    <div style="font-weight:800;color:#157a3a;margin-bottom:9px">✨ אסטרטגיית החייאה</div>
+    <div id="rvWa"></div><div id="rvPh"></div>
+    <div style="margin-top:6px"><div style="font-weight:800;color:#111;margin-bottom:3px;font-size:12px">למה דווקא זה</div><div style="font-size:12.5px;line-height:1.6;color:#444">${esc(rev.rationale||'')}</div></div>
+  </div>`;
+  const mk=(mount,title,txt)=>{if(!txt)return;const wrap=document.createElement('div');wrap.style.marginBottom='10px';
+    wrap.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:800;color:#157a3a">${title}</span><button type="button" class="btn" style="padding:3px 10px;font-size:11px">העתק</button></div><div style="background:#fff;border:1px solid #e0ece4;border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.65;white-space:pre-wrap"></div>`;
+    wrap.querySelector('div:last-child').textContent=txt;
+    wrap.querySelector('button').onclick=function(){copyTxt(txt,this);};
+    document.getElementById(mount).appendChild(wrap);};
+  mk('rvWa','הודעת וואטסאפ',rev.whatsapp);
+  mk('rvPh','תסריט טלפון',rev.phoneScript);
+}
+async function generateRevival(){
+  const l=eid?leads.find(x=>x.id===eid):null;
+  if(!l||!l.lead_id){toast('ℹ️ החייאת AI זמינה לליד מהמשפך. אם זה ליד ידני, שמור אותו קודם.',5000);return;}
+  const cat=document.getElementById('nrCat').value,why=document.getElementById('nrWhy').value.trim(),said=document.getElementById('nrSaid').value.trim(),opener=document.getElementById('nrOpener').value.trim();
+  if(!cat||!why||!said||!opener){toast('❌ מלא קטגוריה, למה, מה הליד אמר, ואיך היה הפתיח לפני יצירת אסטרטגיה',6000);return;}
+  const btn=document.getElementById('nrBtn'),res=document.getElementById('nrResult'),ob=btn.textContent;
+  btn.disabled=true;btn.textContent='✨ ה-AI מייצר אסטרטגיה...';
+  res.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">🤖 ה-AI קורא את מסמכי הזהב, את השיחה, ואת הלידים שכן קבעו... כמה שניות.</div>';
+  try{
+    const r=await fetch(`${WORKER_URL}/ai-revive`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,category:cat,reason:why,saidInCall:said,opener})});
+    const j=await r.json();
+    if(!j.ok){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאה: ${esc(j.error||'לא ידוע')}</div>`;}
+    else{l.revival=j.revival;l.notRelevantReason={category:cat,why,saidInCall:said,opener};renderRevival(j.revival);scheduleSave();}
+  }catch(e){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאת רשת: ${esc(String((e&&e.message)||e))}</div>`;}
+  btn.disabled=false;btn.textContent=ob;
 }
 function clearRem(){document.getElementById('rdate').value='';document.getElementById('rtime').value='10:00';document.getElementById('rnote').value='';document.getElementById('savedRem').style.display='none';}
 
