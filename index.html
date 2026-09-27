@@ -166,6 +166,12 @@ tbody td{padding:12px 11px;vertical-align:middle}
 /* ── RELEVANT SECTION ── */
 .relevant-box{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.25);border-radius:12px;padding:14px;margin-bottom:11px}
 .relevant-box h4{font-size:12px;color:#4ade80;margin-bottom:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+/* ── MEETING QUALITY (1-10) ── */
+.mq-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.mq-chips button{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line,#e2e2e2);background:var(--card,#fff);color:var(--text,#111);font-weight:800;font-size:15px;cursor:pointer;transition:transform .12s,box-shadow .12s;line-height:1}
+.mq-chips button:hover{transform:translateY(-1px);border-color:var(--line2,#c9c9c9)}
+.mq-chips button.sel{color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(0,0,0,.18)}
+.mq-label{font-size:13.5px;font-weight:700;color:var(--text2,#667);min-height:19px;line-height:1.5}
 
 /* ── REMINDER ── */
 .rem-box{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:11px}
@@ -436,6 +442,19 @@ tbody td{padding:12px 11px;vertical-align:middle}
     <div class="fg one">
       <div class="f"><label>הערות להיערכות</label><textarea id="mnotes" placeholder="מה להכין, מה לשאול, נקודות חשובות..."></textarea></div>
     </div>
+  </div>
+
+  <!-- MEETING QUALITY (מופיע בסטטוס "קבע פגישה - הגיע") -->
+  <div class="relevant-box" id="mqBox" style="display:none">
+    <h4>⭐ איך הייתה הפגישה?</h4>
+    <div class="fg one"><div class="f"><label>מה היה טוב בשיחה?</label><textarea id="mqGood" placeholder="מה עבד, איפה הליד התחבר, נקודות חזקות..."></textarea></div></div>
+    <div class="fg one"><div class="f"><label>מה היה פחות טוב / לשיפור?</label><textarea id="mqBad" placeholder="מה חסר, איפה נתקענו, מה כדאי לשפר בפעם הבאה..."></textarea></div></div>
+    <div class="fg one"><div class="f">
+      <label>איך תדרגו את טיב הפגישה? (1 עד 10)</label>
+      <div id="mqChips" class="mq-chips"></div>
+      <div id="mqLabel" class="mq-label">בחרו דירוג מ-1 עד 10</div>
+      <input type="hidden" id="mqRating" value=""/>
+    </div></div>
   </div>
 
   <!-- NOT-RELEVANT REASON + AI REVIVAL (מופיע בסטטוס לא רלוונטי / להחייאה) -->
@@ -1153,6 +1172,11 @@ function openLead(id){
   document.getElementById('nrSaid').value=_nr.saidInCall||'';
   document.getElementById('nrOpener').value=_nr.opener||'';
   renderRevival(l&&l.revival);
+  renderMqChips();
+  const _mq=(l&&l.meetingQuality)||{};
+  document.getElementById('mqGood').value=_mq.good||'';
+  document.getElementById('mqBad').value=_mq.bad||'';
+  setMq(_mq.rating||0);
   renderAuto(l);
   document.getElementById('leadOv').classList.add('open');
   setTimeout(()=>document.getElementById('fn').focus(),80);
@@ -1164,6 +1188,7 @@ function onStChange(){
   document.getElementById('relevantBox').style.display=['answered','cold_followup','hot_followup'].includes(st)?'block':'none';
   document.getElementById('wonBox').style.display=st==='deal'?'block':'none';
   document.getElementById('nrBox').style.display=(st==='not_relevant'||st==='revival')?'block':'none';
+  document.getElementById('mqBox').style.display=(st==='attended')?'block':'none';
 }
 function closeLead(){document.getElementById('leadOv').classList.remove('open');eid=null;}
 function saveLead(){
@@ -1172,12 +1197,14 @@ function saveLead(){
   const _st=document.getElementById('fst2').value;
   const _nr={category:document.getElementById('nrCat').value,why:document.getElementById('nrWhy').value.trim(),saidInCall:document.getElementById('nrSaid').value.trim(),opener:document.getElementById('nrOpener').value.trim()};
   if(_st==='not_relevant'&&(!_nr.category||!_nr.why||!_nr.saidInCall||!_nr.opener)){toast('❌ אי אפשר לסמן "לא רלוונטי" בלי למלא: קטגוריה, למה, מה הליד אמר בשיחה, ואיך היה הפתיח',6000);return}
+  const _prevMq=eid?((leads.find(x=>x.id===eid)||{}).meetingQuality||null):null;
+  const mqData=(_st==='attended')?{rating:parseInt(document.getElementById('mqRating').value)||0,good:document.getElementById('mqGood').value.trim(),bad:document.getElementById('mqBad').value.trim(),at:nowIso()}:_prevMq;
   const rd=document.getElementById('rdate').value;
   const rt=document.getElementById('rtime').value||'10:00';
   const remAt=rd?new Date(`${rd}T${rt}`).toISOString():'';
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
-  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,updatedAt:nowIso()};
+  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
@@ -1305,8 +1332,15 @@ function renderAuto(l){
   });
   const bi=bookingInsight(l);
   if(bi) ins+=`<div style="margin-top:5px"><span style="font-weight:800;color:${bi.c}">קביעת פגישה: ${bi.src}</span>${bi.when?` <span style="color:var(--text2,#888);font-size:11px">נקבעה ${esc(fmtDt(bi.when))}</span>`:''}</div>`;
+  if(l&&l.meetingQuality&&l.meetingQuality.rating){const q=l.meetingQuality;ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:${mqColor(q.rating)}">⭐ טיב הפגישה: ${q.rating}/10</span> <span style="color:var(--text2,#888);font-size:11px">${esc(MQ_LABELS[q.rating]||'')}</span>${q.good?`<div style="font-size:11px;color:var(--text2,#888);margin-top:2px">טוב: ${esc(q.good)}</div>`:''}${q.bad?`<div style="font-size:11px;color:var(--text2,#888)">לשיפור: ${esc(q.bad)}</div>`:''}</div>`;}
   el.innerHTML=html+comm+ins;
 }
+// ─── איכות פגישה (1-10) עם מיקרו-קופי אנושי לכל דירוג ───
+const MQ_LABELS={1:'ממש גרוע, לא הלך בכלל',2:'חלש, כמעט בלי חיבור',3:'פושר, לא ממש זרם',4:'בסדר, אבל נשאר שטחי',5:'סביר, יש בסיס להמשיך',6:'טוב, יש עניין אמיתי',7:'ממש טוב, שאל שאלות מתאימות',8:'מעולה, מחובר ורציני',9:'חם מאוד, כמעט סגור',10:'מדויק, מתקדמים לעסקה'};
+function mqColor(n){return n<=3?'#e0575f':n<=6?'#e0a23a':n<=8?'#57b06a':'#1f9d57';}
+function renderMqChips(){const c=document.getElementById('mqChips');if(!c)return;c.innerHTML='';for(let n=1;n<=10;n++){const b=document.createElement('button');b.type='button';b.textContent=n;b.title=MQ_LABELS[n];b.onclick=()=>setMq(n);c.appendChild(b);}}
+function setMq(n){n=Number(n)||0;const ri=document.getElementById('mqRating');if(ri)ri.value=n||'';const c=document.getElementById('mqChips');if(c)[...c.children].forEach((b,i)=>{const on=(i+1)===n;b.classList.toggle('sel',on);b.style.background=on?mqColor(n):'';});const lb=document.getElementById('mqLabel');if(lb)lb.innerHTML=n?`<span style="color:${mqColor(n)};font-weight:800">${n} / 10</span> · ${esc(MQ_LABELS[n])}`:'בחרו דירוג מ-1 עד 10';}
+
 // ─── מנוע החייאת לידים (AI): הצגת תוצאה + יצירה מול הוורקר ───
 function copyTxt(t,btn){try{navigator.clipboard.writeText(t);if(btn){const o=btn.textContent;btn.textContent='✓ הועתק';setTimeout(()=>btn.textContent=o,1500);}}catch(e){}}
 function renderRevival(rev){
@@ -1341,7 +1375,18 @@ async function generateRevival(){
     const r=await fetch(`${WORKER_URL}/ai-revive`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,category:cat,reason:why,saidInCall:said,opener})});
     const j=await r.json();
     if(!j.ok){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאה: ${esc(j.error||'לא ידוע')}</div>`;}
-    else{l.revival=j.revival;l.notRelevantReason={category:cat,why,saidInCall:said,opener};renderRevival(j.revival);scheduleSave();}
+    else{
+      l.revival=j.revival;l.notRelevantReason={category:cat,why,saidInCall:said,opener};renderRevival(j.revival);
+      // עדכון סטטוס אוטומטי ל"להחייאה" ברגע שנוצרה אסטרטגיה (אלא אם ה-AI המליץ לא להחיות).
+      if(j.revival&&j.revival.revivable!==false&&l.status!=='revival'){
+        l.status='revival';l.updatedAt=nowIso();
+        const sel=document.getElementById('fst2');if(sel){sel.value='revival';onStChange();}
+        if(l.lead_id)pushStatusToWorker(l);
+        toast('✨ אסטרטגיה נוצרה. הסטטוס עודכן אוטומטית ל"להחייאה"',5000);
+        render();
+      }
+      scheduleSave();
+    }
   }catch(e){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאת רשת: ${esc(String((e&&e.message)||e))}</div>`;}
   btn.disabled=false;btn.textContent=ob;
 }
