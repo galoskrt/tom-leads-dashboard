@@ -1217,12 +1217,19 @@ function saveLead(){
   else if(saved&&saved.lead_id&&data.status!==prevStatus)pushStatusToWorker(saved);
   // סימון "נכנס לקהילה" נשמר גם בשרת (בלי תופעות לוואי), כך שגם הדשבורד וגם הניתוח קוראים אותו.
   if(saved&&saved.lead_id&&data.joinedCommunity!==prevJoined)pushJoinedToWorker(saved);
+  // דירוג איכות הפגישה (מספר+תאריך בלבד, בלי הטקסט החופשי) נדחף לוורקר כדי שדוח הבוקר יראה מגמה.
+  if(saved&&saved.lead_id&&_st==='attended'&&mqData&&mqData.rating)pushMeetingQualityToWorker(saved);
   closeLead();render();scheduleSave();
 }
 async function pushJoinedToWorker(l){
   if(!l.lead_id)return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,joinedCommunity:!!l.joinedCommunity,by:'dashboard'})}); }
   catch(e){console.warn('join flag push',e);}
+}
+async function pushMeetingQualityToWorker(l){
+  if(!l.lead_id||!l.meetingQuality||!l.meetingQuality.rating)return;
+  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,meetingQuality:{rating:l.meetingQuality.rating,at:l.meetingQuality.at}})}); }
+  catch(e){console.warn('mq push',e);}
 }
 // דוחף ליד ידני חדש למנוע: נכנס לשכל (תחת הקטגוריה, תיוג "ידני") ומקבל lead_id שממנו ימשיך להסתנכרן.
 // מסומן manual=true בשרת → נספר ב-CRM אבל לא נכנס לחישוב עלות הליד מהפרסום.
