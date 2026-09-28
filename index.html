@@ -1575,7 +1575,7 @@ async function renderStatsModal(){
     if(!r.ok||j.error){body.innerHTML=`<div class="empty"><h3>❌ שגיאה</h3><p>${esc(j&&j.error||'שגיאת רשת')}</p></div>`;return;}
   }catch(e){body.innerHTML=`<div class="empty"><h3>❌ שגיאת רשת</h3><p>${esc(e.message)}</p></div>`;return;}
 
-  const c=j.counts||{}, cost=j.cost||{}, bd=j.breakdown||{};
+  const c=j.counts||{}, cost=j.cost||{}, bd=j.breakdown||{}, ld=j.landing||{};
   const spend=j.spend||0;
   const roas=(spend>0&&c.revenue)?(c.revenue/spend):0;
   const paused=spend<=0;
@@ -1588,6 +1588,7 @@ async function renderStatsModal(){
     <div class="stat-card" style="border-color:var(--accent)"><div class="v">${nis(cost.per_meeting)}</div><div class="l">עלות לפגישה (שהתקיימה)</div></div>
     <div class="stat-card" style="border-color:var(--green)"><div class="v">${nis(cost.per_paying)}</div><div class="l">עלות ללקוח משלם</div></div>
     <div class="stat-card" style="border-color:var(--red)"><div class="v">${nis(cost.wasted_on_cancellations)}</div><div class="l">בזבוז על ביטולים</div></div>
+    <div class="stat-card" style="border-color:var(--green)"><div class="v">${ld.conversion_pct!=null?ld.conversion_pct+'%':'—'}</div><div class="l">אחוז המרה בדף הנחיתה${(ld.views&&ld.leads!=null)?` · ${ld.leads}/${ld.views}`:''}</div></div>
   </div>`;
 
   // ── שורת המשפך (ספירות) ──
