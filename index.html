@@ -457,6 +457,27 @@ tbody td{padding:12px 11px;vertical-align:middle}
     </div></div>
   </div>
 
+  <!-- NO-SHOW REVIVAL (מופיע בסטטוס "קבע פגישה - לא הגיע") -->
+  <div class="meeting-box" id="nsBox" style="display:none">
+    <h4>↩ קבע ולא הגיע? בואו נחזיר אותו לפגישה</h4>
+    <div class="fg one"><div class="f"><label>מה קרה? (קטגוריה)</label>
+      <select id="nsCat">
+        <option value="">בחר קטגוריה...</option>
+        <option value="שכח">שכח / לא היה זמין בזמן</option>
+        <option value="חשש">חשש או היסוס רגע לפני</option>
+        <option value="תזמון">תזמון (יצא לו משהו, ביקש לדחות)</option>
+        <option value="לא אישר">לא ענה / לא אישר את הפגישה מראש</option>
+        <option value="ביטל">ביטל ברגע האחרון</option>
+        <option value="אחר">אחר</option>
+      </select>
+    </div></div>
+    <div class="fg one"><div class="f"><label>פירוט: מה ידוע לך על אי-ההגעה?</label><textarea id="nsWhy" placeholder="מה קרה, האם הצלחת להשיג אותו, מה הרגשת..."></textarea></div></div>
+    <div class="fg one"><div class="f"><label>אם דיברתם אחרי, מה הוא אמר?</label><textarea id="nsSaid" placeholder="במילים שלו, אם היה קשר אחרי הפגישה שהוחמצה..."></textarea></div></div>
+    <div class="fg one"><div class="f"><label>איך ניגשת אליו / איך נקבעה הפגישה במקור?</label><textarea id="nsOpener" placeholder="איך קבעתם, מי יזם, מה היה הטון..."></textarea></div></div>
+    <button type="button" class="btn btn-primary" id="nsBtn" onclick="generateNoshowRevival()" style="margin-top:2px">✨ צור אסטרטגיית החזרה לפגישה (AI)</button>
+    <div id="nsResult" style="margin-top:12px"></div>
+  </div>
+
   <!-- NOT-RELEVANT REASON + AI REVIVAL (מופיע בסטטוס לא רלוונטי / להחייאה) -->
   <div class="meeting-box" id="nrBox" style="display:none">
     <h4>🔴 למה לא רלוונטי? (חובה למלא לפני שמירה)</h4>
@@ -960,6 +981,7 @@ async function syncWorker(){
         if(w.pageBehavior)existing.pageBehavior=w.pageBehavior;
         existing.communityClicked=!!w.communityClicked; existing.funnelCompleted=!!w.funnelCompleted; if(w.communityClickedAt)existing.communityClickedAt=w.communityClickedAt;
         if(w.revival)existing.revival=w.revival; if(w.notRelevantReason)existing.notRelevantReason=w.notRelevantReason;
+        if(w.noshowRevival)existing.noshowRevival=w.noshowRevival;
         // הערות: אם המנוע כבר מחזיק את הטקסט הנוכחי, מסמנים כמסונכרן כדי שה-backfill ידלג. אחרת נשאר לא-מסונכרן וייידחף.
         if(w.noteAt)existing.noteAt=existing.noteAt||w.noteAt;
         if(typeof w.noteText==='string'&&w.noteText===(existing.notes||''))existing.noteTextSynced=w.noteText;
@@ -1176,6 +1198,12 @@ function openLead(id){
   document.getElementById('nrSaid').value=_nr.saidInCall||'';
   document.getElementById('nrOpener').value=_nr.opener||'';
   renderRevival(l&&l.revival);
+  const _ns=(l&&l.noshowReason)||{};
+  document.getElementById('nsCat').value=_ns.category||'';
+  document.getElementById('nsWhy').value=_ns.why||'';
+  document.getElementById('nsSaid').value=_ns.saidInCall||'';
+  document.getElementById('nsOpener').value=_ns.opener||'';
+  renderRevival(l&&l.noshowRevival,'nsResult','nsWa','nsPh','אסטרטגיית החזרה לפגישה');
   renderMqChips();
   const _mq=(l&&l.meetingQuality)||{};
   document.getElementById('mqGood').value=_mq.good||'';
@@ -1193,6 +1221,7 @@ function onStChange(){
   document.getElementById('wonBox').style.display=st==='deal'?'block':'none';
   document.getElementById('nrBox').style.display=(st==='not_relevant'||st==='revival')?'block':'none';
   document.getElementById('mqBox').style.display=(st==='attended')?'block':'none';
+  document.getElementById('nsBox').style.display=(st==='booked_noshow')?'block':'none';
 }
 function closeLead(){document.getElementById('leadOv').classList.remove('open');eid=null;}
 function saveLead(){
@@ -1203,6 +1232,8 @@ function saveLead(){
   if(_st==='not_relevant'&&(!_nr.category||!_nr.why||!_nr.saidInCall||!_nr.opener)){toast('❌ אי אפשר לסמן "לא רלוונטי" בלי למלא: קטגוריה, למה, מה הליד אמר בשיחה, ואיך היה הפתיח',6000);return}
   const _prevMq=eid?((leads.find(x=>x.id===eid)||{}).meetingQuality||null):null;
   const mqData=(_st==='attended')?{rating:parseInt(document.getElementById('mqRating').value)||0,good:document.getElementById('mqGood').value.trim(),bad:document.getElementById('mqBad').value.trim(),at:nowIso()}:_prevMq;
+  const _prevNs=eid?((leads.find(x=>x.id===eid)||{}).noshowReason||null):null;
+  const nsData=(_st==='booked_noshow')?{category:document.getElementById('nsCat').value,why:document.getElementById('nsWhy').value.trim(),saidInCall:document.getElementById('nsSaid').value.trim(),opener:document.getElementById('nsOpener').value.trim()}:_prevNs;
   const rd=document.getElementById('rdate').value;
   const rt=document.getElementById('rtime').value||'10:00';
   const remAt=rd?new Date(`${rd}T${rt}`).toISOString():'';
@@ -1212,7 +1243,7 @@ function saveLead(){
   if(_st!==prevStatus && _st!=='not_relevant' && _st!=='revival' && !document.getElementById('fnotes').value.trim()){toast('❌ חובה להוסיף הערה על מה שקרה בשיחה לפני שינוי הסטטוס',6000);return}
   // חובה (גל 28/09): מעבר ל"קבע פגישה" מחייב מועד + שעה + מיקום (קישור לפגישה לא חובה). זה גם מה שמפעיל את תזכורות הפגישה.
   if(_st==='booked' && (!document.getElementById('mdate').value || !document.getElementById('mtime').value || !document.getElementById('mplace').value.trim())){toast('❌ כדי לסמן "קבע פגישה" חובה להזין מועד, שעה ומיקום (קישור לפגישה לא חובה)',6000);return}
-  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,updatedAt:nowIso()};
+  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,noshowReason:nsData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
@@ -1378,25 +1409,26 @@ function setMq(n){n=Number(n)||0;const ri=document.getElementById('mqRating');if
 
 // ─── מנוע החייאת לידים (AI): הצגת תוצאה + יצירה מול הוורקר ───
 function copyTxt(t,btn){try{navigator.clipboard.writeText(t);if(btn){const o=btn.textContent;btn.textContent='✓ הועתק';setTimeout(()=>btn.textContent=o,1500);}}catch(e){}}
-function renderRevival(rev){
-  const el=document.getElementById('nrResult'); if(!el)return;
+function renderRevival(rev,resultId,waId,phId,title){
+  resultId=resultId||'nrResult'; waId=waId||'rvWa'; phId=phId||'rvPh'; title=title||'אסטרטגיית החייאה';
+  const el=document.getElementById(resultId); if(!el)return;
   if(!rev){el.innerHTML='';return;}
   if(rev.revivable===false){
     el.innerHTML=`<div style="background:#fdecec;border:1px solid #f3b0b4;border-radius:10px;padding:12px 14px"><div style="font-weight:800;color:#c2151c;margin-bottom:5px">⛔ לא מומלץ להחיות</div><div style="font-size:13px;line-height:1.6">${esc(rev.rationale||'')}</div></div>`;
     return;
   }
   el.innerHTML=`<div style="background:#f2f8f4;border:1px solid #d7e8dd;border-radius:10px;padding:12px 14px">
-    <div style="font-weight:800;color:#157a3a;margin-bottom:9px">✨ אסטרטגיית החייאה</div>
-    <div id="rvWa"></div><div id="rvPh"></div>
+    <div style="font-weight:800;color:#157a3a;margin-bottom:9px">✨ ${esc(title)}</div>
+    <div id="${waId}"></div><div id="${phId}"></div>
     <div style="margin-top:6px"><div style="font-weight:800;color:#111;margin-bottom:3px;font-size:12px">למה דווקא זה</div><div style="font-size:12.5px;line-height:1.6;color:#444">${esc(rev.rationale||'')}</div></div>
   </div>`;
-  const mk=(mount,title,txt)=>{if(!txt)return;const wrap=document.createElement('div');wrap.style.marginBottom='10px';
-    wrap.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:800;color:#157a3a">${title}</span><button type="button" class="btn" style="padding:3px 10px;font-size:11px">העתק</button></div><div style="background:#fff;border:1px solid #e0ece4;border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.65;white-space:pre-wrap"></div>`;
+  const mk=(mount,ttl,txt)=>{if(!txt)return;const wrap=document.createElement('div');wrap.style.marginBottom='10px';
+    wrap.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:800;color:#157a3a">${ttl}</span><button type="button" class="btn" style="padding:3px 10px;font-size:11px">העתק</button></div><div style="background:#fff;border:1px solid #e0ece4;border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.65;white-space:pre-wrap"></div>`;
     wrap.querySelector('div:last-child').textContent=txt;
     wrap.querySelector('button').onclick=function(){copyTxt(txt,this);};
     document.getElementById(mount).appendChild(wrap);};
-  mk('rvWa','הודעת וואטסאפ',rev.whatsapp);
-  mk('rvPh','תסריט טלפון',rev.phoneScript);
+  mk(waId,'הודעת וואטסאפ',rev.whatsapp);
+  mk(phId,'תסריט טלפון',rev.phoneScript);
 }
 async function generateRevival(){
   const l=eid?leads.find(x=>x.id===eid):null;
@@ -1422,6 +1454,22 @@ async function generateRevival(){
       }
       scheduleSave();
     }
+  }catch(e){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאת רשת: ${esc(String((e&&e.message)||e))}</div>`;}
+  btn.disabled=false;btn.textContent=ob;
+}
+async function generateNoshowRevival(){
+  const l=eid?leads.find(x=>x.id===eid):null;
+  if(!l||!l.lead_id){toast('ℹ️ אסטרטגיית AI זמינה לליד מהמשפך. אם זה ליד ידני, שמור אותו קודם.',5000);return;}
+  const cat=document.getElementById('nsCat').value,why=document.getElementById('nsWhy').value.trim(),said=document.getElementById('nsSaid').value.trim(),opener=document.getElementById('nsOpener').value.trim();
+  if(!cat||!why){toast('❌ מלא לפחות קטגוריה ופירוט לפני יצירת אסטרטגיה',6000);return;}
+  const btn=document.getElementById('nsBtn'),res=document.getElementById('nsResult'),ob=btn.textContent;
+  btn.disabled=true;btn.textContent='✨ ה-AI מייצר אסטרטגיה...';
+  res.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">🤖 ה-AI קורא את מסמכי הזהב ואת הלידים שכן הגיעו, ומכין אסטרטגיה להחזיר לפגישה... כמה שניות.</div>';
+  try{
+    const r=await fetch(`${WORKER_URL}/ai-revive`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({mode:'noshow',lead_id:l.lead_id,category:cat,reason:why,saidInCall:said,opener})});
+    const j=await r.json();
+    if(!j.ok){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאה: ${esc(j.error||'לא ידוע')}</div>`;}
+    else{ l.noshowRevival=j.revival;l.noshowReason={category:cat,why,saidInCall:said,opener};l.updatedAt=nowIso();renderRevival(j.revival,'nsResult','nsWa','nsPh','אסטרטגיית החזרה לפגישה');scheduleSave(); }
   }catch(e){res.innerHTML=`<div style="color:#c2151c;font-size:13px">שגיאת רשת: ${esc(String((e&&e.message)||e))}</div>`;}
   btn.disabled=false;btn.textContent=ob;
 }
