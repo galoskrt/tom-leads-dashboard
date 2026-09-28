@@ -960,6 +960,9 @@ async function syncWorker(){
         if(w.pageBehavior)existing.pageBehavior=w.pageBehavior;
         existing.communityClicked=!!w.communityClicked; existing.funnelCompleted=!!w.funnelCompleted; if(w.communityClickedAt)existing.communityClickedAt=w.communityClickedAt;
         if(w.revival)existing.revival=w.revival; if(w.notRelevantReason)existing.notRelevantReason=w.notRelevantReason;
+        // הערות: אם המנוע כבר מחזיק את הטקסט הנוכחי, מסמנים כמסונכרן כדי שה-backfill ידלג. אחרת נשאר לא-מסונכרן וייידחף.
+        if(w.noteAt)existing.noteAt=existing.noteAt||w.noteAt;
+        if(typeof w.noteText==='string'&&w.noteText===(existing.notes||''))existing.noteTextSynced=w.noteText;
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
@@ -967,12 +970,13 @@ async function syncWorker(){
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
           followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinedCommunity:!!w.joinedCommunity,joinedCommunityAt:w.joinedCommunityAt||'',
           vslWatched:w.vslWatched,vslSecs:w.vslSecs,vslLen:w.vslLen,pageBehavior:w.pageBehavior||null,communityClicked:!!w.communityClicked,funnelCompleted:!!w.funnelCompleted,communityClickedAt:w.communityClickedAt||'',
-          revival:w.revival||null,notRelevantReason:w.notRelevantReason||null,
+          revival:w.revival||null,notRelevantReason:w.notRelevantReason||null,noteAt:w.noteAt||'',
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
     }
     if(added||updated){render();scheduleSave();if(added)toast(`✅ ${added} לידים חדשים מהמשפך`);}
+    backfillNotes();   // דחיפה חד-פעמית של הערות שעדיין לא סונכרנו למנוע (למדידת תיעוד בדוח)
   }catch(e){console.warn('Worker sync',e);}
 }
 
@@ -1219,6 +1223,10 @@ function saveLead(){
   if(saved&&saved.lead_id&&data.joinedCommunity!==prevJoined)pushJoinedToWorker(saved);
   // דירוג איכות הפגישה (מספר+תאריך בלבד, בלי הטקסט החופשי) נדחף לוורקר כדי שדוח הבוקר יראה מגמה.
   if(saved&&saved.lead_id&&_st==='attended'&&mqData&&mqData.rating)pushMeetingQualityToWorker(saved);
+  // הערת הנציג: noteAt מתעדכן רק כשהטקסט באמת השתנה (כדי שזיהוי "הערה ישנה" יעבוד). נדחף בכל save.
+  const _newNote=saved?(saved.notes||''):'';
+  if(saved&&saved.noteTextSynced!==_newNote){saved.noteAt=nowIso();saved.noteTextSynced=_newNote;}
+  if(saved&&saved.lead_id)pushNotesToWorker(saved);
   closeLead();render();scheduleSave();
 }
 async function pushJoinedToWorker(l){
@@ -1230,6 +1238,22 @@ async function pushMeetingQualityToWorker(l){
   if(!l.lead_id||!l.meetingQuality||!l.meetingQuality.rating)return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,meetingQuality:{rating:l.meetingQuality.rating,at:l.meetingQuality.at}})}); }
   catch(e){console.warn('mq push',e);}
+}
+// דוחף את הערת הנציג (טקסט + מתי השתנתה) למנוע, למדידת פערי תיעוד בדוח הבוקר. נדחף בכל save, כולל ריק.
+async function pushNotesToWorker(l){
+  if(!l.lead_id)return;
+  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,noteText:l.notes||'',noteAt:l.noteAt||nowIso()})}); }
+  catch(e){console.warn('note push',e);}
+}
+// גיבוי חד-פעמי לכל ליד שעדיין לא סונכרן (noteTextSynced ריק), כדי שהדוח יהיה אמין מהיום הראשון.
+function backfillNotes(){
+  for(const l of leads){
+    if(l.lead_id && l.noteTextSynced===undefined){
+      l.noteTextSynced=l.notes||'';
+      if(!l.noteAt) l.noteAt=l.updatedAt||l.createdAt||nowIso();
+      pushNotesToWorker(l);
+    }
+  }
 }
 // דוחף ליד ידני חדש למנוע: נכנס לשכל (תחת הקטגוריה, תיוג "ידני") ומקבל lead_id שממנו ימשיך להסתנכרן.
 // מסומן manual=true בשרת → נספר ב-CRM אבל לא נכנס לחישוב עלות הליד מהפרסום.
