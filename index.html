@@ -1208,6 +1208,10 @@ function saveLead(){
   const remAt=rd?new Date(`${rd}T${rt}`).toISOString():'';
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
+  // חובה (גל 28/09): כל שינוי סטטוס מחייב הערה על מה שקרה בשיחה. "לא רלוונטי"/"להחייאה" פטורים כי יש להם סיבה מפורטת משלהם.
+  if(_st!==prevStatus && _st!=='not_relevant' && _st!=='revival' && !document.getElementById('fnotes').value.trim()){toast('❌ חובה להוסיף הערה על מה שקרה בשיחה לפני שינוי הסטטוס',6000);return}
+  // חובה (גל 28/09): מעבר ל"קבע פגישה" מחייב מועד + שעה + מיקום (קישור לפגישה לא חובה). זה גם מה שמפעיל את תזכורות הפגישה.
+  if(_st==='booked' && (!document.getElementById('mdate').value || !document.getElementById('mtime').value || !document.getElementById('mplace').value.trim())){toast('❌ כדי לסמן "קבע פגישה" חובה להזין מועד, שעה ומיקום (קישור לפגישה לא חובה)',6000);return}
   const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
   let saved,isNew=false;
@@ -1274,7 +1278,7 @@ async function pushStatusToWorker(l){
   if(!ST[l.status]||!l.lead_id)return;
   try{
     await fetch(`${WORKER_URL}/lead-status`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},
-      body:JSON.stringify({lead_id:l.lead_id,status:l.status,note:l.notes||undefined,deal_amount:l.status==='deal'?(l.dealAmount||0):undefined,deal_meters:l.status==='deal'?(l.dealMeters||0):undefined})});
+      body:JSON.stringify({lead_id:l.lead_id,status:l.status,note:l.notes||undefined,deal_amount:l.status==='deal'?(l.dealAmount||0):undefined,deal_meters:l.status==='deal'?(l.dealMeters||0):undefined,meetDate:l.meetDate||undefined,meetTime:l.meetTime||undefined,meetPlace:l.meetPlace||undefined})});
   }catch(e){console.warn('status sync',e);}
 }
 function delLead(){
