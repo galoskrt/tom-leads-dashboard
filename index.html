@@ -985,6 +985,9 @@ async function syncWorker(){
         // הערות: אם המנוע כבר מחזיק את הטקסט הנוכחי, מסמנים כמסונכרן כדי שה-backfill ידלג. אחרת נשאר לא-מסונכרן וייידחף.
         if(w.noteAt)existing.noteAt=existing.noteAt||w.noteAt;
         if(typeof w.noteText==='string'&&w.noteText===(existing.notes||''))existing.noteTextSynced=w.noteText;
+        // שם תצוגה: אם המנוע כבר מחזיק את השם הנוכחי, מסמנים כמסונכרן; אם הצוות ערך שם ששונה מהמקורי ולא סונכרן, דוחפים.
+        if(w.displayName&&w.displayName===existing.name)existing.displayNameSynced=existing.name;
+        if(existing.name&&w.name&&existing.name!==w.name&&existing.displayNameSynced!==existing.name){existing.displayNameSynced=existing.name;pushDisplayNameToWorker(existing);}
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
@@ -1247,6 +1250,7 @@ function saveLead(){
   const prevJoined=prev?!!prev.joinedCommunity:false;
   // האם פרטי הפגישה השתנו (חשוב: נקרא לפני Object.assign שדורס את prev). מאפשר לדחוף מועד חדש גם בלי שינוי סטטוס.
   const _meetChanged=prev?(prev.meetDate!==data.meetDate||prev.meetTime!==data.meetTime||prev.meetPlace!==data.meetPlace):false;
+  const _prevName=prev?(prev.name||''):'';   // captured before Object.assign, to detect a name edit → push displayName
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
   else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
@@ -1264,6 +1268,8 @@ function saveLead(){
   const _newNote=saved?(saved.notes||''):'';
   if(saved&&saved.noteTextSynced!==_newNote){saved.noteAt=nowIso();saved.noteTextSynced=_newNote;}
   if(saved&&saved.lead_id)pushNotesToWorker(saved);
+  // שם שהצוות ערך (למשל דניאל→דן): נדחף למנוע כך שגם האוטומציות וגם הדוח יפנו אליו בשם הזה.
+  if(saved&&saved.lead_id&&!isNew&&saved.name!==_prevName){saved.displayNameSynced=saved.name;pushDisplayNameToWorker(saved);}
   closeLead();render();scheduleSave();
 }
 async function pushJoinedToWorker(l){
@@ -1281,6 +1287,12 @@ async function pushNotesToWorker(l){
   if(!l.lead_id)return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,noteText:l.notes||'',noteAt:l.noteAt||nowIso()})}); }
   catch(e){console.warn('note push',e);}
+}
+// דוחף שם שהצוות ערך (displayName) למנוע, כך שהאוטומציות והדוח יפנו לליד בשם שהוא ביקש. השם המקורי נשאר לשיוך.
+async function pushDisplayNameToWorker(l){
+  if(!l.lead_id)return;
+  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,displayName:l.name||''})}); }
+  catch(e){console.warn('displayName push',e);}
 }
 // גיבוי חד-פעמי לכל ליד שעדיין לא סונכרן (noteTextSynced ריק), כדי שהדוח יהיה אמין מהיום הראשון.
 function backfillNotes(){
