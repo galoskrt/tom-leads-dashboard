@@ -515,6 +515,22 @@ tbody td{padding:12px 11px;vertical-align:middle}
     </div>
   </div>
 
+  <!-- LANDING PAGE שהליד ראה (מיכל, 30/09) -->
+  <div class="fg one" id="landBox" style="display:none">
+    <div class="f"><label>דף הנחיתה שהליד ראה</label>
+      <div class="adinfo-box" id="landTxt"></div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX לצפייה במודעה המלאה -->
+  <div id="adLightbox" onclick="closeAdLightbox(event)" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:24px">
+    <div style="position:relative;max-width:94vw;max-height:94vh;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <button onclick="closeAdLightbox()" title="סגור" style="position:absolute;top:-16px;left:-16px;width:36px;height:36px;border-radius:50%;border:none;background:#fff;color:#111;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:2">✕</button>
+      <div id="adLightboxBody" style="max-width:94vw;max-height:88vh;overflow:auto;border-radius:12px"></div>
+      <div id="adLightboxCap" style="color:#fff;font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.6)"></div>
+    </div>
+  </div>
+
   <div class="fg one">
     <div class="f"><label>קישור לתמלול / תקציר שיחה (Docs)</label><input type="url" id="fdoc" placeholder="https://docs.google.com/..."/></div>
   </div>
@@ -1121,6 +1137,27 @@ function renderStats(){
 // LEAD MODAL
 // ═══════════════════════════════════════════════
 // מיפוי קריאייטיב → שם עברי + תמונת תצוגה מקדימה של המודעה עצמה. מתעדכן כשעולה מודעה חדשה.
+// ─── Lightbox לצפייה במודעה המלאה (מיכל, 30/09): לחיצה על הקריאייטיב פותחת אותו בגדול ───
+let curAd=null;
+function openAdLightbox(){
+  if(!curAd||!curAd.img)return;
+  const body=document.getElementById('adLightboxBody'), cap=document.getElementById('adLightboxCap');
+  if(curAd.video){
+    body.innerHTML=`<video src="${curAd.video}" controls autoplay playsinline poster="${curAd.img||''}" style="max-width:94vw;max-height:88vh;border-radius:12px;background:#000"></video>`;
+  }else if(curAd.yt){
+    body.innerHTML=`<iframe src="https://www.youtube.com/embed/${curAd.yt}?autoplay=1" allow="autoplay;encrypted-media;fullscreen" allowfullscreen style="width:min(94vw,720px);height:min(88vh,405px);border:0;border-radius:12px;background:#000"></iframe>`;
+  }else{
+    body.innerHTML=`<img src="${curAd.img}" alt="המודעה" style="max-width:94vw;max-height:88vh;object-fit:contain;border-radius:12px;display:block"/>`;
+  }
+  cap.textContent=curAd.name||'';
+  document.getElementById('adLightbox').style.display='flex';
+}
+function closeAdLightbox(e){
+  if(e&&e.target&&e.target.closest('#adLightboxBody'))return; // לחיצה על התוכן עצמו לא סוגרת
+  const lb=document.getElementById('adLightbox'); lb.style.display='none';
+  document.getElementById('adLightboxBody').innerHTML=''; // עוצר וידאו מתנגן
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAdLightbox();});
 const CREATIVE_MAP={
   'video-1580':{name:'סרטון ראשי · 1.58', img:'https://land.tom-harush.co.il/creatives/video-1580.jpg'},
   'remarketing':{name:'רימרקטינג', img:'https://land.tom-harush.co.il/creatives/remarketing.jpg'},
@@ -1138,10 +1175,10 @@ function adLabel(l){
   const campName={main:'ראשי',rmk:'רימרקטינג',remarketing:'רימרקטינג'}[camp]||(camp?camp:'');
   const cr=String(l.creative||(l.utm&&l.utm.content)||l.ad||'');
   const mapped=CREATIVE_MAP[cr.toLowerCase()];
-  let adName, img='';
-  if(mapped){ adName=mapped.name; img=mapped.img; }
+  let adName, img='', video='', yt='';
+  if(mapped){ adName=mapped.name; img=mapped.img; video=mapped.video||''; yt=mapped.yt||''; }
   else { const m=cr.match(/image[\s_-]?(\d+)/i); adName=m?('תמונה '+m[1]):(cr||''); }
-  return {camp:campName, ad:adName, img};
+  return {camp:campName, ad:adName, img, video, yt};
 }
 function openLead(id){
   eid=id||null;
@@ -1175,14 +1212,25 @@ function openLead(id){
   const adInfoBox=document.getElementById('adInfoBox');
   // איש המכירות רואה רק את התווית הנקייה של הקריאייטיב (image1/image2…), לא את מחרוזת ה-UTM הגולמית.
   const _al=adLabel(l);
+  curAd=(_al.img||_al.video||_al.yt)?{img:_al.img,name:[_al.camp?('קמפיין: '+_al.camp):'',_al.ad].filter(Boolean).join(' · '),video:_al.video,yt:_al.yt}:null;
   if(_al.camp||_al.ad){
     adInfoBox.style.display='block';
     const _txt='📢 '+[_al.camp?('קמפיין: '+_al.camp):'',_al.ad?('מודעה: '+_al.ad):''].filter(Boolean).join('  ·  ');
-    const _img=_al.img?`<img src="${_al.img}" alt="תצוגה מקדימה של המודעה" style="width:54px;height:96px;object-fit:cover;border-radius:9px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.18)" onerror="this.style.display='none'"/>`:'';
-    document.getElementById('adInfoTxt').innerHTML='<div style="display:flex;align-items:center;gap:11px">'+_img+'<span>'+esc(_txt)+'</span></div>';
+    const _clk=curAd?' onclick="openAdLightbox()" style="width:54px;height:96px;object-fit:cover;border-radius:9px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer" title="לחצו לצפייה במודעה המלאה"':' style="width:54px;height:96px;object-fit:cover;border-radius:9px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.18)"';
+    const _img=_al.img?`<img src="${_al.img}" alt="תצוגה מקדימה של המודעה"${_clk} onerror="this.style.display='none'"/>`:'';
+    const _hint=curAd?'<span style="display:block;color:var(--accent,#c2151c);font-size:11px;font-weight:700;margin-top:3px;cursor:pointer" onclick="openAdLightbox()">👁 לחצו לצפייה במודעה המלאה</span>':'';
+    document.getElementById('adInfoTxt').innerHTML='<div style="display:flex;align-items:center;gap:11px">'+_img+'<span>'+esc(_txt)+_hint+'</span></div>';
   }else{
     adInfoBox.style.display='none';
   }
+  // דף הנחיתה שהליד ראה (מיכל, 30/09): קישור לצפייה במידע שהליד קיבל, בלי שיוך שלא לזהם נתוני צפייה
+  const landBox=document.getElementById('landBox');
+  if(l&&(l.temperature||l.score!=null)){
+    const hot=(l.temperature==='hot')||(Number(l.score)>=4);
+    const url='https://land.tom-harush.co.il/'+(hot?'hpage':'cpage')+'/';
+    landBox.style.display='block';
+    document.getElementById('landTxt').innerHTML=`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent,#c2151c);font-weight:700;text-decoration:none">🔗 ${hot?'דף חם (כולל הסרטון)':'דף קר'} · לחצו לצפייה במה שהליד ראה</a><div style="color:var(--text2,#888);font-size:11px;margin-top:3px">נפתח בלי שיוך לליד, לא משפיע על נתוני הצפייה שלו</div>`;
+  }else if(landBox){ landBox.style.display='none'; }
   onStChange();
   if(l?.remAt){const d=new Date(l.remAt);document.getElementById('rdate').value=d.toISOString().split('T')[0];document.getElementById('rtime').value=d.toTimeString().slice(0,5);}
   else{document.getElementById('rdate').value='';document.getElementById('rtime').value='10:00';}
@@ -1369,8 +1417,9 @@ function vslVerdict(l){
 function behaviorVerdict(b){
   if(!b) return null; const d=b.maxScroll||0, a=b.activeSec||0; let v;
   if(d>=70 && a>=45) v={t:'קרא לעומק',c:'#16a34a'};
-  else if(d>=70 && a<20) v={t:'סקימה מהירה',c:'#d97706'};
+  else if(d>=70 && a<20) v={t:'רפרף על הכל ויצא',c:'#d97706'};
   else if(d<30 && a<15) v={t:'נטישה מהירה',c:'#c2151c'};
+  else if(d<30 && a>=120) v={t:'נכנס אבל כנראה הופרע (טלפון/סוללה)',c:'#d97706'};
   else v={t:'עיון חלקי',c:'#d97706'};
   v.d=d; v.a=a; v.scrolls=b.scrolls||0; return v;
 }
