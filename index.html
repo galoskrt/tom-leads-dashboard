@@ -1058,6 +1058,14 @@ const ST_PRI={
 };
 // סטטוסים שעבורם נפתחת תיבת "פרטי הפגישה" (תאריך/שעה/מיקום/הערות היערכות)
 const MEETING_STATUSES=['booked','booked_noshow','attended','deal'];
+// ─── היררכיית מיילסטונים (גל 04/10): מידע שהליד עבר (פגישה, הגעה, דירוג) נשאר גלוי בכרטיס גם אחרי שהסטטוס עבר הלאה ───
+function meetingTs(l){ if(!l)return 0; if(l.calBooking&&l.calBooking.startTime){const t=Date.parse(l.calBooking.startTime);if(t)return t;} if(l.meetDate){const t=Date.parse(l.meetDate+'T'+(l.meetTime||'00:00'));if(t)return t;} return 0; }
+function metPassed(l){ const t=meetingTs(l); return !!t && t<Date.now(); }
+function attendedEver(l){ return !!l && (l.status==='attended' || !!l.attendedAt || !!(l.milestones&&l.milestones.attended) || !!(l.meetingQuality&&(l.meetingQuality.rating||l.meetingQuality.at))); }
+function noshowEver(l){ return !!l && (l.status==='booked_noshow' || !!l.noshowAt || !!(l.milestones&&l.milestones.noshow)); }
+function hadMeetingEver(l){ return !!l && (MEETING_STATUSES.includes(l.status) || !!l.booked || !!l.calBooking || !!l.meetDate || !!l.attendedAt || !!(l.milestones&&(l.milestones.booked||l.milestones.attended||l.milestones.noshow))); }
+// האם אפשר לדרג את הפגישה עכשיו: הגיע, או שנקבעה פגישה שמועדה כבר עבר (ואינה מסומנת כלא-הגיע)
+function canRateMeeting(l,st){ st=st||(l&&l.status); return st==='attended' || attendedEver(l) || (hadMeetingEver(l)&&metPassed(l)&&!noshowEver(l)&&st!=='booked_noshow'); }
 
 // ═══════════════════════════════════════════════
 // RENDER
@@ -1266,12 +1274,15 @@ function openLead(id){
 }
 function onStChange(){
   const st=document.getElementById('fst2').value;
-  document.getElementById('meetBox').style.display=MEETING_STATUSES.includes(st)?'block':'none';
+  const _l=eid?leads.find(x=>x.id===eid):null;
+  // פרטי הפגישה נשארים זמינים כל עוד הייתה פגישה אי פעם, גם אם הסטטוס עבר ל"פולואפ חם" (גל 04/10)
+  document.getElementById('meetBox').style.display=(MEETING_STATUSES.includes(st)||hadMeetingEver(_l))?'block':'none';
   // תיבת "המשך התהליך" נפתחת בסטטוסים שבהם הליד בשיחה/נענה (לא פגישה, לא סגירה).
   document.getElementById('relevantBox').style.display=['answered','cold_followup','hot_followup'].includes(st)?'block':'none';
   document.getElementById('wonBox').style.display=st==='deal'?'block':'none';
   document.getElementById('nrBox').style.display=(st==='not_relevant'||st==='revival')?'block':'none';
-  document.getElementById('mqBox').style.display=(st==='attended')?'block':'none';
+  // כרטיס הדירוג נשאר זמ��ן למי שהגיע לפגישה, או שנקבעה לו פגישה שמועדה עבר, כדי שאפשר יהיה לדרג גם אחרי שינוי סטטוס
+  document.getElementById('mqBox').style.display=canRateMeeting(_l,st)?'block':'none';
   document.getElementById('nsBox').style.display=(st==='booked_noshow')?'block':'none';
 }
 function closeLead(){document.getElementById('leadOv').classList.remove('open');eid=null;}
@@ -1281,8 +1292,10 @@ function saveLead(){
   const _st=document.getElementById('fst2').value;
   const _nr={category:document.getElementById('nrCat').value,why:document.getElementById('nrWhy').value.trim(),saidInCall:document.getElementById('nrSaid').value.trim(),opener:document.getElementById('nrOpener').value.trim()};
   if(_st==='not_relevant'&&(!_nr.category||!_nr.why||!_nr.saidInCall||!_nr.opener)){toast('❌ אי אפשר לסמן "לא רלוונטי" בלי למלא: קטגוריה, למה, מה הליד אמר בשיחה, ואיך היה הפתיח',6000);return}
-  const _prevMq=eid?((leads.find(x=>x.id===eid)||{}).meetingQuality||null):null;
-  const mqData=(_st==='attended')?{rating:parseInt(document.getElementById('mqRating').value)||0,good:document.getElementById('mqGood').value.trim(),bad:document.getElementById('mqBad').value.trim(),at:nowIso()}:_prevMq;
+  const _curL=eid?leads.find(x=>x.id===eid):null;
+  const _prevMq=(_curL&&_curL.meetingQuality)||null;
+  const _canRate=canRateMeeting(_curL,_st);
+  const mqData=_canRate?{rating:parseInt(document.getElementById('mqRating').value)||0,good:document.getElementById('mqGood').value.trim(),bad:document.getElementById('mqBad').value.trim(),at:(_prevMq&&_prevMq.at)||nowIso()}:_prevMq;
   const _prevNs=eid?((leads.find(x=>x.id===eid)||{}).noshowReason||null):null;
   const nsData=(_st==='booked_noshow')?{category:document.getElementById('nsCat').value,why:document.getElementById('nsWhy').value.trim(),saidInCall:document.getElementById('nsSaid').value.trim(),opener:document.getElementById('nsOpener').value.trim()}:_prevNs;
   const rd=document.getElementById('rdate').value;
@@ -1304,6 +1317,13 @@ function saveLead(){
   else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
   // חותמת זמן לכניסה לקהילה: נקבעת פעם אחת כשמסמנים, מתאפסת אם מבטלים.
   if(saved){ if(data.joinedCommunity&&!saved.joinedCommunityAt)saved.joinedCommunityAt=nowIso(); if(!data.joinedCommunity)saved.joinedCommunityAt=''; }
+  // חותמות מיילסטונים קבועות (גל 04/10): נשמרות גם כשהסטטוס עובר הלאה, כדי שמה שהליד כבר עבר (פגישה/הגעה) לא ייעלם מהכרטיס.
+  if(saved){
+    if(_st==='booked'&&!saved.bookedStampAt)saved.bookedStampAt=nowIso();
+    if(_st==='attended'&&!saved.attendedAt)saved.attendedAt=nowIso();
+    if(_st==='booked_noshow'&&!saved.noshowAt)saved.noshowAt=nowIso();
+    if(mqData&&mqData.rating&&!saved.attendedAt)saved.attendedAt=nowIso();   // דירוג פגישה = הליד היה בפגישה
+  }
   // כלל ברזל: כל ליד חדש שמוזן ידנית נדחף לשכל תחת "מתעניינים קדימה צורן" עם תיוג "ידני".
   if(isNew)pushManualLeadToWorker(saved);
   // סנכרון שינוי סטטוס חזרה ל-Worker (המקור האמיתי היחיד שמזין את שקלול העלויות).
@@ -1311,7 +1331,7 @@ function saveLead(){
   // סימון "נכנס לקהילה" נשמר גם בשרת (בלי תופעות לוואי), כך שגם הדשבורד וגם הניתוח קוראים אותו.
   if(saved&&saved.lead_id&&data.joinedCommunity!==prevJoined)pushJoinedToWorker(saved);
   // דירוג איכות הפגישה (מספר+תאריך בלבד, בלי הטקסט החופשי) נדחף לוורקר כדי שדוח הבוקר יראה מגמה.
-  if(saved&&saved.lead_id&&_st==='attended'&&mqData&&mqData.rating)pushMeetingQualityToWorker(saved);
+  if(saved&&saved.lead_id&&_canRate&&mqData&&mqData.rating)pushMeetingQualityToWorker(saved);
   // הערת הנציג: noteAt מתעדכן רק כשהטקסט באמת השתנה (כדי שזיהוי "הערה ישנה" יעבוד). נדחף בכל save.
   const _newNote=saved?(saved.notes||''):'';
   if(saved&&saved.noteTextSynced!==_newNote){saved.noteAt=nowIso();saved.noteTextSynced=_newNote;}
@@ -1468,7 +1488,22 @@ function renderAuto(l){
   });
   const bi=bookingInsight(l);
   if(bi) ins+=`<div style="margin-top:5px"><span style="font-weight:800;color:${bi.c}">קביעת פגישה: ${bi.src}</span>${bi.when?` <span style="color:var(--text2,#888);font-size:11px">נקבעה ${esc(fmtDt(bi.when))}</span>`:''}</div>`;
-  if(l&&l.meetingQuality&&l.meetingQuality.rating){const q=l.meetingQuality;ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:${mqColor(q.rating)}">⭐ טיב הפגישה: ${q.rating}/10</span> <span style="color:var(--text2,#888);font-size:11px">${esc(MQ_LABELS[q.rating]||'')}</span>${q.good?`<div style="font-size:11px;color:var(--text2,#888);margin-top:2px">טוב: ${esc(q.good)}</div>`:''}${q.bad?`<div style="font-size:11px;color:var(--text2,#888)">לשיפור: ${esc(q.bad)}</div>`:''}</div>`;}
+  // רשומת פגישה מתמשכת (גל 04/10): מה שהליד עבר נשאר גלוי גם אחרי שהסטטוס עבר ל"פולואפ חם" וכו'
+  if(l&&hadMeetingEver(l)){
+    const _md=l.meetDate?(l.meetDate+(l.meetTime?(' '+l.meetTime):'')):((l.calBooking&&l.calBooking.startTime)?fmtDt(l.calBooking.startTime):'');
+    const _mdTxt=_md?` <span style="color:var(--text2,#888);font-size:11px">${esc(_md)}</span>`:'';
+    if(attendedEver(l)){
+      const q=l.meetingQuality||{};
+      const _rate=q.rating?`<span style="color:${mqColor(q.rating)};font-weight:800">⭐ ${q.rating}/10</span> <span style="color:var(--text2,#888);font-size:11px">${esc(MQ_LABELS[q.rating]||'')}</span>`:'<span style="color:#c2151c;font-weight:800">טרם דורגה</span>';
+      ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#16a34a">✓ היה בפגישה</span>${_mdTxt} · ${_rate}${q.good?`<div style="font-size:11px;color:var(--text2,#888);margin-top:2px">טוב: ${esc(q.good)}</div>`:''}${q.bad?`<div style="font-size:11px;color:var(--text2,#888)">לשיפור: ${esc(q.bad)}</div>`:''}${(!q.good&&!q.bad)?'<div style="font-size:11px;color:#c2151c">חסר סיכום פגישה, להשלים</div>':''}</div>`;
+    } else if(noshowEver(l)){
+      ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#c2151c">✗ לא הגיע לפגישה</span>${_mdTxt}</div>`;
+    } else if(metPassed(l)){
+      ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#d97706">⏳ פגישה שנקבעה כבר עברה</span>${_mdTxt} · <span style="color:#c2151c;font-weight:700">לעדכן: הגיע או לא הגיע, ולדרג</span></div>`;
+    } else {
+      ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#2563eb">📅 נקבעה פגישה</span>${_mdTxt}</div>`;
+    }
+  }
   el.innerHTML=html+comm+ins;
 }
 // ─── איכות פגישה (1-10) עם מיקרו-קופי אנושי לכל דירוג ───
