@@ -1541,6 +1541,8 @@ function renderAuto(l){
       ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#c2151c">✗ לא הגיע לפגישה</span>${_mdTxt}</div>`;
     } else if(metPassed(l)){
       ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#d97706">⏳ פגישה שנקבעה כבר עברה</span>${_mdTxt} · <span style="color:#c2151c;font-weight:700">לעדכן: הגיע או לא הגיע, ולדרג</span></div>`;
+    } else if(!_md){
+      ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#c2151c">⚠️ קבע פגישה בלי מועד</span> <span style="color:#c2151c;font-size:11px">התזכורות לא יוצאות בלי תאריך+שעה. הזינו אותם בפרטי הפגישה כדי שהליד יקבל תזכורות.</span></div>`;
     } else {
       ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:#2563eb">📅 נקבעה פגישה</span>${_mdTxt}</div>`;
     }
