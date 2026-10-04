@@ -450,6 +450,11 @@ tbody td{padding:12px 11px;vertical-align:middle}
     <div class="fg one"><div class="f"><label>מה היה טוב בשיחה?</label><textarea id="mqGood" placeholder="מה עבד, איפה הליד התחבר, נקודות חזקות..."></textarea></div></div>
     <div class="fg one"><div class="f"><label>מה היה פחות טוב / לשיפור?</label><textarea id="mqBad" placeholder="מה חסר, איפה נתקענו, מה כדאי לשפר בפעם הבאה..."></textarea></div></div>
     <div class="fg one"><div class="f">
+      <label>תמלול מהשיחה (אופציונלי) — הדביקו טקסט ממקליט השיחות ואזקק לכם סיכום</label>
+      <textarea id="mqTranscript" placeholder="הדביקו כאן את התמלול המלא מהשיחה, ולחצו 'זקק סיכום'..."></textarea>
+      <button type="button" class="btn-ghost" id="mqDistillBtn" onclick="distillMeeting()" style="margin-top:6px">זקק סיכום מהתמלול</button>
+    </div></div>
+    <div class="fg one"><div class="f">
       <label>איך תדרגו את טיב הפגישה? (1 עד 10)</label>
       <div id="mqChips" class="mq-chips"></div>
       <div id="mqLabel" class="mq-label">בחרו דירוג מ-1 עד 10</div>
@@ -519,6 +524,14 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <div class="fg one" id="landBox" style="display:none">
     <div class="f"><label>דף הנחיתה שהליד ראה</label>
       <div class="adinfo-box" id="landTxt"></div>
+    </div>
+  </div>
+
+  <!-- ★ המוח: מה הייתי עושה עם הליד הזה (גל 05/10) -->
+  <div class="fg one" id="coachBox" style="display:none">
+    <div class="f">
+      <button type="button" class="btn-ghost" id="coachBtn" onclick="askCoach()" style="width:100%;font-weight:700">מה הייתי עושה עם הליד הזה?</button>
+      <div id="coachResult" style="display:none;margin-top:8px"></div>
     </div>
   </div>
 
@@ -1113,9 +1126,78 @@ function populateCampFilter(){
   sel.innerHTML='<option value="">כל הקריאייטיבים</option>'+cr.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   if(cr.includes(cur))sel.value=cur;
 }
+/* ===== מנוע אנומליות (גל 05/10): המערכת שמה לב לבד למה שגל היה שם לב אליו, ומתריעה בכניסה ובכותרת ===== */
+function _anomAgeDays(l){ const t=Date.parse(l.createdAt||l.ts||l.updatedAt||''); return isFinite(t)?(Date.now()-t)/86400000:0; }
+function _anomLastTouchDays(l){
+  let last=Date.parse(l.updatedAt||l.createdAt||l.ts||'');
+  const h=(l.history||[]); if(h.length){ const ht=Date.parse(h[h.length-1].date||h[h.length-1].at||''); if(isFinite(ht))last=Math.max(last||0,ht); }
+  return isFinite(last)?(Date.now()-last)/86400000:0;
+}
+function computeAnomalies(){
+  const out=[];
+  (leads||[]).forEach(l=>{
+    if(l.demo)return;
+    const st=l.status;
+    if(['not_relevant','invalid','deal','revival'].includes(st))return;
+    // 1. קבע פגישה בלי מועד → לא יוצאות תזכורות (החור של וקנין)
+    if((st==='booked'||l.booked)&&!l.meetDate&&!attendedEver(l)&&!noshowEver(l))
+      out.push({lvl:'crit',id:l.id,name:l.name,msg:'קבע פגישה בלי מועד. התזכורות לא יוצאות, חובה להזין תאריך ושעה בכרטיס.'});
+    // 2. מועד הפגישה עבר, עדיין "קבע פגישה", בלי תוצאה
+    else if(st==='booked'&&l.meetDate&&metPassed(l)&&!attendedEver(l)&&!noshowEver(l))
+      out.push({lvl:'crit',id:l.id,name:l.name,msg:'מועד הפגישה עבר ואין תוצאה. לעדכן הגיע או לא הגיע, ולדרג.'});
+    // 3. הגיע בלי דירוג וסיכום (לידים ישנים מלפני השער)
+    if(st==='attended'&&!(l.meetingQuality&&l.meetingQuality.rating))
+      out.push({lvl:'warn',id:l.id,name:l.name,msg:'הגיע לפגישה בלי דירוג וסיכום. חסר תיעוד שמזין את המוח ואת המדדים.'});
+    // 4. ליד חם ממתין בלי מענה
+    const hot=(l.temperature==='hot')||(Number(l.score)>=4);
+    if(hot&&['new','no_answer_1','no_answer_2','no_answer_3'].includes(st)&&_anomLastTouchDays(l)>=2)
+      out.push({lvl:'warn',id:l.id,name:l.name,msg:'ליד חם ממתין '+Math.floor(_anomLastTouchDays(l))+' ימים בלי מענה. החום יורד מהר, לחזור אליו היום.'});
+    // 5. ליד חדש יושב בלי טיפול
+    else if(st==='new'&&_anomAgeDays(l)>=1)
+      out.push({lvl:'warn',id:l.id,name:l.name,msg:'ליד חדש יושב '+Math.floor(_anomAgeDays(l))+' ימים בסטטוס "חדש" בלי טיפול.'});
+    // 6. אות קנייה: חזר והשאיר פרטים שוב
+    if((l.returnsCount>0)&&['new','cold_followup','no_answer_1','no_answer_2','no_answer_3'].includes(st))
+      out.push({lvl:'info',id:l.id,name:l.name,msg:'אות קנייה: חזר והשאיר פרטים '+(l.returnsCount+1)+' פעמים. מתעניין, שווה שיחה יזומה.'});
+  });
+  const rank={crit:0,warn:1,info:2};
+  return out.sort((a,b)=>rank[a.lvl]-rank[b.lvl]);
+}
+function ensureAnomalyModal(){
+  if(document.getElementById('anomOv'))return;
+  const d=document.createElement('div');
+  d.id='anomOv';
+  d.style.cssText='display:none;position:fixed;inset:0;z-index:3200;background:rgba(20,18,28,.6);align-items:flex-start;justify-content:center;padding:28px 16px;overflow:auto';
+  d.innerHTML='<div style="background:var(--card,#fff);color:var(--text,#1a1a1a);max-width:560px;width:100%;border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.35);overflow:hidden">'
+    +'<div style="background:#c2151c;color:#fff;padding:16px 20px"><div style="font-weight:800;font-size:17px">דברים שדורשים את תשומת ליבך</div><div style="font-size:12.5px;opacity:.92;margin-top:3px">אלה הנקודות שהייתי עוצר עליהן אם הייתי פותח את הדשבורד עכשיו. סוגרים אותן, ואז עובדים.</div></div>'
+    +'<div id="anomList" style="padding:10px 16px 4px"></div>'
+    +'<div style="padding:12px 20px 20px;text-align:left"><button class="btn" style="background:var(--accent,#c2151c);color:#fff;padding:9px 18px;border-radius:9px;font-weight:700" onclick="closeAnomalyModal()">הבנתי, מטפל</button></div>'
+    +'</div>';
+  document.body.appendChild(d);
+}
+function _anomColor(lvl){ return lvl==='crit'?'#c2151c':lvl==='warn'?'#b4690e':'#2563eb'; }
+function _anomTag(lvl){ return lvl==='crit'?'דחוף':lvl==='warn'?'לטפל':'הזדמנות'; }
+function openAnomalyModal(){
+  ensureAnomalyModal();
+  const items=computeAnomalies();
+  const box=document.getElementById('anomList');
+  if(!items.length){ box.innerHTML='<div style="padding:18px 4px;color:var(--text2,#777)">הכל נקי כרגע. אין נקודות פתוחות.</div>'; }
+  else box.innerHTML=items.map(a=>`<div onclick="closeAnomalyModal();openLead('${a.id}')" style="display:flex;gap:10px;align-items:flex-start;padding:11px 10px;border-radius:10px;cursor:pointer;border-right:4px solid ${_anomColor(a.lvl)};background:rgba(0,0,0,.02);margin-bottom:8px">
+    <span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#fff;background:${_anomColor(a.lvl)};padding:3px 8px;border-radius:7px;margin-top:1px">${_anomTag(a.lvl)}</span>
+    <span style="font-size:13px;line-height:1.5"><b>${esc(a.name||'ליד')}</b> · ${esc(a.msg)}</span></div>`).join('');
+  document.getElementById('anomOv').style.display='flex';
+}
+function closeAnomalyModal(){ const o=document.getElementById('anomOv'); if(o)o.style.display='none'; }
+let _anomShown=false;
+function maybeShowAnomaliesOnEntry(){
+  if(_anomShown)return;
+  const items=computeAnomalies();
+  if(items.some(a=>a.lvl==='crit'||a.lvl==='warn')){ _anomShown=true; openAnomalyModal(); }
+  else _anomShown=true;
+}
 function render(){
   populateCampFilter();
   renderStats();
+  maybeShowAnomaliesOnEntry();
   const rows=getFiltered();
   const tbody=document.getElementById('tbody');
   const empty=document.getElementById('emptyEl');
@@ -1152,6 +1234,8 @@ function renderStats(){
   let h=`<div class="hstat">סה"כ <b>${total}</b></div><div class="hstat">פייפליין <b>${pipe}</b></div><div class="hstat">נסגרו <b>${won}</b></div><div class="hstat">אחוז סגירה <b>${closeRate}%</b></div>`;
   if(td)h+=`<div class="hstat todayc">היום <b>${td}</b></div>`;
   if(od)h+=`<div class="hstat warn">באיחור <b>${od}</b></div>`;
+  const _anom=computeAnomalies();
+  if(_anom.length)h+=`<div class="hstat warn" style="cursor:pointer;background:#c2151c;color:#fff" title="דברים שדורשים טיפול, לחצו לפירוט" onclick="openAnomalyModal()">⚠ דורש טיפול <b>${_anom.length}</b></div>`;
   document.getElementById('hstats').innerHTML=h;
 }
 
@@ -1253,6 +1337,10 @@ function openLead(id){
     landBox.style.display='block';
     document.getElementById('landTxt').innerHTML=`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent,#c2151c);font-weight:700;text-decoration:none">🔗 ${hot?'דף חם (כולל הסרטון)':'דף קר'} · לחצו לצפייה במה שהליד ראה</a><div style="color:var(--text2,#888);font-size:11px;margin-top:3px">נפתח בלי שיוך לליד, לא משפיע על נתוני הצפייה שלו</div>`;
   }else if(landBox){ landBox.style.display='none'; }
+  // ★ המוח: זמין ללידים שנכנסו מהמשפך (יש להם lead_id בשרת)
+  const coachBox=document.getElementById('coachBox'), coachRes=document.getElementById('coachResult');
+  if(coachBox)coachBox.style.display=(l&&l.lead_id)?'block':'none';
+  if(coachRes){ coachRes.style.display='none'; coachRes.innerHTML=''; }
   onStChange();
   if(l?.remAt){const d=new Date(l.remAt);document.getElementById('rdate').value=d.toISOString().split('T')[0];document.getElementById('rtime').value=d.toTimeString().slice(0,5);}
   else{document.getElementById('rdate').value='';document.getElementById('rtime').value='10:00';}
@@ -1281,6 +1369,7 @@ function openLead(id){
   const _mq=(l&&l.meetingQuality)||{};
   document.getElementById('mqGood').value=_mq.good||'';
   document.getElementById('mqBad').value=_mq.bad||'';
+  document.getElementById('mqTranscript').value=_mq.transcript||'';
   setMq(_mq.rating||0);
   renderAuto(l);
   document.getElementById('leadOv').classList.add('open');
@@ -1336,7 +1425,7 @@ function saveLead(){
   const _curL=eid?leads.find(x=>x.id===eid):null;
   const _prevMq=(_curL&&_curL.meetingQuality)||null;
   const _canRate=canRateMeeting(_curL,_st);
-  const mqData=_canRate?{rating:parseInt(document.getElementById('mqRating').value)||0,good:document.getElementById('mqGood').value.trim(),bad:document.getElementById('mqBad').value.trim(),at:(_prevMq&&_prevMq.at)||nowIso()}:_prevMq;
+  const mqData=_canRate?{rating:parseInt(document.getElementById('mqRating').value)||((_prevMq&&_prevMq.rating)||0),good:document.getElementById('mqGood').value.trim(),bad:document.getElementById('mqBad').value.trim(),transcript:document.getElementById('mqTranscript').value.trim()||((_prevMq&&_prevMq.transcript)||''),at:(_prevMq&&_prevMq.at)||nowIso()}:_prevMq;
   const _prevNs=eid?((leads.find(x=>x.id===eid)||{}).noshowReason||null):null;
   const nsData=(_st==='booked_noshow')?{category:document.getElementById('nsCat').value,why:document.getElementById('nsWhy').value.trim(),saidInCall:document.getElementById('nsSaid').value.trim(),opener:document.getElementById('nsOpener').value.trim()}:_prevNs;
   const rd=document.getElementById('rdate').value;
@@ -1348,6 +1437,13 @@ function saveLead(){
   if(_st!==prevStatus && _st!=='not_relevant' && _st!=='revival' && !document.getElementById('fnotes').value.trim()){toast('❌ חובה להוסיף הערה על מה שקרה בשיחה לפני שינוי הסטטוס',6000);return}
   // חובה (גל 28/09): מעבר ל"קבע פגישה" מחייב מועד + שעה + מיקום (קישור לפגישה לא חובה). זה גם מה שמפעיל את תזכורות הפגישה.
   if(_st==='booked' && (!document.getElementById('mdate').value || !document.getElementById('mtime').value || !document.getElementById('mplace').value.trim())){toast('❌ כדי לסמן "קבע פגישה" חובה להזין מועד, שעה ומיקום (קישור לפגישה לא חובה)',6000);return}
+  // ★ שער קשיח (גל 05/10): אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10 + סיכום (במילים שלכם או תמלול). זה המדד שמשפר את השיחות ומזין את המוח.
+  if(_st==='attended'){
+    const _r=parseInt(document.getElementById('mqRating').value)||((_prevMq&&_prevMq.rating)||0);
+    const _sum=document.getElementById('mqGood').value.trim()||document.getElementById('mqTranscript').value.trim()||((_prevMq&&(_prevMq.good||_prevMq.transcript))||'');
+    if(!(_r>=1&&_r<=10)){toast('❌ אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10. בחרו דירוג למטה.',6000);return}
+    if(!_sum){toast('❌ אי אפשר לשמור "הגיע לפגישה" בלי סיכום. כתבו במילים שלכם מה היה בפגישה, או הדביקו תמלול ולחצו "זקק סיכום".',7000);return}
+  }
   const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,noshowReason:nsData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
   // האם פרטי הפגישה השתנו (חשוב: נקרא לפני Object.assign שדורס את prev). מאפשר לדחוף מועד חדש גם בלי שינוי סטטוס.
@@ -1557,6 +1653,41 @@ function setMq(n){n=Number(n)||0;const ri=document.getElementById('mqRating');if
 
 // ─── מנוע החייאת לידים (AI): הצגת תוצאה + יצירה מול הוורקר ───
 function copyTxt(t,btn){try{navigator.clipboard.writeText(t);if(btn){const o=btn.textContent;btn.textContent='✓ הועתק';setTimeout(()=>btn.textContent=o,1500);}}catch(e){}}
+async function askCoach(){
+  const l=eid?leads.find(x=>x.id===eid):null;
+  if(!l||!l.lead_id){toast('התובנה החיה זמינה ללידים שנכנסו מהמשפך בלבד',4000);return}
+  const btn=document.getElementById('coachBtn'), box=document.getElementById('coachResult'), _t=btn.textContent;
+  btn.disabled=true; btn.textContent='חושב על הליד...';
+  try{
+    const r=await fetch(`${WORKER_URL}/ai-coach`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,newStatus:document.getElementById('fst2').value,note:document.getElementById('fnotes').value.trim(),trigger:'manual'})});
+    const j=await r.json();
+    if(!j||!j.ok){toast('לא הצלחתי להפיק תובנה: '+((j&&j.error)||''),5000);return}
+    const c=j.coach||{}, pc=c.priority==='high'?'#c2151c':c.priority==='low'?'#2563eb':'#b4690e';
+    box.style.display='block';
+    box.innerHTML=`<div style="border-right:4px solid ${pc};background:rgba(0,0,0,.03);border-radius:10px;padding:11px 13px">
+      <div style="font-size:13.5px;line-height:1.6">${esc(c.insight||'')}</div>
+      ${c.nextStep?`<div style="margin-top:8px;font-size:12.5px"><b>הצעד הבא:</b> ${esc(c.nextStep)}</div>`:''}</div>`;
+  }catch(e){toast('שגיאה בהפקת תובנה',4000);}
+  finally{btn.disabled=false;btn.textContent=_t;}
+}
+async function distillMeeting(){
+  const l=eid?leads.find(x=>x.id===eid):null;
+  const tr=document.getElementById('mqTranscript').value.trim();
+  if(!tr){toast('הדביקו תמלול קודם',3500);return}
+  if(!l||!l.lead_id){toast('הזיקוק זמין ללידים מהמשפך בלבד. אפשר לכתוב סיכום ידני.',4500);return}
+  const btn=document.getElementById('mqDistillBtn'), _t=btn.textContent;
+  btn.disabled=true; btn.textContent='מזקק...';
+  try{
+    const r=await fetch(`${WORKER_URL}/ai-coach`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,mode:'distill',transcript:tr})});
+    const j=await r.json();
+    if(!j||!j.ok){toast('זיקוק נכשל: '+((j&&j.error)||''),5000);return}
+    if(j.good)document.getElementById('mqGood').value=j.good;
+    if(j.bad)document.getElementById('mqBad').value=j.bad;
+    if(j.suggestedRating&&!document.getElementById('mqRating').value)setMq(j.suggestedRating);
+    toast('✓ זוקק: '+(j.summary||'מולאו מה היה טוב ומה פחות טוב'),7000);
+  }catch(e){toast('שגיאה בזיקוק',4000);}
+  finally{btn.disabled=false;btn.textContent=_t;}
+}
 function renderRevival(rev,resultId,waId,phId,title){
   resultId=resultId||'nrResult'; waId=waId||'rvWa'; phId=phId||'rvPh'; title=title||'אסטרטגיית החייאה';
   const el=document.getElementById(resultId); if(!el)return;
