@@ -375,7 +375,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <div class="fg">
     <div class="f">
       <label>סטטוס</label>
-      <select id="fst2" onchange="onStChange()">
+      <select id="fst2" onchange="onStatusPick()">
         <option value="new">ליד חדש</option>
         <option value="no_answer_1">אין מענה X1</option>
         <option value="no_answer_2">אין מענה X2</option>
@@ -640,6 +640,20 @@ tbody td{padding:12px 11px;vertical-align:middle}
 </div>
 
 <!-- TOAST -->
+<!-- פופאפ דילוג-שלב: תוצאת פגישה (גל 04/10, "הדשבורד מסביר כל דבר") -->
+<div id="moGate" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(20,18,28,.58);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;max-width:460px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;direction:rtl">
+    <div style="font-size:34px;line-height:1">⚠️</div>
+    <h3 style="font-size:18px;font-weight:800;color:#C2151C;margin:8px 0 10px">רגע, דילגת על שלב חשוב</h3>
+    <p style="font-size:13.5px;color:#333;line-height:1.65;margin-bottom:18px">הליד הזה <b>קבע פגישה</b>, ועדיין לא סומן מה קרה בה.<br>לפני שממשיכים, חובה לסמן את תוצאת הפגישה, אחרת היא נעלמת מהמדדים ולא נדע אם הוא הגיע.<br><b>אז מה קרה בפגישה?</b></p>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <button onclick="moGateChoose('attended')" style="font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;border:none;border-radius:11px;padding:12px;background:#16a34a;color:#fff">✓ הגיע לפגישה</button>
+      <button onclick="moGateChoose('noshow')" style="font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;border:none;border-radius:11px;padding:12px;background:#C2151C;color:#fff">✗ לא הגיע</button>
+      <button onclick="moGateChoose('notyet')" style="font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #ddd;border-radius:11px;padding:11px;background:#fff;color:#666">הפגישה עדיין לא התקיימה, המשך בכל זאת</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <div style="flex:1" id="toastTxt"></div>
   <button class="toast-x" onclick="closeToast()">✕</button>
@@ -1271,6 +1285,33 @@ function openLead(id){
   renderAuto(l);
   document.getElementById('leadOv').classList.add('open');
   setTimeout(()=>document.getElementById('fn').focus(),80);
+}
+// ─── בינה תפעולית: זיהוי דילוג על שלב היררכי + הנחיה (גל 04/10). מניחים שמי שמעדכן לא זוכר את הנוהל, אז הדשבורד מסביר כל דבר ו"נותן בעיטה בטוסיק". ───
+function onStatusPick(){
+  const sel=document.getElementById('fst2'), newSt=sel.value;
+  const l=eid?leads.find(x=>x.id===eid):null;
+  const prevSt=l?l.status:null;
+  if(l && newSt!==prevSt){
+    // שער 1 (הכי חשוב): עוזבים "קבע פגישה" לסטטוס שאינו פגישה בלי לסמן אם הגיע או לא
+    if(prevSt==='booked' && !attendedEver(l) && !noshowEver(l) && !MEETING_STATUSES.includes(newSt)){
+      const ov=document.getElementById('moGate'); ov.dataset.intended=newSt; ov.style.display='flex'; return;
+    }
+    // שער 2: דילוג בשלבי אין מענה (למשל X1→X3 מדלג על X2)
+    const pm=(prevSt||'').match(/^no_answer_(\d)$/), nm=newSt.match(/^no_answer_(\d)$/);
+    if(pm&&nm&&Number(nm[1])>Number(pm[1])+1){
+      if(!confirm('רגע, דילגת על שלב.\n\nעברת מ"אין מענה '+pm[1]+'" ל"אין מענה '+nm[1]+'", ודילגת על "אין מענה '+(Number(pm[1])+1)+'".\nכל ניסיון התקשרות הוא שלב אחד, עולים שלב-שלב.\n\nלהמשיך בכל זאת?')){
+        sel.value=prevSt; onStChange(); return;
+      }
+    }
+  }
+  onStChange();
+}
+function moGateChoose(choice){
+  const ov=document.getElementById('moGate'), intended=ov.dataset.intended||'', sel=document.getElementById('fst2');
+  ov.style.display='none';
+  if(choice==='attended'){ sel.value='attended'; onStChange(); toast('✓ סומן שהגיע. עכשיו מלאו למטה דירוג 1-10 + סיכום הפגישה (מה היה טוב ומה פחות), ואז שמרו.',7000); }
+  else if(choice==='noshow'){ sel.value='booked_noshow'; onStChange(); toast('✗ סומן שלא הגיע. מלאו את פרטי אי-ההגעה למטה ושמרו (אפשר גם ליצור אסטרטגיית החזרה לפגישה).',6000); }
+  else { sel.value=intended; onStChange(); }   // הפגישה עדיין לא התקיימה — ממשיכים לסטטוס שנבחר
 }
 function onStChange(){
   const st=document.getElementById('fst2').value;
