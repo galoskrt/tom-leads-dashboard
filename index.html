@@ -527,10 +527,13 @@ tbody td{padding:12px 11px;vertical-align:middle}
     </div>
   </div>
 
-  <!-- ★ המוח: מה הייתי עושה עם הליד הזה (גל 05/10) -->
+  <!-- ★ המוח: מה הגורל של הליד הזה בפרויקט (גל 05/10) -->
   <div class="fg one" id="coachBox" style="display:none">
     <div class="f">
-      <button type="button" class="btn-ghost" id="coachBtn" onclick="askCoach()" style="width:100%;font-weight:700">מה הייתי עושה עם הליד הזה?</button>
+      <button type="button" id="coachBtn" onclick="askCoach()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 18px;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:14.5px;color:#fff;background:linear-gradient(135deg,#c2151c,#7f0224);box-shadow:0 6px 18px rgba(194,21,28,.28);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 9px 24px rgba(194,21,28,.36)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 18px rgba(194,21,28,.28)'">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        <span id="coachBtnLabel">מה הגורל של הליד הזה בפרויקט שלי?</span>
+      </button>
       <div id="coachResult" style="display:none;margin-top:8px"></div>
     </div>
   </div>
@@ -1656,8 +1659,8 @@ function copyTxt(t,btn){try{navigator.clipboard.writeText(t);if(btn){const o=btn
 async function askCoach(){
   const l=eid?leads.find(x=>x.id===eid):null;
   if(!l||!l.lead_id){toast('התובנה החיה זמינה ללידים שנכנסו מהמשפך בלבד',4000);return}
-  const btn=document.getElementById('coachBtn'), box=document.getElementById('coachResult'), _t=btn.textContent;
-  btn.disabled=true; btn.textContent='חושב על הליד...';
+  const btn=document.getElementById('coachBtn'), lbl=document.getElementById('coachBtnLabel'), box=document.getElementById('coachResult'), _t=lbl.textContent;
+  btn.disabled=true; btn.style.opacity='.7'; lbl.textContent='חושב על הליד...';
   try{
     const r=await fetch(`${WORKER_URL}/ai-coach`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,newStatus:document.getElementById('fst2').value,note:document.getElementById('fnotes').value.trim(),trigger:'manual'})});
     const j=await r.json();
@@ -1668,7 +1671,7 @@ async function askCoach(){
       <div style="font-size:13.5px;line-height:1.6">${esc(c.insight||'')}</div>
       ${c.nextStep?`<div style="margin-top:8px;font-size:12.5px"><b>הצעד הבא:</b> ${esc(c.nextStep)}</div>`:''}</div>`;
   }catch(e){toast('שגיאה בהפקת תובנה',4000);}
-  finally{btn.disabled=false;btn.textContent=_t;}
+  finally{btn.disabled=false;btn.style.opacity='';lbl.textContent=_t;}
 }
 async function distillMeeting(){
   const l=eid?leads.find(x=>x.id===eid):null;
