@@ -439,6 +439,16 @@ tbody td{padding:12px 11px;vertical-align:middle}
     <div class="fg one">
       <div class="f"><label>קישור לקובץ הכנה (Docs)</label><input type="url" id="mdoc" placeholder="https://docs.google.com/..."/></div>
     </div>
+    <!-- ★ קישור הפגישה (Google Meet) שנוצר אוטומטית ב-Cal בעת שמירת קביעה ידנית (גל 05/10) -->
+    <div class="fg one" id="mlinkRow" style="display:none">
+      <div class="f"><label>קישור לפגישה (Google Meet) · נוצר אוטומטית</label>
+        <div style="display:flex;gap:7px;align-items:center">
+          <input type="url" id="mlink" readonly style="flex:1;background:rgba(21,122,58,.06)" placeholder="נוצר אוטומטית בעת שמירת הפגישה"/>
+          <a id="mlinkOpen" href="#" target="_blank" rel="noopener" style="display:none;flex:0 0 auto;padding:8px 12px;border-radius:9px;background:#157a3a;color:#fff;font-weight:700;text-decoration:none;font-size:13px">פתח</a>
+        </div>
+        <div id="mlinkHint" style="font-size:11px;color:var(--text2,#888);margin-top:3px"></div>
+      </div>
+    </div>
     <div class="fg one">
       <div class="f"><label>הערות להיערכות</label><textarea id="mnotes" placeholder="מה להכין, מה לשאול, נקודות חשובות..."></textarea></div>
     </div>
@@ -1316,6 +1326,7 @@ function openLead(id){
   document.getElementById('mplace').value=l?.meetPlace||'';
   document.getElementById('mdoc').value=l?.meetDoc||'';
   document.getElementById('mnotes').value=l?.meetNotes||'';
+  setMeetLinkUI((l&&(l.meetLink||(l.calBooking&&l.calBooking.meetingUrl)))||'');
   document.getElementById('fdeal').value=l?.dealAmount||'';
   document.getElementById('fmeters').value=l?.dealMeters||'';
   const adInfoBox=document.getElementById('adInfoBox');
@@ -1409,7 +1420,7 @@ function onStChange(){
   const st=document.getElementById('fst2').value;
   const _l=eid?leads.find(x=>x.id===eid):null;
   // פרטי הפגישה נשארים זמינים כל עוד הייתה פגישה אי פעם, גם אם הסטטוס עבר ל"פולואפ חם" (גל 04/10)
-  document.getElementById('meetBox').style.display=(MEETING_STATUSES.includes(st)||hadMeetingEver(_l))?'block':'none';
+  { const _mb=(MEETING_STATUSES.includes(st)||hadMeetingEver(_l)); document.getElementById('meetBox').style.display=_mb?'block':'none'; const _mlr=document.getElementById('mlinkRow'); if(_mlr)_mlr.style.display=_mb?'block':'none'; }
   // תיבת "המשך התהליך" נפתחת בסטטוסים שבהם הליד בשיחה/נענה (לא פגישה, לא סגירה).
   document.getElementById('relevantBox').style.display=['answered','cold_followup','hot_followup'].includes(st)?'block':'none';
   document.getElementById('wonBox').style.display=st==='deal'?'block':'none';
@@ -1440,6 +1451,8 @@ function saveLead(){
   if(_st!==prevStatus && _st!=='not_relevant' && _st!=='revival' && !document.getElementById('fnotes').value.trim()){toast('❌ חובה להוסיף הערה על מה שקרה בשיחה לפני שינוי הסטטוס',6000);return}
   // חובה (גל 28/09): מעבר ל"קבע פגישה" מחייב מועד + שעה + מיקום (קישור לפגישה לא חובה). זה גם מה שמפעיל את תזכורות הפגישה.
   if(_st==='booked' && (!document.getElementById('mdate').value || !document.getElementById('mtime').value || !document.getElementById('mplace').value.trim())){toast('❌ כדי לסמן "קבע פגישה" חובה להזין מועד, שעה ומיקום (קישור לפגישה לא חובה)',6000);return}
+  // ★ שער מייל (גל 05/10): קביעה ידנית מייצרת פגישת Google Meet + יומן + מיילים, ולשם כך חובה מייל ללקוח.
+  if(_st==='booked' && !document.getElementById('fe').value.trim()){toast('❌ כדי ליצור את הפגישה ואת קישור ה-Google Meet חובה להזין מייל ללקוח. הזינו מייל בכרטיס ואז שמרו.',7000);return}
   // ★ שער קשיח (גל 05/10): אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10 + סיכום (במילים שלכם או תמלול). זה המדד שמשפר את השיחות ומזין את המוח.
   if(_st==='attended'){
     const _r=parseInt(document.getElementById('mqRating').value)||((_prevMq&&_prevMq.rating)||0);
@@ -1447,7 +1460,7 @@ function saveLead(){
     if(!(_r>=1&&_r<=10)){toast('❌ אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10. בחרו דירוג למטה.',6000);return}
     if(!_sum){toast('❌ אי אפשר לשמור "הגיע לפגישה" בלי סיכום. כתבו במילים שלכם מה היה בפגישה, או הדביקו תמלול ולחצו "זקק סיכום".',7000);return}
   }
-  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,noshowReason:nsData,updatedAt:nowIso()};
+  const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetLink:document.getElementById('mlink').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,noshowReason:nsData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
   // האם פרטי הפגישה השתנו (חשוב: נקרא לפני Object.assign שדורס את prev). מאפשר לדחוף מועד חדש גם בלי שינוי סטטוס.
   const _meetChanged=prev?(prev.meetDate!==data.meetDate||prev.meetTime!==data.meetTime||prev.meetPlace!==data.meetPlace):false;
@@ -1468,6 +1481,8 @@ function saveLead(){
   if(isNew)pushManualLeadToWorker(saved);
   // סנכרון שינוי סטטוס חזרה ל-Worker (המקור האמיתי היחיד שמזין את שקלול העלויות).
   else if(saved&&saved.lead_id&&(data.status!==prevStatus||(MEETING_STATUSES.includes(data.status)&&_meetChanged)))pushStatusToWorker(saved);
+  // ★ קביעה ידנית: יצירת פגישת Cal (Google Meet + יומן + מיילים) כשיש מועד ומייל, והקישור עוד לא נוצר או שהמועד השתנה.
+  if(saved&&saved.lead_id&&data.status==='booked'&&data.meetDate&&data.email&&(!saved.meetLink||_meetChanged))createMeetingForLead(saved);
   // סימון "נכנס לקהילה" נשמר גם בשרת (בלי תופעות לוואי), כך שגם הדשבורד וגם הניתוח קוראים אותו.
   if(saved&&saved.lead_id&&data.joinedCommunity!==prevJoined)pushJoinedToWorker(saved);
   // דירוג איכות הפגישה (מספר+תאריך בלבד, בלי הטקסט החופשי) נדחף לוורקר כדי שדוח הבוקר יראה מגמה.
@@ -1656,6 +1671,31 @@ function setMq(n){n=Number(n)||0;const ri=document.getElementById('mqRating');if
 
 // ─── מנוע החייאת לידים (AI): הצגת תוצאה + יצירה מול הוורקר ───
 function copyTxt(t,btn){try{navigator.clipboard.writeText(t);if(btn){const o=btn.textContent;btn.textContent='✓ הועתק';setTimeout(()=>btn.textContent=o,1500);}}catch(e){}}
+function setMeetLinkUI(url){
+  const inp=document.getElementById('mlink'), a=document.getElementById('mlinkOpen'), hint=document.getElementById('mlinkHint');
+  if(inp)inp.value=url||'';
+  if(a){ if(url){a.href=url;a.style.display='inline-block';} else a.style.display='none'; }
+  if(hint)hint.textContent=url?'הקישור נשלח אוטומטית לתום וללקוח ונכנס ליומן של תום.':'הקישור ייווצר אוטומטית כשתשמרו "קבע פגישה" עם תאריך, שעה ומייל ללקוח.';
+}
+// יוצר פגישת Cal אמיתית (Google Meet + יומן תום + מיילים), ומכניס את הקישור לכרטיס מיד.
+async function createMeetingForLead(l){
+  if(!l||!l.lead_id)return;
+  const hint=document.getElementById('mlinkHint'); if(hint)hint.textContent='יוצר פגישה וקישור Google Meet...';
+  try{
+    const r=await fetch(`${WORKER_URL}/create-meeting`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,meetDate:l.meetDate,meetTime:l.meetTime,email:l.email})});
+    const j=await r.json();
+    if(j&&j.ok&&j.meetingUrl){
+      l.meetLink=j.meetingUrl; l.calBooking=Object.assign({},l.calBooking,{meetingUrl:j.meetingUrl,uid:j.uid,startTime:j.startTime,source:'manual',cancelled:false});
+      if(eid===l.id)setMeetLinkUI(j.meetingUrl);
+      scheduleSave(); toast('✓ נוצרה פגישה עם קישור Google Meet. נשלח לתום וללקוח ונכנס ליומן.',7000);
+    } else if(j&&j.ok&&!j.meetingUrl){
+      if(eid===l.id&&hint)hint.textContent='הפגישה נוצרה אך לא חזר קישור, בדקו ביומן של תום.';
+    } else {
+      const e=(j&&j.error)||''; const msg=e==='no_email'?'אין מייל ללקוח, לא נוצרה פגישה':e==='no_cal_key'?'חיבור Cal לא מוגדר':e==='cal_rejected'?('Cal דחה את המועד: '+(j.detail||'')):('לא נוצרה פגישה: '+e);
+      if(eid===l.id&&hint)hint.textContent=msg; toast('⚠ '+msg,7000);
+    }
+  }catch(e){ if(eid===l.id&&hint)hint.textContent='שגיאה ביצירת הפגישה'; }
+}
 async function askCoach(){
   const l=eid?leads.find(x=>x.id===eid):null;
   if(!l||!l.lead_id){toast('התובנה החיה זמינה ללידים שנכנסו מהמשפך בלבד',4000);return}
