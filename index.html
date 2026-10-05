@@ -1143,10 +1143,10 @@ function computeAnomalies(){
     const st=l.status;
     if(['not_relevant','invalid','deal','revival'].includes(st))return;
     // 1. קבע פגישה בלי מועד → לא יוצאות תזכורות (החור של וקנין)
-    if((st==='booked'||l.booked)&&!l.meetDate&&!attendedEver(l)&&!noshowEver(l))
+    if((st==='booked'||l.booked)&&!meetingTs(l)&&!attendedEver(l)&&!noshowEver(l))
       out.push({lvl:'crit',id:l.id,name:l.name,msg:'קבע פגישה בלי מועד. התזכורות לא יוצאות, חובה להזין תאריך ושעה בכרטיס.'});
     // 2. מועד הפגישה עבר, עדיין "קבע פגישה", בלי תוצאה
-    else if(st==='booked'&&l.meetDate&&metPassed(l)&&!attendedEver(l)&&!noshowEver(l))
+    else if(st==='booked'&&meetingTs(l)&&metPassed(l)&&!attendedEver(l)&&!noshowEver(l))
       out.push({lvl:'crit',id:l.id,name:l.name,msg:'מועד הפגישה עבר ואין תוצאה. לעדכן הגיע או לא הגיע, ולדרג.'});
     // 3. הגיע בלי דירוג וסיכום (לידים ישנים מלפני השער)
     if(st==='attended'&&!(l.meetingQuality&&l.meetingQuality.rating))
