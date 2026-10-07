@@ -598,6 +598,11 @@ tbody td{padding:12px 11px;vertical-align:middle}
     </div>
   </div>
 
+  <style>
+    #saveErr{display:none;background:#fdecec;border:1.5px solid #e0455c;color:#a01022;border-radius:9px;padding:11px 14px;margin:8px 0 10px;font-size:13.5px;font-weight:700;line-height:1.5}
+    .field-missing{outline:2px solid #e0455c !important;outline-offset:1px;border-radius:6px;background:#fff4f4 !important}
+  </style>
+  <div id="saveErr"></div>
   <div class="mactions">
     <button class="btn btn-red" id="bdel" onclick="delLead()" style="display:none">מחק</button>
     <button class="btn btn-wa btn-sm" id="bwa" onclick="openWAFromModal()" style="display:none">📱 וואטסאפ</button>
@@ -1022,7 +1027,13 @@ async function syncWorker(){
         existing.q_a=w.q_a||existing.q_a||''; existing.creative=creative;
         existing.campaign=utm.campaign||existing.campaign||'';
         // ה-Worker קנוני לסטטוס (מזין גם עדכוני שכל/Cal.com האוטומטיים).
-        if(w.status&&w.status!==existing.status&&ST[w.status]){existing.status=w.status;existing.updatedAt=nowIso();updated++;}
+        if(w.status&&w.status!==existing.status&&ST[w.status]){
+          // הגנה (גל 07/10): שינוי סטטוס מקומי טרי שעוד לא נקלט בוורקר לא נדרס. דוחפים שוב ושומרים את המקומי עד שהוורקר מתעדכן.
+          const _pend=existing.pendingStatus===existing.status&&existing.pendingStatusAt&&(Date.now()-existing.pendingStatusAt<5*60000)&&w.status!==existing.pendingStatus;
+          if(_pend){pushStatusToWorker(existing);}
+          else{existing.status=w.status;existing.updatedAt=nowIso();updated++;}
+        }
+        if(existing.pendingStatus&&w.status===existing.pendingStatus){existing.pendingStatus=null;existing.pendingStatusAt=null;}
         // Cal.com booking details are canonical — pull them so the meeting box auto-fills.
         if(w.meetDate&&existing.meetDate!==w.meetDate){existing.meetDate=w.meetDate;existing.updatedAt=nowIso();updated++;}
         if(w.meetTime&&existing.meetTime!==w.meetTime){existing.meetTime=w.meetTime;existing.updatedAt=nowIso();updated++;}
@@ -1301,6 +1312,7 @@ function adLabel(l){
 }
 function openLead(id){
   eid=id||null;
+  clearSaveErr();
   const l=id?leads.find(x=>x.id===id):null;
   const retBadge=l?.returnsCount>0?` <span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">↩ חזר ×${l.returnsCount+1}</span>`:'';
   document.getElementById('leadTitle').innerHTML=(l?`עריכה — ${esc(l.name)} `:'ליד חדש ')+retBadge+' <span id="savedEl" style="display:none;font-size:12px;color:var(--green)">✓ נשמר</span>'+((l&&l.createdAt)?`<span style="font-size:11px;color:var(--text2);font-weight:400"> · הגיע ${esc(fmtDt(l.createdAt))}</span>`:'');
@@ -1430,12 +1442,25 @@ function onStChange(){
   document.getElementById('nsBox').style.display=(st==='booked_noshow')?'block':'none';
 }
 function closeLead(){document.getElementById('leadOv').classList.remove('open');eid=null;}
+function clearSaveErr(){
+  const e=document.getElementById('saveErr'); if(e){e.style.display='none';e.innerHTML='';}
+  document.querySelectorAll('.field-missing').forEach(el=>el.classList.remove('field-missing'));
+}
+function blockSave(msg,fieldIds){
+  const box=document.getElementById('saveErr');
+  if(box){ box.innerHTML='⚠ לא נשמר. '+msg+'<br><span style="font-weight:600;font-size:12.5px">מה שכתבת נשאר כאן. מלאו את המסומן באדום ולחצו שמור שוב.</span>'; box.style.display='block'; }
+  (fieldIds||[]).forEach(id=>{const el=document.getElementById(id); if(el)el.classList.add('field-missing');});
+  const first=(fieldIds&&fieldIds.length)?document.getElementById(fieldIds[0]):box;
+  try{ if(first&&first.scrollIntoView)first.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
+  try{ if(first&&first.focus&&/^(INPUT|TEXTAREA|SELECT)$/.test(first.tagName))first.focus({preventScroll:true}); }catch(e){}
+}
 function saveLead(){
+  clearSaveErr();
   const name=document.getElementById('fn').value.trim();
-  if(!name){toast('❌ שם הוא שדה חובה');return}
+  if(!name){blockSave('שם הוא שדה חובה.',['fn']);return}
   const _st=document.getElementById('fst2').value;
   const _nr={category:document.getElementById('nrCat').value,why:document.getElementById('nrWhy').value.trim(),saidInCall:document.getElementById('nrSaid').value.trim(),opener:document.getElementById('nrOpener').value.trim()};
-  if(_st==='not_relevant'&&(!_nr.category||!_nr.why||!_nr.saidInCall||!_nr.opener)){toast('❌ אי אפשר לסמן "לא רלוונטי" בלי למלא: קטגוריה, למה, מה הליד אמר בשיחה, ואיך היה הפתיח',6000);return}
+  if(_st==='not_relevant'&&(!_nr.category||!_nr.why||!_nr.saidInCall||!_nr.opener)){const miss=[];if(!_nr.category)miss.push('nrCat');if(!_nr.why)miss.push('nrWhy');if(!_nr.saidInCall)miss.push('nrSaid');if(!_nr.opener)miss.push('nrOpener');blockSave('כדי לסמן "לא רלוונטי" חובה למלא בתיבה שנפתחה למטה: קטגוריה, למה, מה הליד אמר בשיחה, ואיך היה הפתיח.',miss);return}
   const _curL=eid?leads.find(x=>x.id===eid):null;
   const _prevMq=(_curL&&_curL.meetingQuality)||null;
   const _canRate=canRateMeeting(_curL,_st);
@@ -1448,17 +1473,17 @@ function saveLead(){
   const prev=eid?leads.find(x=>x.id===eid):null;
   const prevStatus=prev?prev.status:null;
   // חובה (גל 28/09): כל שינוי סטטוס מחייב הערה על מה שקרה בשיחה. "לא רלוונטי"/"להחייאה" פטורים כי יש להם סיבה מפורטת משלהם.
-  if(_st!==prevStatus && _st!=='not_relevant' && _st!=='revival' && !document.getElementById('fnotes').value.trim()){toast('❌ חובה להוסיף הערה על מה שקרה בשיחה לפני שינוי הסטטוס',6000);return}
+  if(_st!==prevStatus && _st!=='not_relevant' && _st!=='revival' && !document.getElementById('fnotes').value.trim()){blockSave('חובה להוסיף הערה על מה שקרה בשיחה לפני שינוי הסטטוס.',['fnotes']);return}
   // חובה (גל 28/09): מעבר ל"קבע פגישה" מחייב מועד + שעה + מיקום (קישור לפגישה לא חובה). זה גם מה שמפעיל את תזכורות הפגישה.
-  if(_st==='booked' && (!document.getElementById('mdate').value || !document.getElementById('mtime').value || !document.getElementById('mplace').value.trim())){toast('❌ כדי לסמן "קבע פגישה" חובה להזין מועד, שעה ומיקום (קישור לפגישה לא חובה)',6000);return}
+  if(_st==='booked' && (!document.getElementById('mdate').value || !document.getElementById('mtime').value || !document.getElementById('mplace').value.trim())){const miss=[];if(!document.getElementById('mdate').value)miss.push('mdate');if(!document.getElementById('mtime').value)miss.push('mtime');if(!document.getElementById('mplace').value.trim())miss.push('mplace');blockSave('כדי לסמן "קבע פגישה" חובה מועד, שעה ומיקום.',miss);return}
   // ★ שער מייל (גל 05/10): קביעה ידנית מייצרת פגישת Google Meet + יומן + מיילים, ולשם כך חובה מייל ללקוח.
-  if(_st==='booked' && !document.getElementById('fe').value.trim()){toast('❌ כדי ליצור את הפגישה ואת קישור ה-Google Meet חובה להזין מייל ללקוח. הזינו מייל בכרטיס ואז שמרו.',7000);return}
+  if(_st==='booked' && !document.getElementById('fe').value.trim()){blockSave('כדי ליצור את הפגישה וקישור ה-Google Meet חובה מייל ללקוח.',['fe']);return}
   // ★ שער קשיח (גל 05/10): אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10 + סיכום (במילים שלכם או תמלול). זה המדד שמשפר את השיחות ומזין את המוח.
   if(_st==='attended'){
     const _r=parseInt(document.getElementById('mqRating').value)||((_prevMq&&_prevMq.rating)||0);
     const _sum=document.getElementById('mqGood').value.trim()||document.getElementById('mqTranscript').value.trim()||((_prevMq&&(_prevMq.good||_prevMq.transcript))||'');
-    if(!(_r>=1&&_r<=10)){toast('❌ אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10. בחרו דירוג למטה.',6000);return}
-    if(!_sum){toast('❌ אי אפשר לשמור "הגיע לפגישה" בלי סיכום. כתבו במילים שלכם מה היה בפגישה, או הדביקו תמלול ולחצו "זקק סיכום".',7000);return}
+    if(!(_r>=1&&_r<=10)){blockSave('אי אפשר לשמור "הגיע לפגישה" בלי דירוג 1 עד 10. בחרו דירוג למטה.',['mqChips']);return}
+    if(!_sum){blockSave('אי אפשר לשמור "הגיע לפגישה" בלי סיכום. כתבו מה היה בפגישה או הדביקו תמלול ולחצו "זקק סיכום".',['mqGood']);return}
   }
   const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetLink:document.getElementById('mlink').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,noshowReason:nsData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
@@ -1480,7 +1505,7 @@ function saveLead(){
   // כלל ברזל: כל ליד חדש שמוזן ידנית נדחף לשכל תחת "מתעניינים קדימה צורן" עם תיוג "ידני".
   if(isNew)pushManualLeadToWorker(saved);
   // סנכרון שינוי סטטוס חזרה ל-Worker (המקור האמיתי היחיד שמזין את שקלול העלויות).
-  else if(saved&&saved.lead_id&&(data.status!==prevStatus||(MEETING_STATUSES.includes(data.status)&&_meetChanged)))pushStatusToWorker(saved);
+  else if(saved&&saved.lead_id&&(data.status!==prevStatus||(MEETING_STATUSES.includes(data.status)&&_meetChanged))){if(data.status!==prevStatus){saved.pendingStatus=data.status;saved.pendingStatusAt=Date.now();}pushStatusToWorker(saved);}
   // ★ קביעה ידנית: יצירת פגישת Cal (Google Meet + יומן + מיילים) כשיש מועד ומייל, והקישור עוד לא נוצר או שהמועד השתנה.
   if(saved&&saved.lead_id&&data.status==='booked'&&data.meetDate&&data.email&&(!saved.meetLink||_meetChanged))createMeetingForLead(saved);
   // סימון "נכנס לקהילה" נשמר גם בשרת (בלי תופעות לוואי), כך שגם הדשבורד וגם הניתוח קוראים אותו.
