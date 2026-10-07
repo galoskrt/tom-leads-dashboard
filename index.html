@@ -1126,7 +1126,9 @@ function canRateMeeting(l,st){ st=st||(l&&l.status); return st==='attended' || a
 // RENDER
 // ═══════════════════════════════════════════════
 let filter7d=false;
-function isNew7(l){ const t=Date.parse((l&&(l.createdAt||l.ts))||''); return !!t && (Date.now()-t)<7*86400000; }
+// ניסוי המודל מול תום מתחיל ראשון 11/10/2026. הבאדג מסמן רק לידים שנכנסו מתחילת הניסוי, 7 ימים לכל ליד.
+const TRIAL_START=Date.parse('2026-10-11T00:00:00+03:00');
+function isNew7(l){ const t=Date.parse((l&&(l.createdAt||l.ts))||''); return !!t && t>=TRIAL_START && (Date.now()-t)<7*86400000; }
 function toggle7d(){ filter7d=!filter7d; const b=document.getElementById('flt7Btn'); if(b)b.classList.toggle('on',filter7d); render(); }
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase();
