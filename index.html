@@ -111,6 +111,9 @@ tbody td{padding:12px 11px;vertical-align:middle}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:.02em}
 .returns-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(194,118,28,.15);color:#FF9000;border:1px solid rgba(194,118,28,.35);margin-right:6px;vertical-align:middle;cursor:default}
 .returns-badge::before{content:'↩';font-size:10px}
+.new7-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:rgba(27,158,99,.14);color:#15995c;border:1px solid rgba(27,158,99,.4);margin-right:6px;vertical-align:middle;cursor:default}
+.new7-badge::before{content:'●';font-size:7px}
+#flt7Btn.on{background:#15995c;color:#fff;border-color:#15995c}
 .s-new{background:rgba(194,21,28,.15);color:#d494ff;border:1px solid rgba(194,21,28,.3)}
 .s-no1,.s-no2,.s-no3,.s-no4{background:rgba(255,26,0,.12);color:#ff8099;border:1px solid rgba(255,26,0,.25)}
 .s-cold-fu{background:rgba(100,160,255,.1);color:#80b8ff;border:1px solid rgba(100,160,255,.2)}
@@ -322,6 +325,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <select class="sel" id="fcamp" onchange="render()">
     <option value="">כל הקריאייטיבים</option>
   </select>
+  <button class="btn btn-outline btn-sm" id="flt7Btn" onclick="toggle7d()" title="הצג רק לידים שנכנסו ב-7 הימים האחרונים">נכנסו השבוע</button>
   <button class="btn btn-outline btn-sm" onclick="syncNow()" title="סנכרן עכשיו">🔄</button>
   <button class="btn btn-outline btn-sm" onclick="manualMigrate()" title="שחזר נתונים מגיבוי ישן" style="background:#fff3cd;border-color:#ffc107">♻️ שחזר</button>
   <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
@@ -1121,6 +1125,9 @@ function canRateMeeting(l,st){ st=st||(l&&l.status); return st==='attended' || a
 // ═══════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════
+let filter7d=false;
+function isNew7(l){ const t=Date.parse((l&&(l.createdAt||l.ts))||''); return !!t && (Date.now()-t)<7*86400000; }
+function toggle7d(){ filter7d=!filter7d; const b=document.getElementById('flt7Btn'); if(b)b.classList.toggle('on',filter7d); render(); }
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase();
   const st=document.getElementById('fst').value;
@@ -1130,6 +1137,7 @@ function getFiltered(){
     if(q&&!`${l.name} ${l.phone} ${l.business} ${l.notes}`.toLowerCase().includes(q))return false;
     if(st&&l.status!==st)return false;
     if(fc&&l.creative!==fc)return false;
+    if(filter7d&&!isNew7(l))return false;
     if(fr){const rs=remSt(l);if(fr==='today'&&rs!=='due')return false;if(fr==='overdue'&&rs!=='overdue')return false;if(fr==='week'&&!['due','week'].includes(rs))return false;}
     return true;
   }).sort((a,b)=>{
@@ -1237,7 +1245,7 @@ function render(){
     const commBtn=`<button class="btn btn-sm" title="העתק קישור לקהילת הוואטספ, לשליחה בלייב בשיחת התיאום" style="padding:5px 9px;font-size:11px;background:var(--accent);color:#fff" onclick="copyCommunity(this)">קהילה</button>`;
     return`<tr onclick="openLead('${l.id}')">
       <td data-label="#">${rows.length-i}</td>
-      <td data-label="שם"><b>${esc(l.name)}</b>${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
+      <td data-label="שם"><b>${esc(l.name)}</b>${isNew7(l)?`<span class="new7-badge" title="נכנס ב-7 הימים האחרונים">נכנס השבוע</span>`:''}${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
       <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(()=>{const vv=vslVerdict(l);return vv?`<br><span style="font-size:11px;color:${vv.c};font-weight:800">▶ ${vv.t} ${vv.pct}%</span>`:'';})()}</td>
       <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
@@ -1315,7 +1323,8 @@ function openLead(id){
   clearSaveErr();
   const l=id?leads.find(x=>x.id===id):null;
   const retBadge=l?.returnsCount>0?` <span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">↩ חזר ×${l.returnsCount+1}</span>`:'';
-  document.getElementById('leadTitle').innerHTML=(l?`עריכה — ${esc(l.name)} `:'ליד חדש ')+retBadge+' <span id="savedEl" style="display:none;font-size:12px;color:var(--green)">✓ נשמר</span>'+((l&&l.createdAt)?`<span style="font-size:11px;color:var(--text2);font-weight:400"> · הגיע ${esc(fmtDt(l.createdAt))}</span>`:'');
+  const new7Badge=(l&&isNew7(l))?` <span class="new7-badge" title="נכנס ב-7 הימים האחרונים">נכנס השבוע</span>`:'';
+  document.getElementById('leadTitle').innerHTML=(l?`עריכה — ${esc(l.name)} `:'ליד חדש ')+new7Badge+retBadge+' <span id="savedEl" style="display:none;font-size:12px;color:var(--green)">✓ נשמר</span>'+((l&&l.createdAt)?`<span style="font-size:11px;color:var(--text2);font-weight:400"> · הגיע ${esc(fmtDt(l.createdAt))}</span>`:'');
   document.getElementById('bdel').style.display=l?'inline-flex':'none';
   document.getElementById('bwa').style.display=(l&&l.phone)?'inline-flex':'none';
   document.getElementById('fn').value=l?.name||'';
