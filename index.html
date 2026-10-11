@@ -144,6 +144,8 @@ tbody td{padding:12px 11px;vertical-align:middle}
 /* ── OVERLAY & MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch;backdrop-filter:blur(4px)}
 .overlay.open{display:flex}
+@keyframes nudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.modal.nudge{animation:nudge .22s ease 1}
 .modal{background:var(--s1);border:1px solid var(--border2);border-radius:20px;width:100%;max-width:580px;padding:24px;margin:auto;box-shadow:0 0 40px rgba(194,21,28,.15),0 20px 60px rgba(0,0,0,.7)}
 .modal h2{font-size:17px;font-weight:800;margin-bottom:18px;padding-bottom:13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .modal-close{background:transparent;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;-webkit-text-fill-color:var(--text2)}
@@ -304,20 +306,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <input class="search" id="search" placeholder="חיפוש..." oninput="render()"/>
   <select class="sel" id="fst" onchange="render()">
     <option value="">כל הסטטוסים</option>
-    <option value="new">ליד חדש</option>
-    <option value="no_answer_1">אין מענה X1</option>
-    <option value="no_answer_2">אין מענה X2</option>
-    <option value="no_answer_3">אין מענה X3</option>
-    <option value="no_answer_4">אין מענה X4</option>
-    <option value="answered">ענה</option>
-    <option value="booked">קבע פגישה</option>
-    <option value="booked_noshow">קבע פגישה - לא הגיע</option>
-    <option value="attended">קבע פגישה - הגיע</option>
-    <option value="cold_followup">פולואפ קר</option>
-    <option value="hot_followup">פולואפ חם</option>
-    <option value="deal">סגר עסקה</option>
-    <option value="not_relevant">לא רלוונטי</option>
-    <option value="invalid">מספר לא תקין</option>
+    <!-- נבנה אוטומטית מ-ST, כדי שהסינון תמיד יהיה מסונכרן לסטטוסים העדכניים (גל 11/10) -->
   </select>
   <select class="sel" id="frem" onchange="render()">
     <option value="">כל הפולואפים</option>
@@ -358,7 +347,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
 </div>
 
 <!-- LEAD MODAL -->
-<div class="overlay" id="leadOv" onclick="bgClose(event,'leadOv')">
+<div class="overlay" id="leadOv" onclick="bgNudge(event,'leadOv')">
 <div class="modal">
   <h2 id="leadTitle">ליד חדש <button class="modal-close" onclick="closeLead()">✕</button></h2>
 
@@ -620,7 +609,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
 </div>
 
 <!-- WHATSAPP MODAL -->
-<div class="overlay" id="waOv" onclick="bgClose(event,'waOv')">
+<div class="overlay" id="waOv" onclick="bgNudge(event,'waOv')">
 <div class="modal wa-modal">
   <h2>📱 שלח פולואפ <button class="modal-close" onclick="closeWA()">✕</button></h2>
   <div class="wa-info">
@@ -1101,6 +1090,8 @@ const ST={
   revival:{l:'להחייאה',c:'s-hot-fu'},
   invalid:{l:'מספר לא תקין',c:'s-invalid'},
 };
+// סינון הסטטוסים נבנה מהקטלוג הזה בלבד, כך שכל סטטוס חדש מופיע בסינון אוטומטית. (גל 11/10)
+(function(){const f=document.getElementById('fst');if(!f)return;const cur=f.value;f.innerHTML='<option value="">כל הסטטוסים</option>'+Object.entries(ST).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('');f.value=cur;})();
 // מיפוי סטטוסים ישנים (מהגרסה הקודמת של הדשבורד) → ל-13 החדשים, מוחל פעם אחת ב-loadData.
 const ST_MIGRATE={
   won:'deal',meeting_won:'deal',meeting_attended:'attended',meeting_noshow:'booked_noshow',
@@ -2206,6 +2197,8 @@ function todayStr(){return new Date().toISOString().split('T')[0]}
 function fmtDt(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function bgClose(e,id){if(e.target.id===id)document.getElementById(id).classList.remove('open')}
+// כרטיס ליד ופופאפ פולואפ: לחיצה על הרקע לא סוגרת (נסגר רק בכפתורים), כדי לא לאבד הקלדה. רק "רעד" קטן שמסמן להשתמש בכפתורים. (גל 11/10)
+function bgNudge(e,id){if(e.target.id!==id)return;const m=e.target.querySelector('.modal');if(!m)return;m.classList.remove('nudge');void m.offsetWidth;m.classList.add('nudge');}
 let toastT=null;
 async function manualMigrate(){
   const old=JSON.parse(localStorage.getItem('gl2')||'[]');
