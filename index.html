@@ -207,6 +207,41 @@ tbody td{padding:12px 11px;vertical-align:middle}
 
 /* ── WHATSAPP MODAL ── */
 .wa-modal{max-width:440px}
+/* ── התאמה לפי השיחה + לוח מגמות (גל 11/10) ── */
+.fit-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px}
+.fit-chips button{font-family:inherit;font-size:13px;font-weight:700;padding:6px 14px;border-radius:999px;border:1.5px solid var(--border);background:#fff;color:var(--text);cursor:pointer}
+.fit-chips button.on[data-f="fit"]{background:var(--green);border-color:var(--green);color:#fff}
+.fit-chips button.on[data-f="unsure"]{background:var(--orange);border-color:var(--orange);color:#fff}
+.fit-chips button.on[data-f="unfit"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.fit-ai{font-size:12.5px;line-height:1.55;color:var(--text2);background:var(--s3);border-radius:9px;padding:7px 10px;margin-top:7px}
+.fit-ai b{color:var(--text)}
+.tr-modal{max-width:980px}
+.tr-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.tr-note{font-size:12px;color:var(--text2);line-height:1.6;margin:4px 0 12px}
+.tr-ins{display:flex;flex-direction:column;gap:7px;margin-bottom:6px}
+.tr-ins div{background:var(--s3);border-radius:10px;padding:9px 12px;font-size:13.5px;line-height:1.55;text-wrap:pretty}
+.tr-ins div.good{border-inline-start:4px solid var(--green)} .tr-ins div.bad{border-inline-start:4px solid var(--accent)}
+.tr-h{font-size:15px;font-weight:800;margin:18px 0 6px}
+.tr-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.tr-t{min-width:760px;width:100%;border-collapse:collapse;font-size:12.5px}
+table.tr-t th{font-size:11px;color:var(--text2);font-weight:700;text-align:right;padding:6px 7px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.tr-t td{padding:6px 7px;border-bottom:1px solid rgba(194,21,28,.07);white-space:nowrap;font-variant-numeric:tabular-nums}
+table.tr-t td:first-child{font-weight:700;white-space:normal;min-width:120px}
+table.tr-t td.up{background:rgba(21,122,58,.10);color:#0f6b31;font-weight:700}
+table.tr-t td.dn{background:rgba(194,21,28,.08);color:var(--accent);font-weight:700}
+table.tr-t td.thin{color:var(--text2)}
+table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
+.tr-k{font-size:11px;color:var(--text2)}
+.tr-reasons{display:flex;flex-wrap:wrap;gap:6px}
+.tr-reasons span{background:var(--s3);border-radius:999px;padding:4px 11px;font-size:12.5px}
+@media(max-width:680px){
+  table.tr-t,table.tr-t thead,table.tr-t tbody,table.tr-t tr,table.tr-t td,table.tr-t th{display:revert}
+  table.tr-t thead{display:table-header-group}
+  table.tr-t tbody tr{display:table-row;background:none;border:0;padding:0;margin:0;box-shadow:none}
+  table.tr-t tbody td{display:table-cell;padding:6px 7px;font-size:12.5px}
+  table.tr-t tbody td:first-child{display:table-cell}
+  table.tr-t tbody td::before{content:none}
+}
 /* ── פתיחים לשיחה (גל 11/10) ── */
 .op-open{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 16px;border:1.5px solid var(--accent);border-radius:12px;background:#fff;color:var(--accent);font-family:inherit;font-weight:800;font-size:14.5px;cursor:pointer;transition:background .12s ease}
 .op-open:hover{background:rgba(194,21,28,.05)}
@@ -352,6 +387,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <button class="btn btn-outline btn-sm" onclick="undoSnapshot()" title="שחזור למצב לפני 24 שעות" style="border-color:rgba(194,118,28,.5);color:var(--orange)">↩ UNDO</button>
   <button class="btn btn-outline btn-sm" onclick="reqNotif()" title="הפעל התראות">🔔</button>
   <button class="btn btn-outline btn-sm" onclick="openStats()" title="סטטיסטיקות וביצועים">📊 ביצועים ועלויות</button>
+  <button class="btn btn-outline btn-sm" onclick="openTrends()" title="מגמות לאורך המשפך: איזו מודעה, שעה ותשובה מביאות לידים טובים יותר"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> מגמות</button>
 </div>
 
 <div class="wrap">
@@ -596,6 +632,23 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <div class="fg one">
     <div class="f"><label>הערות</label><textarea id="fnotes" placeholder="תחושות מהשיחה, התנגדויות, מה דיברנו..."></textarea></div>
   </div>
+  <!-- ★ התאמה לפי השיחה (גל 11/10): לא לפי סטטוס ולא לפי דירוג. מזין את לוח המגמות. -->
+  <div class="fg one" id="fitRow" style="display:none">
+    <div class="f"><label>התאמה לפי השיחה <span style="font-weight:400;color:var(--text2);font-size:11px">(השיפוט שלך מהשיחה, לא הסטטוס. מזין את לוח המגמות)</span></label>
+      <div class="fit-chips" id="fitChips">
+        <button type="button" data-f="fit" onclick="setManualFit('fit')">מתאים</button>
+        <button type="button" data-f="unsure" onclick="setManualFit('unsure')">לא בטוח</button>
+        <button type="button" data-f="unfit" onclick="setManualFit('unfit')">לא מתאים</button>
+      </div>
+      <select id="fitReason" onchange="setManualFit(null)">
+        <option value="">הסיבה העיקרית (לא חובה)</option>
+        <option>כוונה ממשית</option><option>הון זמין</option><option>מוכן להתקדם</option>
+        <option>אין הון פנוי</option><option>תזמון, לא עכשיו</option><option>סקרן, אוסף מידע</option>
+        <option>חשדנות או חוסר אמון</option><option>מחפש משהו אחר</option><option>קשה להשגה, לא עונה</option><option>מחוץ לקהל היעד</option>
+      </select>
+      <div class="fit-ai" id="fitAi" style="display:none"></div>
+    </div>
+  </div>
 
   <!-- REMINDER -->
   <div class="rem-box">
@@ -654,6 +707,22 @@ tbody td{padding:12px 11px;vertical-align:middle}
   <div class="op-tags" id="opTags"></div>
   <div id="opBody"></div>
   <div class="mactions"><button class="btn btn-outline" onclick="closeOpeners()">סגור</button></div>
+</div>
+</div>
+
+<!-- TRENDS MODAL · מגמות (גל 11/10) -->
+<div class="overlay" id="trOv" onclick="bgClose(event,'trOv')">
+<div class="modal tr-modal">
+  <h2>מגמות לאורך המשפך <button class="modal-close" onclick="closeOv('trOv')">✕</button></h2>
+  <div class="tr-top">
+    <select class="sel" id="trRange" onchange="renderTrends()" style="width:auto;font-size:13px">
+      <option value="0">מאז העלייה לאוויר</option><option value="30">30 ימים</option><option value="14">14 ימים</option>
+    </select>
+    <button class="btn btn-outline btn-sm" id="trAiBtn" onclick="runAiFit()">נתח הערות חדשות</button>
+    <span class="tr-k" id="trStamp"></span>
+  </div>
+  <p class="tr-note"><b>התאמה</b> = הסימון שלך בכרטיס אחרי שיחה, ואם אין סימון, ניתוח ה־AI של ההערות בלבד (בלי סטטוס ובלי דירוג). <b>ענו</b> = הגיעו לשיחה (ענה, פגישה, פולואפ, עסקה, או לא רלוונטי אחרי שיחה). <b>ניסיונות</b> = כמה "אין מענה" לפני שענו. <b>יציאה מהירה</b> = פחות מ־15 שניות פעילות בדף אחרי השאלון. ירוק או אדום מסמנים סטייה של 15 נקודות לפחות מהממוצע, רק כשיש 5 לידים ומעלה. אפור = מעט מדי נתונים להסיק.</p>
+  <div id="trBody">טוען...</div>
 </div>
 </div>
 
@@ -1094,6 +1163,7 @@ async function syncWorker(){
         existing.communityClicked=!!w.communityClicked; existing.funnelCompleted=!!w.funnelCompleted; if(w.communityClickedAt)existing.communityClickedAt=w.communityClickedAt;
         if(w.revival)existing.revival=w.revival; if(w.notRelevantReason)existing.notRelevantReason=w.notRelevantReason;
         if(w.noshowRevival)existing.noshowRevival=w.noshowRevival;
+        existing.aiFit=w.aiFit||null; if(w.manualFit)existing.manualFit=w.manualFit;
         // הערות: אם המנוע כבר מחזיק את הטקסט הנוכחי, מסמנים כמסונכרן כדי שה-backfill ידלג. אחרת נשאר לא-מסונכרן וייידחף.
         if(w.noteAt)existing.noteAt=existing.noteAt||w.noteAt;
         if(typeof w.noteText==='string'&&w.noteText===(existing.notes||''))existing.noteTextSynced=w.noteText;
@@ -1107,7 +1177,7 @@ async function syncWorker(){
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
           followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinedCommunity:!!w.joinedCommunity,joinedCommunityAt:w.joinedCommunityAt||'',
           vslWatched:w.vslWatched,vslSecs:w.vslSecs,vslLen:w.vslLen,pageBehavior:w.pageBehavior||null,communityClicked:!!w.communityClicked,funnelCompleted:!!w.funnelCompleted,communityClickedAt:w.communityClickedAt||'',
-          revival:w.revival||null,notRelevantReason:w.notRelevantReason||null,noteAt:w.noteAt||'',
+          revival:w.revival||null,notRelevantReason:w.notRelevantReason||null,noteAt:w.noteAt||'',aiFit:w.aiFit||null,manualFit:w.manualFit||null,
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
         added++;
       }
@@ -1366,6 +1436,7 @@ function adLabel(l){
 function openLead(id){
   eid=id||null;
   {const _ob=document.getElementById('opBtnRow'); if(_ob)_ob.style.display=id?'':'none';}
+  setTimeout(()=>renderFitRow(id?leads.find(x=>x.id===id):null),0);
   clearSaveErr();
   const l=id?leads.find(x=>x.id===id):null;
   const retBadge=l?.returnsCount>0?` <span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">↩ חזר ×${l.returnsCount+1}</span>`:'';
@@ -2245,6 +2316,178 @@ function exportCSV(){
 function nowIso(){return new Date().toISOString()}
 function todayStr(){return new Date().toISOString().split('T')[0]}
 function fmtDt(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}
+// ═══ התאמה לפי השיחה (גל 11/10) ═══
+const FIT_HE={fit:'מתאים',unsure:'לא בטוח',unfit:'לא מתאים',unknown:'אין תיעוד שיחה'};
+function renderFitRow(l){
+  const row=document.getElementById('fitRow'); if(!row)return;
+  if(!l||!l.lead_id){row.style.display='none';return;}
+  row.style.display='';
+  const mf=(l.manualFit&&l.manualFit.fit)||'';
+  document.querySelectorAll('#fitChips button').forEach(b=>b.classList.toggle('on',b.dataset.f===mf));
+  document.getElementById('fitReason').value=(l.manualFit&&l.manualFit.reason)||'';
+  const ai=l.aiFit, box=document.getElementById('fitAi');
+  if(ai&&ai.fit){
+    box.style.display='';
+    box.innerHTML=`<b>ניתוח ההערות:</b> ${FIT_HE[ai.fit]||ai.fit}${(ai.reasons||[]).length?' · '+esc(ai.reasons.join(', ')):''}${ai.curious?' · סקרן':''}${ai.confidence==='low'?' · מעט תיעוד':''}${ai.summary&&ai.fit!=='unknown'?'<br>'+esc(ai.summary):''}`;
+  } else box.style.display='none';
+}
+async function setManualFit(fit){
+  const l=eid?leads.find(x=>x.id===eid):null; if(!l||!l.lead_id)return;
+  const cur=(l.manualFit&&l.manualFit.fit)||'';
+  let f=fit===null?cur:(fit===cur?'':fit);
+  const reason=document.getElementById('fitReason').value;
+  if(fit===null&&!f)return;          // סיבה בלי סימון: מחכים לסימון
+  l.manualFit=f?{fit:f,reason,at:nowIso(),by:'dashboard'}:null;
+  renderFitRow(l); scheduleSave();
+  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,manualFit:{fit:f,reason},by:'dashboard'})}); }
+  catch(e){console.warn('fit push',e);}
+}
+
+// ═══ לוח מגמות (גל 11/10) ═══
+// מחושב תמיד מהוורקר (מקור האמת להיסטוריה, למיילסטונים, להתנהגות בדף ולניתוח ההערות), לא מהעותק המקומי.
+let trData=null;
+const TR_TEST=['תום הרוש'];
+const TR_ANS=['answered','booked','booked_noshow','attended','cold_followup','hot_followup','deal','not_relevant','revival'];
+async function openTrends(){document.getElementById('trOv').classList.add('open');await loadTrends();}
+async function loadTrends(){
+  document.getElementById('trBody').textContent='טוען...';
+  try{
+    const r=await fetch(`${WORKER_URL}/leads?limit=2000`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`}});
+    const j=await r.json(); trData=(j.leads||[]).filter(w=>!w.demo&&!w.manual&&!TR_TEST.includes(String(w.name||'').trim()));
+    document.getElementById('trStamp').textContent='עודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    renderTrends();
+  }catch(e){document.getElementById('trBody').textContent='לא הצלחתי לטעון את הנתונים. נסו שוב.';}
+}
+async function runAiFit(){
+  const btn=document.getElementById('trAiBtn'); btn.disabled=true;
+  let total=0;
+  try{
+    for(let i=0;i<12;i++){
+      btn.textContent='מנתח הערות... '+total;
+      const r=await fetch(`${WORKER_URL}/ai-fit`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({max:6})});
+      const j=await r.json(); if(!j.ok)break; total+=j.done||0; if(!j.remaining||(j.errors&&j.errors.length))break;
+    }
+    toast(total?`נותחו ${total} לידים עם הערות חדשות`:'אין הערות חדשות לניתוח',4000);
+  }catch(e){toast('הניתוח נכשל, נסו שוב',4000);}
+  btn.disabled=false; btn.textContent='נתח הערות חדשות';
+  await loadTrends(); syncWorker();
+}
+function trRow(w){
+  const H=w.history||[]; const keys=H.map(h=>h.key);
+  const firstAnsIdx=H.findIndex(h=>TR_ANS.includes(h.key));
+  const answered=firstAnsIdx>=0;
+  const attempts=(answered?H.slice(0,firstAnsIdx):H).filter(h=>String(h.key||'').startsWith('no_answer')).length;
+  const firstTouch=H.find(h=>h.key&&h.key!=='new');
+  const touchMin=firstTouch&&w.ts?Math.max(0,(Date.parse(firstTouch.at)-Date.parse(w.ts))/60000):null;
+  const m=w.milestones||{};
+  const booked=!!(m.booked||w.booked||w.attendedAt);
+  const attended=!!(m.attended||w.attendedAt);
+  const fitSrc=w.manualFit&&w.manualFit.fit?w.manualFit:(w.aiFit&&w.aiFit.fit&&w.aiFit.fit!=='unknown'?w.aiFit:null);
+  const fit=fitSrc?fitSrc.fit:null;
+  const reasons=w.manualFit&&w.manualFit.reason?[w.manualFit.reason]:((w.aiFit&&w.aiFit.reasons)||[]);
+  let pb=null; if(w.pageBehavior){for(const k of Object.keys(w.pageBehavior)){const v=w.pageBehavior[k];if(v&&(!pb||(v.activeSec||0)>(pb.activeSec||0)))pb=v;}}
+  const ts=Date.parse(w.ts||0)||0; const d=new Date(ts);
+  const ilH=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'numeric',hourCycle:'h23'}).format(d));
+  const ilD=new Intl.DateTimeFormat('he-IL',{timeZone:'Asia/Jerusalem',weekday:'long'}).format(d);
+  const utm=w.utm||{}; const camp=String(utm.campaign||'').toLowerCase();
+  const isRmk=/rmk|remarket|retarget/.test(camp);
+  const crRaw=utm.content||utm.creative||'ללא תיוג';
+  const q1=(String(w.q_a||'').replace(/^\[[^\]]*\]\s*/,'').split(' | ')[0]||'').split('→')[1];
+  return {ts,answered,attempts,touchMin,booked,attended,fit,reasons,curious:!!(w.aiFit&&w.aiFit.curious),
+    notRel:keys.includes('not_relevant')||keys.includes('invalid'),
+    vsl:(w.vslWatched!=null&&w.vslWatched!=='')?Number(w.vslWatched):null,
+    quick:pb?((pb.activeSec||0)<15):null, returned:(w.returnsCount||0)>0,
+    creative:(isRmk?'רימרקטינג · ':'')+(typeof adLabel==='function'?(adLabel({utm}).ad||crRaw):crRaw),
+    campaign:isRmk?'רימרקטינג':(camp?'ראשי':'ללא קמפיין'),
+    temp:w.temperature==='hot'?'חם':'קר', q1:(q1||'').trim()||'לא ידוע',
+    hour:ilH<6?'00:00 עד 06:00':ilH<9?'06:00 עד 09:00':ilH<12?'09:00 עד 12:00':ilH<15?'12:00 עד 15:00':ilH<18?'15:00 עד 18:00':ilH<21?'18:00 עד 21:00':'21:00 עד 24:00',
+    day:ilD};
+}
+// מדדים: שם, איך מחשבים, האם גבוה = טוב
+const TR_MET=[
+  {k:'answered',h:'ענו',kind:'rate',good:true},
+  {k:'attempts',h:'ניסיונות עד מענה',kind:'avg',good:false,only:r=>r.answered},
+  {k:'booked',h:'קבעו',kind:'rate',good:true},
+  {k:'attended',h:'הגיעו',kind:'rate',good:true},
+  {k:'unfit',h:'לא מתאימים',kind:'rate',good:false,only:r=>r.fit!==null,val:r=>r.fit==='unfit'},
+  {k:'curious',h:'סקרנים',kind:'rate',good:false,only:r=>r.fit!==null},
+  {k:'notRel',h:'סומנו לא רלוונטי',kind:'rate',good:false},
+  {k:'vsl',h:'צפייה ב־VSL',kind:'avgpct',good:true,only:r=>r.vsl!==null},
+  {k:'quick',h:'יציאה מהירה',kind:'rate',good:false,only:r=>r.quick!==null},
+  {k:'returned',h:'חזרו',kind:'rate',good:true},
+];
+function trStat(rows,m){
+  const pool=m.only?rows.filter(m.only):rows; const n=pool.length;
+  if(!n)return {n:0,v:null,txt:'—'};
+  const get=m.val||(r=>r[m.k]);
+  if(m.kind==='rate'){const k=pool.filter(r=>get(r)).length;const v=Math.round(k*100/n);return {n,v,txt:`${v}% <span class="tr-k">${k}/${n}</span>`};}
+  const sum=pool.reduce((a,r)=>a+(Number(get(r))||0),0);const v=sum/n;
+  if(m.kind==='avgpct')return {n,v:Math.round(v),txt:`${Math.round(v)}% <span class="tr-k">${n}</span>`};
+  return {n,v:Math.round(v*10)/10,txt:`${(Math.round(v*10)/10).toLocaleString('he-IL')} <span class="tr-k">${n}</span>`};
+}
+function trTable(title,rows,keyFn,order){
+  const groups={}; rows.forEach(r=>{const k=keyFn(r);(groups[k]=groups[k]||[]).push(r);});
+  let keys=Object.keys(groups); keys.sort(order||((a,b)=>groups[b].length-groups[a].length));
+  const all=TR_MET.map(m=>trStat(rows,m));
+  let h=`<div class="tr-h">${title}</div><div class="tr-wrap"><table class="tr-t"><thead><tr><th></th><th>לידים</th>${TR_MET.map(m=>`<th>${m.h}</th>`).join('')}</tr></thead><tbody>`;
+  const ins=[];
+  keys.forEach(k=>{
+    const g=groups[k];
+    const cells=TR_MET.map((m,i)=>{
+      const st=trStat(g,m), base=all[i];
+      let cls='';
+      if(st.v===null)cls='thin';
+      else if(st.n<5)cls='thin';
+      else if(base.v!==null){
+        const diff=(m.kind==='avg')?(st.v-base.v)*25:(st.v-base.v);   // ניסיון אחד ממוצע ≈ 25 נקודות
+        if(Math.abs(diff)>=15){const better=m.good?diff>0:diff<0;cls=better?'up':'dn';
+          ins.push({better,mag:Math.abs(diff),txt:`<b>${esc(title.replace(/^לפי\s*/,''))}: ${esc(k)}</b> · ${m.h} ${st.txt.replace(/<[^>]+>/g,'').replace(/\s+(\d+\/\d+|\d+)$/,' ($1)')} מול ${base.txt.replace(/<[^>]+>/g,'').replace(/\s+(\d+\/\d+|\d+)$/,'')} בממוצע`});}
+      }
+      return `<td class="${cls}">${st.txt}</td>`;
+    }).join('');
+    h+=`<tr><td>${esc(k)}</td><td>${g.length}</td>${cells}</tr>`;
+  });
+  h+=`<tr class="all"><td>כל הלידים</td><td>${rows.length}</td>${all.map(st=>`<td>${st.txt}</td>`).join('')}</tr></tbody></table></div>`;
+  return {h,ins};
+}
+function renderTrends(){
+  if(!trData)return;
+  const days=Number(document.getElementById('trRange').value)||0;
+  const since=days?Date.now()-days*864e5:0;
+  const rows=trData.map(trRow).filter(r=>!since||r.ts>=since);
+  if(!rows.length){document.getElementById('trBody').textContent='אין לידים בטווח הזה.';return;}
+  const DAYS=['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','יום שבת'];
+  const parts=[
+    trTable('לפי מודעה',rows,r=>r.creative),
+    trTable('לפי מה שסימנו בשאלה 1',rows,r=>r.q1),
+    trTable('לפי חם או קר',rows,r=>r.temp),
+    trTable('לפי שעת כניסה',rows,r=>r.hour,(a,b)=>a.localeCompare(b)),
+    trTable('לפי יום בשבוע',rows,r=>r.day,(a,b)=>DAYS.indexOf(a)-DAYS.indexOf(b)),
+    trTable('לפי קמפיין',rows,r=>r.campaign),
+  ];
+  const ins=parts.flatMap(p=>p.ins).sort((a,b)=>b.mag-a.mag).slice(0,8);
+  // תפעול
+  const touched=rows.filter(r=>r.touchMin!==null);
+  const med=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)];};
+  const mt=med(touched.map(r=>r.touchMin));
+  const fmtMin=v=>v==null?'—':v<60?`${Math.round(v)} דק׳`:v<1440?`${Math.round(v/60)} שע׳`:`${Math.round(v/1440)} ימים`;
+  const ansRows=rows.filter(r=>r.answered);
+  const a1=ansRows.filter(r=>r.attempts===0).length, a2=ansRows.filter(r=>r.attempts===1).length, a3=ansRows.filter(r=>r.attempts>=2).length;
+  const never=rows.filter(r=>!r.answered&&r.attempts>0).length;
+  // סיבות
+  const rc={}; rows.filter(r=>r.fit==='unfit'||r.fit==='unsure').forEach(r=>r.reasons.forEach(x=>{rc[x]=(rc[x]||0)+1;}));
+  const reasons=Object.entries(rc).sort((a,b)=>b[1]-a[1]);
+  const fitN=rows.filter(r=>r.fit!==null).length;
+  let h='';
+  h+=`<div class="tr-h">מה בולט עכשיו</div>`;
+  h+=ins.length?`<div class="tr-ins">${ins.map(x=>`<div class="${x.better?'good':'bad'}">${x.txt}</div>`).join('')}</div>`:`<p class="tr-note">עדיין אין סטייה ברורה של 15 נקודות בקבוצה של 5 לידים ומעלה.</p>`;
+  h+=`<p class="tr-note">${rows.length} לידים בטווח. זו מגמה, לא הוכחה: כל קבוצה קטנה, ונבדוק שוב כשיהיו יותר לידים. התאמה ידועה ל־${fitN} מתוך ${rows.length}.</p>`;
+  h+=`<div class="tr-h">תפעול</div><p class="tr-note" style="font-size:13px;color:var(--text)">זמן חציוני עד הפעולה הראשונה על ליד: <b>${fmtMin(mt)}</b>. מתוך ${ansRows.length} שענו: ${a1} ענו בניסיון הראשון, ${a2} בשני, ${a3} בשלישי ומעלה. ${never} לידים עם ניסיונות שעדיין לא ענו אף פעם.</p>`;
+  h+=`<div class="tr-h">למה לידים פחות מתאימים</div>`+(reasons.length?`<div class="tr-reasons">${reasons.map(([k,v])=>`<span>${esc(k)} · ${v}</span>`).join('')}</div>`:'<p class="tr-note">אין עדיין מספיק תיעוד.</p>');
+  h+=parts.map(p=>p.h).join('');
+  document.getElementById('trBody').innerHTML=h;
+}
+
 // ═══ פתיחים לשיחה (גל 11/10) ═══
 // 3 סוגי שיחה. מציגים קודם רק את הסוגים והתיאורים, והפתיחים נפתחים רק אחרי שבוחרים סוג.
 const OPENERS={
