@@ -207,6 +207,34 @@ tbody td{padding:12px 11px;vertical-align:middle}
 
 /* ── WHATSAPP MODAL ── */
 .wa-modal{max-width:440px}
+/* ── פתיחים לשיחה (גל 11/10) ── */
+.op-open{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 16px;border:1.5px solid var(--accent);border-radius:12px;background:#fff;color:var(--accent);font-family:inherit;font-weight:800;font-size:14.5px;cursor:pointer;transition:background .12s ease}
+.op-open:hover{background:rgba(194,21,28,.05)}
+.op-open small{font-weight:600;font-size:12px;color:var(--text2)}
+.op-modal{max-width:600px}
+.op-who{font-size:13px;color:var(--text2);margin:-6px 0 12px}
+.op-guide{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.01em;margin:0 0 8px}
+.op-tags{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.op-tag{display:flex;flex-direction:column;gap:4px;text-align:right;padding:11px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--s1);font-family:inherit;cursor:pointer;transition:border-color .12s ease,background .12s ease}
+.op-tag b{font-size:14px;color:var(--text)}
+.op-tag span{font-size:12px;line-height:1.45;color:var(--text2)}
+.op-tag:hover{border-color:var(--border2)}
+.op-tag.on{border-color:var(--accent);background:rgba(194,21,28,.06)}
+.op-tag.on b{color:var(--accent)}
+.op-ctx{background:var(--s3);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.55}
+.op-ctx label{display:block;font-size:12px;font-weight:800;color:var(--text);margin-bottom:5px}
+.op-ctx textarea{width:100%;min-height:54px;font-family:inherit;font-size:13.5px;line-height:1.5;border:1px solid var(--border);border-radius:9px;padding:8px 10px;background:#fff;color:var(--text);resize:vertical}
+.op-ctx .op-qa div{padding:2px 0}
+.op-ctx .op-qa b{color:var(--accent);font-weight:700}
+.op-ctx .op-last{margin-top:8px;color:var(--text2);font-size:12.5px}
+.op-h{font-size:12px;font-weight:800;color:var(--text2);margin:2px 0 7px}
+.op-line{border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin-bottom:7px;font-size:14.5px;line-height:1.55;color:var(--text);background:#fff;cursor:pointer;transition:border-color .12s ease}
+.op-line:hover{border-color:var(--border2)}
+.op-line.on{border:1.5px solid var(--accent);background:rgba(194,21,28,.04)}
+.op-mem{margin-top:7px;font-size:13px;color:var(--accent);font-weight:700}
+.op-note{font-size:12px;line-height:1.6;color:var(--text2);margin:10px 0 4px}
+.op-guide,.op-h,.op-line,.op-mem,.op-note,.op-tag span{text-wrap:pretty}
+@media(max-width:680px){.op-tags{grid-template-columns:1fr}}
 .wa-info{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:13px;display:flex;align-items:center;gap:11px}
 .wa-av{width:42px;height:42px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;flex-shrink:0;box-shadow:0 0 14px rgba(194,21,28,.3)}
 .wa-nm{font-weight:800;margin-bottom:2px}
@@ -357,6 +385,15 @@ tbody td{padding:12px 11px;vertical-align:middle}
   </div>
   <div class="fg one">
     <div class="f"><label>אימייל</label><input id="fe" type="email" placeholder="name@email.com"/></div>
+  </div>
+  <!-- ★ פתיחים לשיחה לפי סוג השיחה (גל 11/10) -->
+  <div class="fg one" id="opBtnRow" style="display:none">
+    <div class="f">
+      <button type="button" class="op-open" onclick="openOpeners()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"></path></svg>
+        <span>פתיחים לשיחה <small>· בוחרים את סוג השיחה לפני שמחייגים</small></span>
+      </button>
+    </div>
   </div>
   <div class="fg one">
     <div class="f"><label>תשובות מהשאלון</label>
@@ -605,6 +642,18 @@ tbody td{padding:12px 11px;vertical-align:middle}
     <button class="btn btn-outline" onclick="closeLead()">ביטול</button>
     <button class="btn btn-primary" onclick="saveLead()">שמור</button>
   </div>
+</div>
+</div>
+
+<!-- OPENERS MODAL · פתיחים לשיחה (גל 11/10). לא נסגר בלחיצה על הרקע. -->
+<div class="overlay" id="opOv" onclick="bgNudge(event,'opOv')">
+<div class="modal op-modal">
+  <h2>פתיחים לשיחה <button class="modal-close" onclick="closeOpeners()">✕</button></h2>
+  <div class="op-who" id="opWho"></div>
+  <div class="op-guide">לפני שמחייגים: בוחרים איזו שיחה זו, והפתיחים המתאימים&nbsp;נפתחים</div>
+  <div class="op-tags" id="opTags"></div>
+  <div id="opBody"></div>
+  <div class="mactions"><button class="btn btn-outline" onclick="closeOpeners()">סגור</button></div>
 </div>
 </div>
 
@@ -1316,6 +1365,7 @@ function adLabel(l){
 }
 function openLead(id){
   eid=id||null;
+  {const _ob=document.getElementById('opBtnRow'); if(_ob)_ob.style.display=id?'':'none';}
   clearSaveErr();
   const l=id?leads.find(x=>x.id===id):null;
   const retBadge=l?.returnsCount>0?` <span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">↩ חזר ×${l.returnsCount+1}</span>`:'';
@@ -2195,6 +2245,77 @@ function exportCSV(){
 function nowIso(){return new Date().toISOString()}
 function todayStr(){return new Date().toISOString().split('T')[0]}
 function fmtDt(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}
+// ═══ פתיחים לשיחה (גל 11/10) ═══
+// 3 סוגי שיחה. מציגים קודם רק את הסוגים והתיאורים, והפתיחים נפתחים רק אחרי שבוחרים סוג.
+const OPENERS={
+  first:{name:'פנייה ראשונית',desc:'שוברים קרח, מתייחסים לשאלון ומכירים את האדם',lines:[
+    'איזה כיף, סוף סוף מדברים. תגיד/י, הספקת כבר להציץ במידע ששלחתי לך?',
+    'מה העניינים? תגיד/י, איך הייתה החוויה בשאלון? עברנו את המבחן?',
+    'מה המצב? אז אחרי כל השאלות שאנחנו שאלנו אותך, הגיע הזמן שגם את/ה תשאל/י אותנו קצת, לא?',
+    'מה קורה? אני שמח שיצא לנו לדבר. מסקרן אותי לשמוע מה משך אותך דווקא לקרקעות.',
+    'אהלן, עברתי על מה שסימנת בשאלון, ויש כמה דברים שמעניין אותי לדבר איתך עליהם.',
+    'מה קורה? ראיתי שהתעניינת בקרקעות, אז אמרתי, במקום להתכתב בוא/י נכיר רגע.']},
+  second:{name:'שיחה שניה',desc:'ממשיכים מנקודת העצירה בשיחה הקודמת, לא מתחילים מחדש',lines:[
+    'מה קורה? תגיד/י, השארתי אותך עם יותר תשובות או עם יותר שאלות בפעם הקודמת?',
+    'מה העניינים? תגיד/י, הספקת להעמיק במידע הרלוונטי או שעוד לא הגעת לזה?',
+    'מה המצב? באתי לבדוק אם הצלחתי לעורר אצלך קצת סקרנות בפעם הקודמת.',
+    'מה העניינים? אז אחרי שנתתי לך קצת חומר למחשבה, באתי לשמוע מה את/ה חושב/ת.',
+    'אהלן, אני מקווה שאני לא נופל עליך שוב בזמן הכי עמוס ביום. אני מפריע?']},
+  renew:{name:'חידוש קשר',desc:'בודקים מה השתנה, מציעים ערך ומשאירים בחירה חופשית',lines:[
+    'מה קורה? נראה לי שהשארתי אותך עם לא מעט חומר למחשבה. מה אומר/ת, עשינו קצת סדר?',
+    'מה המצב? אני לא רוצה שנהפוך לחברים רק דרך שיחות טלפון, תגיד/י, שווה שנקבע זמן מסודר לדבר או שזה פחות רלוונטי כרגע?',
+    'מה קורה? יש לי הרגשה שעוד לא סיימנו לדבר על כל מה שבאמת מעניין אותך. אני צודק?',
+    'אהלן, אז מה, היום אני בתפקיד השואל או שכבר הכנת לי כמה שאלות משלך?',
+    'אהלן, תגיד/י, יצא לך לשתף מישהו במה שדיברנו עליו?']},
+};
+const OP_NOTE='* מה זכור לנו מהשיחה הקודמת? אפילו פרט אחד, כמו נסיעה לחו"ל, עומס בעבודה, שאלה על מחיר או התייעצות עם בן משפחה. להציף נושא אישי מהשיחה הקודמת יכול להפוך כל פתיח טוב לפתיח שבאמת מרגיש אישי. כך לא סתם בוחרים משפט יפה, אלא משתמשים בו כדי לפתוח שיחה שמבוססת על האדם שמולכם.';
+let opTag=null, opPick=null;
+function opLead(){return eid?leads.find(x=>x.id===eid):null;}
+// בלי מילה יתומה בשורה האחרונה (כלל ברזל): שתי המילים האחרונות נדבקות.
+function opGlue(x){return String(x||'').replace(/ (\S+)\s*$/,' $1');}
+function openOpeners(){
+  const l=opLead(); if(!l)return;
+  opTag=null; opPick=null;
+  document.getElementById('opWho').textContent=[l.name,l.phone].filter(Boolean).join(' · ');
+  renderOpeners();
+  document.getElementById('opOv').classList.add('open');
+}
+function closeOpeners(){saveOpMemory();document.getElementById('opOv').classList.remove('open');}
+// "מה זכור לנו" נשמר ישר על הליד (l.memory), בלי תלות בשמירה או בביטול של הכרטיס.
+function saveOpMemory(){
+  const el=document.getElementById('opMem'); const l=opLead(); if(!el||!l)return;
+  const v=el.value.trim();
+  if((l.memory||'')!==v){l.memory=v;l.memoryAt=nowIso();scheduleSave();}
+}
+function pickOpTag(k){saveOpMemory();opTag=k;opPick=null;renderOpeners();}
+function pickOpLine(i){saveOpMemory();opPick=(opPick===i?null:i);renderOpeners();}
+function opQaHtml(l){
+  const qa=String(l.q_a||'').replace(/^\[[^\]]*\]\s*/,'');
+  const rows=qa.split(' | ').map(x=>{const i=x.indexOf('→');return i>0?`<div><b>${esc(x.slice(0,i).trim())}</b> ${esc(x.slice(i+1).trim())}</div>`:'';}).filter(Boolean);
+  return rows.length?`<div class="op-qa">${rows.join('')}</div>`:'<div class="op-qa">אין תשובות שאלון לליד הזה.</div>';
+}
+function renderOpeners(){
+  const l=opLead()||{};
+  document.getElementById('opTags').innerHTML=Object.entries(OPENERS).map(([k,t])=>
+    `<button type="button" class="op-tag${opTag===k?' on':''}" onclick="pickOpTag('${k}')"><b>${t.name}</b><span>${opGlue(t.desc)}</span></button>`).join('');
+  const body=document.getElementById('opBody');
+  if(!opTag){body.innerHTML='';return;}
+  const t=OPENERS[opTag], mem=(l.memory||'').trim();
+  let ctx='';
+  if(opTag==='first'){
+    ctx=`<div class="op-ctx"><label>מה סימן בשאלון</label>${opQaHtml(l)}</div>`;
+  } else {
+    const last=String(l.notes||'').trim();
+    ctx=`<div class="op-ctx"><label for="opMem">מה זכור לנו מהשיחה הקודמת?</label>
+      <textarea id="opMem" placeholder="פרט אחד מספיק: נסיעה לחו״ל, עומס בעבודה, שאלה על מחיר, התייעצות עם בן משפחה..." onblur="saveOpMemory()">${esc(l.memory||'')}</textarea>
+      ${last?`<div class="op-last"><b>מההערות:</b> ${esc(last.length>220?last.slice(0,220)+'…':last)}</div>`:''}</div>`;
+  }
+  body.innerHTML=ctx+
+    `<div class="op-h">הנחיה: ${opGlue(t.desc)}</div>`+
+    t.lines.map((x,i)=>`<div class="op-line${opPick===i?' on':''}" onclick="pickOpLine(${i})">${esc(opGlue(x))}${opPick===i&&mem&&opTag!=='first'?`<div class="op-mem">לשלב בפתיח: ${esc(opGlue(mem))}</div>`:''}</div>`).join('')+
+    `<div class="op-note">${opGlue(OP_NOTE)}</div>`;
+}
+
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function bgClose(e,id){if(e.target.id===id)document.getElementById(id).classList.remove('open')}
 // כרטיס ליד ופופאפ פולואפ: לחיצה על הרקע לא סוגרת (נסגר רק בכפתורים), כדי לא לאבד הקלדה. רק "רעד" קטן שמסמן להשתמש בכפתורים. (גל 11/10)
