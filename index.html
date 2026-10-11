@@ -102,6 +102,9 @@ tbody td{padding:12px 11px;vertical-align:middle}
   tbody td::before{content:attr(data-label);color:var(--text2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
   tbody td:first-child{display:none}
   .td-wa{grid-column:1/-1}
+  table.stats-table{min-width:0}
+  .stats-table tbody tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .stats-table tbody td,.stats-table tbody th{white-space:normal;min-width:0;padding:4px 0}
   .toolbar{gap:6px}
   .search{min-width:100px}
   header{padding:10px 14px}
@@ -1969,17 +1972,21 @@ async function renderStatsModal(){
   if(crKeys.length){
     h+=`<div class="stats-h">לפי קריאייטיב</div><div style="overflow-x:auto"><table class="stats-table"><tr><th>קריאייטיב</th><th>לידים</th><th>פגישות</th><th>סגירות</th></tr>`;
     crKeys.sort((a,b)=>cr[b].leads-cr[a].leads).forEach(k=>{
-      h+=`<tr><td><b>${esc(k)}</b></td><td>${cr[k].leads}</td><td>${cr[k].attended||0}</td><td>${cr[k].deal||0}</td></tr>`;
+      const kl=k.startsWith('rmk:')?'רימרקטינג · '+k.slice(4):k;
+      h+=`<tr><td><b>${esc(kl)}</b></td><td>${cr[k].leads}</td><td>${cr[k].attended||0}</td><td>${cr[k].deal||0}</td></tr>`;
     });
     h+=`</table></div>`;
   }
 
   // ── פילוח קמפיין (למדידה של גל; איש המכירות עובד לפי קריאייטיב) ──
   const cm=bd.campaigns||{};
-  if((cm.main&&cm.main.leads)||(cm.rmk&&cm.rmk.leads)){
-    h+=`<div class="stats-h">לפי קמפיין</div><table class="stats-table"><tr><th>קמפיין</th><th>לידים</th></tr>
-      <tr><td>ראשי</td><td>${(cm.main&&cm.main.leads)||0}</td></tr>
-      <tr><td>רימרקטינג</td><td>${(cm.rmk&&cm.rmk.leads)||0}</td></tr></table>`;
+  const hasCamp=k=>cm[k]&&(cm[k].leads||cm[k].spend||cm[k].returns);
+  if(hasCamp('main')||hasCamp('rmk')){
+    // ראשי מול רימרקטינג: הוצאה, לידים חדשים, עלות לליד חדש, לידים קיימים שחזרו דרכו, פגישות. (גל 11/10)
+    const row=(name,c)=>{c=c||{};return `<tr style="cursor:default"><th scope="row" style="grid-column:1/-1;font-size:14px;color:var(--text);text-transform:none">${name}</th><td data-label="הוצאה">${nis(c.spend||0)}</td><td data-label="לידים חדשים">${c.leads||0}</td><td data-label="עלות לליד חדש">${c.cost_per_lead?nis(c.cost_per_lead):'—'}</td><td data-label="לידים שחזרו">${c.returns||0}</td><td data-label="פגישות">${c.booked||0}</td></tr>`;};
+    h+=`<div class="stats-h">לפי קמפיין</div><div style="overflow-x:auto"><table class="stats-table"><thead><tr><th>קמפיין</th><th>הוצאה</th><th>לידים חדשים</th><th>עלות לליד חדש</th><th>לידים שחזרו</th><th>פגישות</th></tr></thead><tbody>
+      ${row('ראשי',cm.main)}${row('רימרקטינג',cm.rmk)}</tbody></table></div>
+      <div class="adinfo-box" style="margin-top:6px;font-size:12px;line-height:1.6"><b>לידים שחזרו</b> = לידים שכבר היו במערכת ומילאו שוב את השאלון דרך הקמפיין. ברימרקטינג זו חלק מהמטרה, ולכן הם לא נספרים כליד חדש ולא מנפחים את העלות לליד.</div>`;
   }
 
   h+=`<div class="adinfo-box" style="margin-top:10px;line-height:1.7;font-size:12px">
