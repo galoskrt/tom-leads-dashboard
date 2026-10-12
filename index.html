@@ -830,6 +830,9 @@ let leads=[], deletedIds=new Set(), eid=null, waLid=null;
 let settings={};
 let srt={k:'createdAt',d:-1};
 let sessionPass=null, fileSha=null, snapSha=null;
+// ★ (גל 12/10) שום דחיפה לשרת לפני שהקובץ האמיתי פוענח. במצב בדיקה/תצוגה הכרטיסים ריקים, ודחיפה הייתה מוחקת את האמת בשרת.
+let realData=false;
+function canPush(){return realData && !!sessionPass && sessionPass!=='audit';}
 let saveTimer=null, syncInt=null, liveInt=null;
 let snaps=[];
 
@@ -898,7 +901,7 @@ async function doLogin(){
   btn.disabled=false; info.textContent='';
 }
 function logout(){
-  sessionStorage.removeItem('gal_s'); sessionPass=null; leads=[];
+  sessionStorage.removeItem('gal_s'); sessionPass=null; leads=[]; realData=false;
   if(syncInt)clearInterval(syncInt);
   if(liveInt)clearInterval(liveInt);
   document.getElementById('app').style.display='none';
@@ -935,11 +938,12 @@ async function loadData(){
   // ריק בהתחלה — הלידים נכנסים רק מהמשפך (Worker) כשהתקציב רץ. אין עוד נתוני דמו.
   try{
     const raw=await ghGet();
-    if(raw==='init'){leads=[];deletedIds=new Set();settings={};await saveData(true);}
+    if(raw==='init'){leads=[];deletedIds=new Set();settings={};await saveData(true);realData=true;}
     else{
       const parsed=await dec(raw,sessionPass);
       if(Array.isArray(parsed)){leads=parsed;deletedIds=new Set();settings={};}
       else{leads=parsed.leads||[];deletedIds=new Set(parsed.deletedIds||[]);settings=parsed.settings||{};}
+      realData=true;
     }
   }catch(e){leads=[];deletedIds=new Set();settings={};console.warn('Load failed',e);}
   const migrated=await migrateGL2();
@@ -1123,7 +1127,9 @@ async function syncWorker(){
     let added=0,updated=0;
     for(const w of (j.leads||[])){
       const wid=w.lead_id;
-      if(!wid||deletedIds.has(wid))continue;
+      if(!wid)continue;
+      if(deletedIds.has(wid)){ if(!w.deleted&&canPush())pushDeletedToWorker(wid); continue; }
+      if(w.deleted||w.excluded)continue;              // נמחק או בדיקת מערכת: לא נכנס לדשבורד
       const utm=w.utm||{};
       const creative=utm.content||utm.creative||'';
       const s=String(utm.source||'').toLowerCase();
@@ -1168,8 +1174,12 @@ async function syncWorker(){
         if(w.noteAt)existing.noteAt=existing.noteAt||w.noteAt;
         if(typeof w.noteText==='string'&&w.noteText===(existing.notes||''))existing.noteTextSynced=w.noteText;
         // שם תצוגה: אם המנוע כבר מחזיק את השם הנוכחי, מסמנים כמסונכרן; אם הצוות ערך שם ששונה מהמקורי ולא סונכרן, דוחפים.
-        if(w.displayName&&w.displayName===existing.name)existing.displayNameSynced=existing.name;
-        if(existing.name&&w.name&&existing.name!==w.name&&existing.displayNameSynced!==existing.name){existing.displayNameSynced=existing.name;pushDisplayNameToWorker(existing);}
+        // ★ סנכרון שמתקן את עצמו (גל 12/10): השוואה מול מה שבאמת שמור בשרת, לא מול סימון מקומי "נשלח".
+        if(canPush()){
+          if(existing.name&&existing.name!==(w.displayName||w.name))pushDisplayNameToWorker(existing);
+          if((existing.notes||'')!==(typeof w.noteText==='string'?w.noteText:''))pushNotesToWorker(existing);
+          if(cardHashOf(buildCard(existing))!==(w.cardHash||''))pushCardToWorker(existing);
+        }
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
           source:src,status,creative,campaign:utm.campaign||'',temperature:w.temperature,score:w.score,q_a:w.q_a||'',
@@ -1642,12 +1652,15 @@ function saveLead(){
   const _newNote=saved?(saved.notes||''):'';
   if(saved&&saved.noteTextSynced!==_newNote){saved.noteAt=nowIso();saved.noteTextSynced=_newNote;}
   if(saved&&saved.lead_id)pushNotesToWorker(saved);
+  // ★ מעבר ל"להחייאה": תזכורת אוטומטית לשיחת בדיקה בעוד 14 יום (אם לא נקבעה ידנית תזכורת קרובה).
+  if(saved&&_st==='revival'&&prevStatus!=='revival'&&!data.remAt){if(setRevivalCheck(saved))toast('⏰ נקבעה תזכורת לשיחת בדיקה בעוד 14 יום',4500);}
+  if(saved&&saved.lead_id)pushCardToWorker(saved);
   // שם שהצוות ערך (למשל דניאל→דן): נדחף למנוע כך שגם האוטומציות וגם הדוח יפנו אליו בשם הזה.
   if(saved&&saved.lead_id&&!isNew&&saved.name!==_prevName){saved.displayNameSynced=saved.name;pushDisplayNameToWorker(saved);}
   closeLead();render();scheduleSave();
 }
 async function pushJoinedToWorker(l){
-  if(!l.lead_id)return;
+  if(!l.lead_id||!canPush())return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,joinedCommunity:!!l.joinedCommunity,by:'dashboard'})}); }
   catch(e){console.warn('join flag push',e);}
 }
@@ -1658,18 +1671,57 @@ async function pushMeetingQualityToWorker(l){
 }
 // דוחף את הערת הנציג (טקסט + מתי השתנתה) למנוע, למדידת פערי תיעוד בדוח הבוקר. נדחף בכל save, כולל ריק.
 async function pushNotesToWorker(l){
-  if(!l.lead_id)return;
+  if(!l.lead_id||!canPush())return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,noteText:l.notes||'',noteAt:l.noteAt||nowIso()})}); }
   catch(e){console.warn('note push',e);}
 }
+// ═══ הכרטיס המלא לשרת (גל 12/10): "אם הדוח לא מיושר עם האמת בדשבורד זה לא שווה כלום" ═══
+function buildCard(l){
+  const mq=l.meetingQuality||null, nr=l.notRelevantReason||null, ns=l.noshowReason||null;
+  const pickR=r=>r&&(r.category||r.why||r.saidInCall||r.said)?{category:r.category||'',why:r.why||'',said:r.saidInCall||r.said||'',opener:r.opener||''}:undefined;
+  return {
+    relProg:l.relProg||'', relNext:l.relNext||'', relNextTime:l.relNextTime||'',
+    remAt:l.remAt||'', remNote:l.remNote||'', meetNotes:l.meetNotes||'',
+    memory:l.memory||'', memoryAt:l.memoryAt||'', doc:l.doc||'', source:l.source||'',
+    dealAmount:Number(l.dealAmount)||0, dealMeters:Number(l.dealMeters)||0,
+    meeting:mq&&(mq.rating||mq.good||mq.bad||mq.transcript)?{rating:Number(mq.rating)||0,good:mq.good||'',bad:mq.bad||'',summary:mq.summary||(mq.transcript?String(mq.transcript).slice(0,1500):''),at:mq.at||''}:undefined,
+    notRelevant:pickR(nr), noshow:pickR(ns),
+    calls:(l.history||[]).map(h=>({date:h.date||'',result:h.res||h.result||'',note:h.note||''})),
+  };
+}
+function cardHashOf(card){const s=JSON.stringify(card);let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return String(h>>>0);}
+async function pushCardToWorker(l){
+  if(!l||!l.lead_id||!canPush())return;
+  const card=buildCard(l), h=cardHashOf(card);
+  try{
+    const r=await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,card,cardHash:h})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.cardHash===h)l.cardHashSynced=h;   // מסומן כמסונכרן רק אחרי שהשרת אישר (לא מראש)
+  }catch(e){console.warn('card push',e);}
+}
+async function pushDeletedToWorker(leadId){
+  if(!leadId||!canPush())return;
+  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:leadId,deleted:true,by:'dashboard'})}); }
+  catch(e){console.warn('delete push',e);}
+}
+// תזכורת לשיחת בדיקה ללידים בהחייאה, אחת ל-14 יום (גל 12/10). לא דורס תזכורת עתידית שנקבעה ידנית.
+function setRevivalCheck(l,fromIso){
+  if(!l)return false;
+  const now=Date.now();
+  if(l.remAt&&Date.parse(l.remAt)>now+864e5)return false;
+  const d=new Date(fromIso?Date.parse(fromIso):now); d.setDate(d.getDate()+14); d.setHours(10,0,0,0);
+  l.remAt=d.toISOString(); l.remNote='שיחת בדיקה (החייאה): מה השתנה אצלו? אחת ל־14 יום';
+  return true;
+}
 // דוחף שם שהצוות ערך (displayName) למנוע, כך שהאוטומציות והדוח יפנו לליד בשם שהוא ביקש. השם המקורי נשאר לשיוך.
 async function pushDisplayNameToWorker(l){
-  if(!l.lead_id)return;
+  if(!l.lead_id||!canPush())return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,displayName:l.name||''})}); }
   catch(e){console.warn('displayName push',e);}
 }
 // גיבוי חד-פעמי לכל ליד שעדיין לא סונכרן (noteTextSynced ריק), כדי שהדוח יהיה אמין מהיום הראשון.
 function backfillNotes(){
+  if(!canPush())return;                       // ★ לעולם לא במצב בדיקה (זה מה שמחק את ההערות בשרת, 12/10)
   for(const l of leads){
     if(l.lead_id && l.noteTextSynced===undefined){
       l.noteTextSynced=l.notes||'';
@@ -1703,6 +1755,7 @@ async function pushStatusToWorker(l){
 function delLead(){
   if(!eid||!confirm('למחוק לצמיתות?'))return;
   deletedIds.add(eid);
+  {const _dl=leads.find(l=>l.id===eid); if(_dl&&_dl.lead_id)pushDeletedToWorker(_dl.lead_id);}
   leads=leads.filter(l=>l.id!==eid);
   closeLead();render();scheduleSave();
 }
@@ -1712,6 +1765,8 @@ function addH(){
   if(!l.history)l.history=[];
   l.history.push({date:document.getElementById('hdate').value||todayStr(),res:document.getElementById('hres').value,note:document.getElementById('hnote').value});
   l.updatedAt=nowIso();
+  if(l.status==='revival'&&setRevivalCheck(l))toast('⏰ שיחת הבדיקה הבאה: בעוד 14 יום',4000);
+  pushCardToWorker(l);
   renderHist(l.history);document.getElementById('hnote').value='';
   scheduleSave();render();
 }
@@ -2291,7 +2346,7 @@ function fuReschedule(){
   const rt=document.getElementById('fuRTime').value||'10:00';
   if(!rd){toast('❌ בחר תאריך');return}
   const l=leads.find(x=>x.id===fuCurrent.id);
-  if(l){l.remAt=new Date(`${rd}T${rt}`).toISOString();l.updatedAt=nowIso();scheduleSave();render();toast(`⏰ תזכורת נקבעה מחדש — ${fmtDt(l.remAt)}`);}
+  if(l){l.remAt=new Date(`${rd}T${rt}`).toISOString();l.updatedAt=nowIso();scheduleSave();render();pushCardToWorker(l);toast(`⏰ תזכורת נקבעה מחדש — ${fmtDt(l.remAt)}`);}
   fuMarkPrompted(fuCurrent.id);
   fuCurrent=null;
   showNextFu();
@@ -2339,7 +2394,7 @@ async function setManualFit(fit){
   if(fit===null&&!f)return;          // סיבה בלי סימון: מחכים לסימון
   l.manualFit=f?{fit:f,reason,at:nowIso(),by:'dashboard'}:null;
   renderFitRow(l); scheduleSave();
-  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,manualFit:{fit:f,reason},by:'dashboard'})}); }
+  if(canPush()) try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,manualFit:{fit:f,reason},by:'dashboard'})}); }
   catch(e){console.warn('fit push',e);}
 }
 
