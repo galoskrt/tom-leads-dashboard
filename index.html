@@ -381,7 +381,7 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
     <option value="">כל הקריאייטיבים</option>
   </select>
   <button class="btn btn-outline btn-sm" id="flt7Btn" onclick="toggle7d()" title="הצג רק לידים שנכנסו ב-7 הימים האחרונים">נכנסו השבוע</button>
-  <button class="btn btn-outline btn-sm" onclick="syncNow()" title="סנכרן עכשיו">🔄</button>
+  <button class="btn btn-outline btn-sm" onclick="syncNow(true)" title="סנכרן עכשיו">🔄</button>
   <button class="btn btn-outline btn-sm" onclick="manualMigrate()" title="שחזר נתונים מגיבוי ישן" style="background:#fff3cd;border-color:#ffc107">♻️ שחזר</button>
   <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
   <button class="btn btn-outline btn-sm" onclick="undoSnapshot()" title="שחזור למצב לפני 24 שעות" style="border-color:rgba(194,118,28,.5);color:var(--orange)">↩ UNDO</button>
@@ -852,8 +852,11 @@ async function enc(data,pass){
   const k=await deriveKey(pass),iv=crypto.getRandomValues(new Uint8Array(12));
   const e=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(JSON.stringify(data)));
   const c=new Uint8Array(12+e.byteLength);c.set(iv);c.set(new Uint8Array(e),12);
-  return btoa(String.fromCharCode(...c));
+  return u8ToB64(c);
 }
+// ★ (גל 13/10) String.fromCharCode(...c) קורס מעל ~122KB ("Maximum call stack size exceeded"), וכך כל שמירה
+// נכשלה בשקט מ-12/10 16:37. המרה במנות של 32KB עובדת בכל גודל.
+function u8ToB64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
 async function dec(b64,pass){
   const raw=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
   const k=await deriveKey(pass);
@@ -872,7 +875,19 @@ async function ghGet(){
 async function ghPut(content){
   const b64=btoa(unescape(encodeURIComponent(content)));
   const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${DATA_FILE}`,{method:'PUT',headers:{'Authorization':`Bearer ${GH_TOKEN}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify({message:'sync',content:b64,sha:fileSha})});
-  const j=await r.json(); if(j.content?.sha)fileSha=j.content.sha;
+  const j=await r.json().catch(()=>({})); if(j.content?.sha)fileSha=j.content.sha;
+  // ★ (גל 13/10) כשל נזרק ולא נבלע: 409/422 = מכשיר אחר שמר בינתיים, saveData ממזג ומנסה שוב.
+  if(!r.ok){const e=new Error('GitHub '+r.status+(j.message?' '+j.message:''));e.status=r.status;throw e;}
+}
+// ממזג את מה שבקובץ ב-GitHub (מכשיר/לשונית אחרים) עם המקומי: לכל ליד, הגרסה שעודכנה אחרונה.
+async function mergeRemote(){
+  const raw=await ghGet(); if(raw==='init')return;
+  const remote=await dec(raw,sessionPass);
+  const rl=Array.isArray(remote)?remote:(remote.leads||[]);
+  if(!Array.isArray(remote)&&Array.isArray(remote.deletedIds))remote.deletedIds.forEach(x=>deletedIds.add(x));
+  const merged={};
+  [...leads,...rl].forEach(l=>{const ex=merged[l.id];if(!ex||new Date(l.updatedAt||l.createdAt)>new Date(ex.updatedAt||ex.createdAt))merged[l.id]=l;});
+  leads=Object.values(merged).filter(l=>!deletedIds.has(l.id)).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
 }
 
 // ═══════════════════════════════════════════════
@@ -939,7 +954,7 @@ async function loadData(){
   // ריק בהתחלה — הלידים נכנסים רק מהמשפך (Worker) כשהתקציב רץ. אין עוד נתוני דמו.
   try{
     const raw=await ghGet();
-    if(raw==='init'){leads=[];deletedIds=new Set();settings={};await saveData(true);realData=true;}
+    if(raw==='init'){leads=[];deletedIds=new Set();settings={};realData=true;await saveData(true);}
     else{
       const parsed=await dec(raw,sessionPass);
       if(Array.isArray(parsed)){leads=parsed;deletedIds=new Set();settings={};}
@@ -1012,15 +1027,26 @@ function scheduleSave(){
   if(saveTimer)clearTimeout(saveTimer);
   saveTimer=setTimeout(()=>saveData(true),2500);
 }
+let saveFailCount=0;
 async function saveData(now=false){
   if(!sessionPass)return;
+  // ★ (גל 13/10) אם הטעינה מהקובץ נכשלה, לעולם לא שומרים: אחרת רשימה ריקה הייתה דורסת את כל הנתונים.
+  if(!realData){console.warn('save skipped: data file was not loaded');return;}
   document.getElementById('savingEl').classList.add('show');
+  const put=async()=>ghPut(await enc({leads,deletedIds:[...deletedIds],settings},sessionPass));
   try{
-    const payload={leads,deletedIds:[...deletedIds],settings};
-    const e2=await enc(payload,sessionPass);
-    await ghPut(e2);updateSyncTime();
+    try{ await put(); }
+    catch(er){ if(er.status===409||er.status===422){ await mergeRemote(); await put(); } else throw er; }
+    updateSyncTime();
+    if(saveFailCount)toast('✅ השמירה חזרה לעבוד, הכל נשמר',4000);
+    saveFailCount=0;
   }
-  catch(er){console.error('Save failed',er);}
+  catch(er){
+    // ★ (גל 13/10) לא נבלע יותר בשקט: הודעה ברורה + ניסיון חוזר אוטומטי בעוד דקה.
+    saveFailCount++; console.error('Save failed',er);
+    toast('❌ השמירה נכשלה ('+String(er&&er.message||er).slice(0,60)+'). לא לסגור את החלון, ניסיון חוזר בעוד דקה.',9000);
+    if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(()=>saveData(true),60000);
+  }
   document.getElementById('savingEl').classList.remove('show');
 }
 // ═══════════════════════════════════════════════
@@ -1079,21 +1105,20 @@ function updateSyncTime(){
   const t=new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('syncTime').textContent='סונכרן '+t;
 }
-async function syncNow(){
+async function syncNow(manual){
+  if(!realData)return;
   document.getElementById('savingEl').classList.add('show');
+  // ★ (גל 13/10) כאן היה "שגיאה בסנכרון" כל 5 דקות: הקובץ נשמר כאובייקט {leads,...}, והקוד ניסה לפרוש אותו
+  // כמו רשימה ([...remote]) וקרס. עכשיו המיזוג משותף לשמירה, וההודעה אומרת באיזה שלב נכשל.
+  let step='github';
   try{
-    const raw=await ghGet();
-    if(raw!=='init'){
-      const remote=await dec(raw,sessionPass);
-      const merged={};
-      [...leads,...remote].forEach(l=>{
-        const ex=merged[l.id];
-        if(!ex||new Date(l.updatedAt||l.createdAt)>new Date(ex.updatedAt||ex.createdAt))merged[l.id]=l;
-      });
-      leads=Object.values(merged).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-    }
-    await syncWorker(); render(); updateSyncTime(); toast('✅ סונכרן');
-  }catch(e){toast('❌ שגיאה בסנכרון');}
+    await mergeRemote();
+    step='server'; await syncWorker();
+    step='display'; render(); updateSyncTime(); if(manual===true)toast('✅ סונכרן');
+  }catch(e){
+    console.error('sync failed at',step,e);
+    toast('❌ שגיאה בסנכרון ('+({github:'GitHub',server:'השרת',display:'התצוגה'}[step]||step)+'): '+String(e&&e.message||e).slice(0,60),8000);
+  }
   document.getElementById('savingEl').classList.remove('show');
 }
 function startSync(){
@@ -1140,6 +1165,7 @@ async function syncWorker(){
       const status=ST[w.status]?w.status:'new';
       const existing=leads.find(l=>l.id===wid||l.lead_id===wid);
       if(existing){
+        const _u0=existing.updatedAt||existing.createdAt||'';   // לפני שהסנכרון עצמו נוגע בחותמת
         existing.lead_id=wid;
         if(!existing.name)existing.name=w.name||'';
         if(!existing.phone)existing.phone=w.phone||'';
@@ -1178,8 +1204,20 @@ async function syncWorker(){
         // ★ סנכרון שמתקן את עצמו (גל 12/10): השוואה מול מה שבאמת שמור בשרת, לא מול סימון מקומי "נשלח".
         if(canPush()){
           if(existing.name&&existing.name!==(w.displayName||w.name))pushDisplayNameToWorker(existing);
-          if((existing.notes||'')!==(typeof w.noteText==='string'?w.noteText:''))pushNotesToWorker(existing);
-          if(cardHashOf(buildCard(existing))!==(w.cardHash||''))pushCardToWorker(existing);
+          // ★ (גל 13/10) מי שעודכן אחרון מנצח. קודם הלשונית תמיד דחפה את מה שהיה אצלה, ולשונית עם נתונים ישנים
+          // דרסה בשרת תזכורות והערות חדשות (12/10 18:21). עכשיו: השרת חדש יותר → נמשך לדשבורד; המקומי חדש יותר → נדחף.
+          const wNote=typeof w.noteText==='string'?w.noteText:'';
+          if((existing.notes||'')!==wNote){
+            if((Date.parse(w.noteAt||0)||0)>(Date.parse(existing.noteAt||0)||0)){existing.notes=wNote;existing.noteAt=w.noteAt;existing.noteTextSynced=wNote;updated++;}
+            else pushNotesToWorker(existing);
+          }
+          const lh=cardHashOf(buildCard(existing));
+          if(existing.cardHashLocal!==lh){existing.cardChangedAt=(existing.cardHashLocal===undefined)?_u0:nowIso();existing.cardHashLocal=lh;}
+          if(lh!==(w.cardHash||'')){
+            if(w.card&&(Date.parse(w.cardAt||0)||0)>(Date.parse(existing.cardChangedAt||0)||0)){
+              applyServerCard(existing,w.card);existing.cardHashLocal=cardHashOf(buildCard(existing));existing.cardChangedAt=w.cardAt;existing.updatedAt=nowIso();updated++;
+            }else pushCardToWorker(existing);
+          }
         }
       }else{
         leads.unshift({id:wid,lead_id:wid,name:w.name||'—',phone:w.phone||'',email:w.email||'',business:'',
@@ -1446,6 +1484,9 @@ function adLabel(l){
 }
 function openLead(id){
   eid=id||null;
+  // ★ (גל 13/10) הסטטוס כפי שהיה ברגע פתיחת הכרטיס. אם הסנכרון עדכן אותו בזמן שהכרטיס פתוח, שמירה בלי
+  // שנגעו בבחירת הסטטוס לא מחזירה את הישן (כך דגנית חזרה ל"ליד חדש").
+  window._openStatus=id?((leads.find(x=>x.id===id)||{}).status):undefined;
   {const _ob=document.getElementById('opBtnRow'); if(_ob)_ob.style.display=id?'':'none';}
   setTimeout(()=>renderFitRow(id?leads.find(x=>x.id===id):null),0);
   clearSaveErr();
@@ -1593,6 +1634,8 @@ function blockSave(msg,fieldIds){
 }
 function saveLead(){
   clearSaveErr();
+  {const _c0=eid?leads.find(x=>x.id===eid):null, _sel=document.getElementById('fst2');
+   if(_c0&&window._openStatus!==undefined&&_sel.value===window._openStatus&&_c0.status!==window._openStatus)_sel.value=_c0.status;}
   const name=document.getElementById('fn').value.trim();
   if(!name){blockSave('שם הוא שדה חובה.',['fn']);return}
   const _st=document.getElementById('fst2').value;
@@ -1689,6 +1732,17 @@ function buildCard(l){
     notRelevant:pickR(nr), noshow:pickR(ns),
     calls:(l.history||[]).map(h=>({date:h.date||'',result:h.res||h.result||'',note:h.note||''})),
   };
+}
+// ההפך של buildCard: כרטיס שנשמר בשרת (חדש יותר) חוזר לשדות הליד בדשבורד (גל 13/10).
+function applyServerCard(l,c){
+  ['relProg','relNext','relNextTime','remAt','remNote','meetNotes','memory','memoryAt','doc'].forEach(k=>{if(k in c)l[k]=c[k]||'';});
+  if(c.source)l.source=c.source;
+  l.dealAmount=Number(c.dealAmount)||0; l.dealMeters=Number(c.dealMeters)||0;
+  if(c.meeting)l.meetingQuality=Object.assign({},l.meetingQuality||{},{rating:Number(c.meeting.rating)||0,good:c.meeting.good||'',bad:c.meeting.bad||'',summary:c.meeting.summary||'',at:c.meeting.at||''});
+  const back=r=>({category:r.category||'',why:r.why||'',saidInCall:r.said||'',opener:r.opener||''});
+  if(c.notRelevant)l.notRelevantReason=Object.assign({},l.notRelevantReason||{},back(c.notRelevant));
+  if(c.noshow)l.noshowReason=Object.assign({},l.noshowReason||{},back(c.noshow));
+  if(Array.isArray(c.calls))l.history=c.calls.map(x=>({date:x.date||'',res:x.result||'',note:x.note||''}));
 }
 function cardHashOf(card){const s=JSON.stringify(card);let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return String(h>>>0);}
 async function pushCardToWorker(l){
