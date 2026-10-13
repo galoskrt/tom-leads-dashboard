@@ -485,6 +485,16 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
       </label>
     </div>
   </div>
+  <!-- ★ השהיית רצף (גל 14/10): ליד שביקש הפסקה לא מקבל הודעות שיווק. אישור ותזכורות פגישה ממשיכים. -->
+  <div class="fg one">
+    <div class="f">
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;margin-bottom:0">
+        <input type="checkbox" id="fpause" onchange="document.getElementById('fpauseWhy').style.display=this.checked?'':'none'" style="width:18px;height:18px;accent-color:var(--red,#C2151C);cursor:pointer;flex-shrink:0">
+        <span>השהה רצף והודעות שיווק <span style="font-weight:400;color:var(--text2);font-size:11px">(ביקש הפסקה. אישור ותזכורות פגישה ממשיכים לצאת)</span></span>
+      </label>
+      <input id="fpauseWhy" placeholder="למה? למשל: ביקש שלא נכתוב לו עד ינואר" style="display:none;margin-top:6px">
+    </div>
+  </div>
 
   <!-- RELEVANT (מופיע רק בסטטוס רלוונטי בתהליך) -->
   <div class="relevant-box" id="relevantBox" style="display:none">
@@ -1196,6 +1206,7 @@ async function syncWorker(){
         existing.communityClicked=!!w.communityClicked; existing.funnelCompleted=!!w.funnelCompleted; if(w.communityClickedAt)existing.communityClickedAt=w.communityClickedAt;
         if(w.revival)existing.revival=w.revival; if(w.notRelevantReason)existing.notRelevantReason=w.notRelevantReason;
         if(w.noshowRevival)existing.noshowRevival=w.noshowRevival;
+        if('seqPaused' in w){existing.seqPaused=!!w.seqPaused;existing.seqPausedReason=w.seqPausedReason||'';}   // השהיית רצף: השרת קנוני (גל 14/10)
         existing.aiFit=w.aiFit||null; if(w.manualFit)existing.manualFit=w.manualFit;
         // הערות: אם המנוע כבר מחזיק את הטקסט הנוכחי, מסמנים כמסונכרן כדי שה-backfill ידלג. אחרת נשאר לא-מסונכרן וייידחף.
         if(w.noteAt)existing.noteAt=existing.noteAt||w.noteAt;
@@ -1412,7 +1423,7 @@ function render(){
       <td data-label="שם"><b>${esc(l.name)}</b>${isNew7(l)?`<span class="new7-badge" title="נכנס ב-7 הימים האחרונים">נכנס השבוע</span>`:''}${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
       <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(()=>{const vv=vslVerdict(l);return vv?`<br><span style="font-size:11px;color:${vv.c};font-weight:800">▶ ${vv.t} ${vv.pct}%</span>`:'';})()}</td>
-      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
+      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}${l.seqPaused?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#C2151C" title="${esc(l.seqPausedReason||'')}">⏸ רצף מושהה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
       <td data-label="פולואפ" class="td-rem">${dot}<span style="font-size:12px;color:${remClr}">${remTxt}</span></td>
       <td data-label="WA" class="td-wa"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${waBtn}${commBtn}</div></td>
       <td data-label="מסמך">${doc}</td>
@@ -1557,6 +1568,7 @@ function openLead(id){
   document.getElementById('hnote').value='';
   renderHist(l?.history||[]);
   document.getElementById('fjoined').checked=!!(l&&l.joinedCommunity);
+  {const _p=document.getElementById('fpause'),_w=document.getElementById('fpauseWhy'); if(_p){_p.checked=!!(l&&l.seqPaused); _w.value=(l&&l.seqPausedReason)||''; _w.style.display=_p.checked?'':'none';}}
   const _nr=(l&&l.notRelevantReason)||{};
   document.getElementById('nrCat').value=_nr.category||'';
   document.getElementById('nrWhy').value=_nr.why||'';
@@ -1667,6 +1679,10 @@ function saveLead(){
   }
   const data={name,phone:document.getElementById('fp').value.trim(),email:document.getElementById('fe').value.trim(),business:(prev&&prev.business)||'',status:document.getElementById('fst2').value,source:document.getElementById('fsrc').value,doc:document.getElementById('fdoc').value.trim(),notes:document.getElementById('fnotes').value.trim(),remAt,remNote:document.getElementById('rnote').value.trim(),relProg:document.getElementById('relprog').value.trim(),relNext:document.getElementById('relnext').value,relNextTime:document.getElementById('relnexttime').value,meetDate:document.getElementById('mdate').value,meetTime:document.getElementById('mtime').value,meetPlace:document.getElementById('mplace').value.trim(),meetDoc:document.getElementById('mdoc').value.trim(),meetLink:document.getElementById('mlink').value.trim(),meetNotes:document.getElementById('mnotes').value.trim(),dealAmount:parseFloat(document.getElementById('fdeal').value)||0,dealMeters:parseFloat(document.getElementById('fmeters').value)||0,joinedCommunity:document.getElementById('fjoined').checked,notRelevantReason:_nr,meetingQuality:mqData,noshowReason:nsData,updatedAt:nowIso()};
   const prevJoined=prev?!!prev.joinedCommunity:false;
+  // ★ השהיית רצף (גל 14/10)
+  const _pauseEl=document.getElementById('fpause'), _pauseNow=!!(_pauseEl&&_pauseEl.checked), _pauseWhy=((document.getElementById('fpauseWhy')||{}).value||'').trim();
+  const _pausePrev=prev?!!prev.seqPaused:false, _whyPrev=prev?(prev.seqPausedReason||''):'';
+  data.seqPaused=_pauseNow; data.seqPausedReason=_pauseNow?_pauseWhy:''; if(_pauseNow&&!_pausePrev)data.seqPausedAt=nowIso(); if(!_pauseNow)data.seqPausedAt='';
   // האם פרטי הפגישה השתנו (חשוב: נקרא לפני Object.assign שדורס את prev). מאפשר לדחוף מועד חדש גם בלי שינוי סטטוס.
   const _meetChanged=prev?(prev.meetDate!==data.meetDate||prev.meetTime!==data.meetTime||prev.meetPlace!==data.meetPlace):false;
   const _prevName=prev?(prev.name||''):'';   // captured before Object.assign, to detect a name edit → push displayName
@@ -1690,6 +1706,7 @@ function saveLead(){
   if(saved&&saved.lead_id&&data.status==='booked'&&data.meetDate&&data.email&&(!saved.meetLink||_meetChanged))createMeetingForLead(saved);
   // סימון "נכנס לקהילה" נשמר גם בשרת (בלי תופעות לוואי), כך שגם הדשבורד וגם הניתוח קוראים אותו.
   if(saved&&saved.lead_id&&data.joinedCommunity!==prevJoined)pushJoinedToWorker(saved);
+  if(saved&&saved.lead_id&&(_pauseNow!==_pausePrev||(_pauseNow&&_pauseWhy!==_whyPrev)))pushPauseToWorker(saved);
   // דירוג איכות הפגישה (מספר+תאריך בלבד, בלי הטקסט החופשי) נדחף לוורקר כדי שדוח הבוקר יראה מגמה.
   if(saved&&saved.lead_id&&_canRate&&mqData&&mqData.rating)pushMeetingQualityToWorker(saved);
   // הערת הנציג: noteAt מתעדכן רק כשהטקסט באמת השתנה (כדי שזיהוי "הערה ישנה" יעבוד). נדחף בכל save.
@@ -1707,6 +1724,13 @@ async function pushJoinedToWorker(l){
   if(!l.lead_id||!canPush())return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,joinedCommunity:!!l.joinedCommunity,by:'dashboard'})}); }
   catch(e){console.warn('join flag push',e);}
+}
+// השהיית רצף לשרת: השרת לא שולח לליד שום הודעה שיווקית (רצפים, נדנודים, הזמנה מחדש). גל 14/10.
+async function pushPauseToWorker(l){
+  if(!l.lead_id||!canPush())return;
+  try{ const r=await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,seqPaused:!!l.seqPaused,seqPausedReason:l.seqPausedReason||'',by:'dashboard'})});
+       if(r.ok)toast(l.seqPaused?'⏸ הרצף וההודעות השיווקיות הושהו לליד הזה':'▶️ הרצף חזר לפעול',3500); else toast('❌ ההשהיה לא נשמרה בשרת, נסו שוב',5000); }
+  catch(e){console.warn('pause push',e);toast('❌ ההשהיה לא נשמרה בשרת, נסו שוב',5000);}
 }
 async function pushMeetingQualityToWorker(l){
   if(!l.lead_id||!l.meetingQuality||!l.meetingQuality.rating)return;
