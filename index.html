@@ -1728,27 +1728,37 @@ function saveLead(){
   if(saved&&saved.lead_id&&!isNew&&saved.phone&&phoneKey(saved.phone)!==phoneKey(_prevPhone)){saved.phoneEditedAt=nowIso();pushPhoneToWorker(saved,true);}
   closeLead();render();scheduleSave();
 }
+// ★ תור לכל ליד (גל 14/10, "תקלות שמירה בסטטוסים ותזכורות"): כל הכתיבות של אותו ליד לשרת יוצאות אחת אחרי השנייה.
+// כשהן יצאו במקביל, כל בקשה קראה את הליד, שינתה חלק אחד וכתבה את כולו, והאחרונה מחקה את מה שהקודמות כתבו
+// (סטטוס או תזכורת חזרו לקודם, ואז הסנכרון משך את הישן גם לדשבורד). לידים שונים עדיין יוצאים במקביל.
+const _leadQ={};
+function leadFetch(url,opts){
+  let id='';try{id=JSON.parse((opts&&opts.body)||'{}').lead_id||'';}catch(e){}
+  const run=(_leadQ[id]||Promise.resolve()).then(()=>fetch(url,opts));
+  _leadQ[id]=run.then(()=>{},()=>{});
+  return run;
+}
 async function pushJoinedToWorker(l){
   if(!l.lead_id||!canPush())return;
-  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,joinedCommunity:!!l.joinedCommunity,by:'dashboard'})}); }
+  try{ await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,joinedCommunity:!!l.joinedCommunity,by:'dashboard'})}); }
   catch(e){console.warn('join flag push',e);}
 }
 // השהיית רצף לשרת: השרת לא שולח לליד שום הודעה שיווקית (רצפים, נדנודים, הזמנה מחדש). גל 14/10.
 async function pushPauseToWorker(l){
   if(!l.lead_id||!canPush())return;
-  try{ const r=await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,seqPaused:!!l.seqPaused,seqPausedReason:l.seqPausedReason||'',by:'dashboard'})});
+  try{ const r=await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,seqPaused:!!l.seqPaused,seqPausedReason:l.seqPausedReason||'',by:'dashboard'})});
        if(r.ok)toast(l.seqPaused?'⏸ הרצף וההודעות השיווקיות הושהו לליד הזה':'▶️ הרצף חזר לפעול',3500); else toast('❌ ההשהיה לא נשמרה בשרת, נסו שוב',5000); }
   catch(e){console.warn('pause push',e);toast('❌ ההשהיה לא נשמרה בשרת, נסו שוב',5000);}
 }
 async function pushMeetingQualityToWorker(l){
   if(!l.lead_id||!l.meetingQuality||!l.meetingQuality.rating)return;
-  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,meetingQuality:{rating:l.meetingQuality.rating,at:l.meetingQuality.at}})}); }
+  try{ await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,meetingQuality:{rating:l.meetingQuality.rating,at:l.meetingQuality.at}})}); }
   catch(e){console.warn('mq push',e);}
 }
 // דוחף את הערת הנציג (טקסט + מתי השתנתה) למנוע, למדידת פערי תיעוד בדוח הבוקר. נדחף בכל save, כולל ריק.
 async function pushNotesToWorker(l){
   if(!l.lead_id||!canPush())return;
-  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,noteText:l.notes||'',noteAt:l.noteAt||nowIso()})}); }
+  try{ await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,noteText:l.notes||'',noteAt:l.noteAt||nowIso()})}); }
   catch(e){console.warn('note push',e);}
 }
 // ═══ הכרטיס המלא לשרת (גל 12/10): "אם הדוח לא מיושר עם האמת בדשבורד זה לא שווה כלום" ═══
@@ -1781,14 +1791,14 @@ async function pushCardToWorker(l){
   if(!l||!l.lead_id||!canPush())return;
   const card=buildCard(l), h=cardHashOf(card);
   try{
-    const r=await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,card,cardHash:h})});
+    const r=await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,card,cardHash:h})});
     const j=await r.json().catch(()=>({}));
     if(r.ok&&j.cardHash===h)l.cardHashSynced=h;   // מסומן כמסונכרן רק אחרי שהשרת אישר (לא מראש)
   }catch(e){console.warn('card push',e);}
 }
 async function pushDeletedToWorker(leadId){
   if(!leadId||!canPush())return;
-  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:leadId,deleted:true,by:'dashboard'})}); }
+  try{ await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:leadId,deleted:true,by:'dashboard'})}); }
   catch(e){console.warn('delete push',e);}
 }
 // תזכורת לשיחת בדיקה ללידים בהחייאה, אחת ל-14 יום (גל 12/10). לא דורס תזכורת עתידית שנקבעה ידנית.
@@ -1803,7 +1813,7 @@ function setRevivalCheck(l,fromIso){
 // דוחף שם שהצוות ערך (displayName) למנוע, כך שהאוטומציות והדוח יפנו לליד בשם שהוא ביקש. השם המקורי נשאר לשיוך.
 async function pushDisplayNameToWorker(l){
   if(!l.lead_id||!canPush())return;
-  try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,displayName:l.name||''})}); }
+  try{ await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,displayName:l.name||''})}); }
   catch(e){console.warn('displayName push',e);}
 }
 // ★ מספר טלפון שהשתנה בדשבורד (גל 14/10): השרת מעביר את הליד למספר החדש, ואיש הקשר בסמוב עובר איתו
@@ -1812,7 +1822,7 @@ function phoneKey(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('972'
 async function pushPhoneToWorker(l,loud){
   if(!l.lead_id||!canPush()||!l.phone)return;
   try{
-    const r=await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,phone:l.phone,by:'dashboard'})});
+    const r=await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,phone:l.phone,by:'dashboard'})});
     const j=await r.json().catch(()=>({}));
     if(r.ok&&phoneKey(j.phone)===phoneKey(l.phone)){
       l.phoneSynced=l.phone;
@@ -1849,7 +1859,7 @@ async function pushManualLeadToWorker(l){
 async function pushStatusToWorker(l){
   if(!ST[l.status]||!l.lead_id)return;
   try{
-    await fetch(`${WORKER_URL}/lead-status`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},
+    await leadFetch(`${WORKER_URL}/lead-status`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},
       body:JSON.stringify({lead_id:l.lead_id,status:l.status,note:l.notes||undefined,deal_amount:l.status==='deal'?(l.dealAmount||0):undefined,deal_meters:l.status==='deal'?(l.dealMeters||0):undefined,meetDate:l.meetDate||undefined,meetTime:l.meetTime||undefined,meetPlace:l.meetPlace||undefined})});
   }catch(e){console.warn('status sync',e);}
 }
@@ -2500,7 +2510,7 @@ async function setManualFit(fit){
   if(fit===null&&!f)return;          // סיבה בלי סימון: מחכים לסימון
   l.manualFit=f?{fit:f,reason,at:nowIso(),by:'dashboard'}:null;
   renderFitRow(l); scheduleSave();
-  if(canPush()) try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,manualFit:{fit:f,reason},by:'dashboard'})}); }
+  if(canPush()) try{ await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,manualFit:{fit:f,reason},by:'dashboard'})}); }
   catch(e){console.warn('fit push',e);}
 }
 
