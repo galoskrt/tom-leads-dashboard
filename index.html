@@ -1198,6 +1198,12 @@ async function syncWorker(){
         if(w.meetDoc&&!existing.meetDoc){existing.meetDoc=w.meetDoc;}
         if(w.calBooking)existing.calBooking=w.calBooking;
         if(w.booked)existing.booked=true;
+        // ★ מספר טלפון (גל 14/10): מי שעודכן אחרון מנצח. עריכה מקומית חדשה (או עריכה ישנה מלפני הפיצ'ר) נדחפת לשרת,
+        // שינוי חדש יותר בשרת (ממכשיר אחר) נמשך לכאן. ככה שני מכשירים לא מחזירים מספר ישן.
+        if(existing.phone&&w.phone&&phoneKey(existing.phone)!==phoneKey(w.phone)){
+          if(w.phoneChangedAt&&(!existing.phoneEditedAt||w.phoneChangedAt>=existing.phoneEditedAt)){existing.phone=w.phone;existing.phoneSynced=w.phone;existing.phoneEditedAt=w.phoneChangedAt;updated++;}
+          else pushPhoneToWorker(existing,false);
+        }
         // תצוגה בלבד, קנוני מה-Worker, מתרענן בכל סנכרון (בלי updated++ כדי לא ליצור שמירות מיותרות).
         existing.followupLog=w.followupLog||[]; existing.subscribed=!!w.subscribed;
         if('joinedCommunity' in w){existing.joinedCommunity=w.joinedCommunity; if(w.joinedCommunityAt)existing.joinedCommunityAt=w.joinedCommunityAt;}
@@ -1686,6 +1692,7 @@ function saveLead(){
   // האם פרטי הפגישה השתנו (חשוב: נקרא לפני Object.assign שדורס את prev). מאפשר לדחוף מועד חדש גם בלי שינוי סטטוס.
   const _meetChanged=prev?(prev.meetDate!==data.meetDate||prev.meetTime!==data.meetTime||prev.meetPlace!==data.meetPlace):false;
   const _prevName=prev?(prev.name||''):'';   // captured before Object.assign, to detect a name edit → push displayName
+  const _prevPhone=prev?(prev.phone||''):'';  // ★ מספר שהשתנה → כל האוטומציות עוברות אליו (גל 14/10)
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
   else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
@@ -1718,6 +1725,7 @@ function saveLead(){
   if(saved&&saved.lead_id)pushCardToWorker(saved);
   // שם שהצוות ערך (למשל דניאל→דן): נדחף למנוע כך שגם האוטומציות וגם הדוח יפנו אליו בשם הזה.
   if(saved&&saved.lead_id&&!isNew&&saved.name!==_prevName){saved.displayNameSynced=saved.name;pushDisplayNameToWorker(saved);}
+  if(saved&&saved.lead_id&&!isNew&&saved.phone&&phoneKey(saved.phone)!==phoneKey(_prevPhone)){saved.phoneEditedAt=nowIso();pushPhoneToWorker(saved,true);}
   closeLead();render();scheduleSave();
 }
 async function pushJoinedToWorker(l){
@@ -1797,6 +1805,20 @@ async function pushDisplayNameToWorker(l){
   if(!l.lead_id||!canPush())return;
   try{ await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,displayName:l.name||''})}); }
   catch(e){console.warn('displayName push',e);}
+}
+// ★ מספר טלפון שהשתנה בדשבורד (גל 14/10): השרת מעביר את הליד למספר החדש, ואיש הקשר בסמוב עובר איתו
+// (כל הרשימות נשמרות). מכאן כל ההודעות האוטומטיות יוצאות למספר החדש. המספר הישן נשמר בהיסטוריה בשרת.
+function phoneKey(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('972'))d='0'+d.slice(3);return d;}
+async function pushPhoneToWorker(l,loud){
+  if(!l.lead_id||!canPush()||!l.phone)return;
+  try{
+    const r=await fetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,phone:l.phone,by:'dashboard'})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&phoneKey(j.phone)===phoneKey(l.phone)){
+      l.phoneSynced=l.phone;
+      if(loud)toast(j.phoneMove&&j.phoneMove.ok===false?'⚠ המספר עודכן, אבל המעבר בסמוב לא אושר. בדקו את איש הקשר בסמוב':'✓ המספר עודכן. כל ההודעות האוטומטיות יוצאות מעכשיו למספר החדש',5000);
+    } else if(loud) toast('⚠ המספר נשמר בדשבורד אבל לא עודכן באוטומציות. ננסה שוב בסנכרון הבא',6000);
+  }catch(e){console.warn('phone push',e);if(loud)toast('⚠ המספר נשמר בדשבורד אבל לא עודכן באוטומציות. ננסה שוב בסנכרון הבא',6000);}
 }
 // גיבוי חד-פעמי לכל ליד שעדיין לא סונכרן (noteTextSynced ריק), כדי שהדוח יהיה אמין מהיום הראשון.
 function backfillNotes(){
