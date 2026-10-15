@@ -299,6 +299,10 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
 .stat-card .l{font-size:11px;color:var(--text2);margin-top:5px;text-transform:uppercase;letter-spacing:.04em}
 .stats-h{font-size:12px;color:var(--text2);margin:14px 0 8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .stats-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px}
+.abseg{display:inline-flex;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:3px;margin:0 0 12px}
+.abseg button{border:0;background:transparent;color:var(--text2);font:inherit;font-size:13px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer}
+.abseg button.on{background:var(--accent);color:#fff}
+.ab-t td.d{font-weight:800;white-space:nowrap}.ab-t td.up{color:var(--green)}.ab-t td.dn{color:var(--red)}.ab-t th.grp{background:var(--s2);color:var(--text);font-size:12px;text-transform:none}
 .stats-table th,.stats-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
 .stats-table th{color:var(--text2);font-size:11px;font-weight:700;text-transform:uppercase}
 .adinfo-box{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--text2)}
@@ -683,6 +687,7 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
       <input type="date" id="hdate"/>
       <select id="hres">
         <option value="ענה">✅ ענה</option>
+        <option value="שיחה אמיתית">🟢 שיחה אמיתית (2 עד 3 דקות ומעלה, עם רקע)</option>
         <option value="לא ענה">❌ לא ענה</option>
         <option value="ביקש לחזור">🔄 ביקש לחזור</option>
         <option value="וואטסאפ נשלח">📱 וואטסאפ נשלח</option>
@@ -767,6 +772,7 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
       <option value="maximum" selected>הכל</option>
     </select>
     <button class="modal-close" onclick="closeOv('statsOv')">✕</button></h2>
+  <div class="abseg" role="tablist"><button type="button" id="segSum" class="on" onclick="setStatsView('sum')">סיכום</button><button type="button" id="segAB" onclick="setStatsView('ab')">A מול B</button></div>
   <div id="statsBody"></div>
 </div>
 </div>
@@ -1892,7 +1898,7 @@ function addH(){
 function renderHist(h){
   const el=document.getElementById('hlist');
   if(!h.length){el.innerHTML='<div style="color:var(--gray);font-size:12px;margin-bottom:5px">אין היסטוריה</div>';return}
-  el.innerHTML=[...h].reverse().map(x=>`<div class="hitem"><span class="hdate">${x.date.split('-').reverse().join('/')}</span><span class="hres" style="color:${x.res.startsWith('✅')||x.res==='ענה'?'var(--green)':'var(--red)'}">${x.res}</span><span class="hnote">${esc(x.note||'')}</span></div>`).join('');
+  el.innerHTML=[...h].reverse().map(x=>`<div class="hitem"><span class="hdate">${x.date.split('-').reverse().join('/')}</span><span class="hres" style="color:${x.res.startsWith('✅')||x.res==='ענה'||x.res==='שיחה אמיתית'?'var(--green)':'var(--red)'}">${x.res}</span><span class="hnote">${esc(x.note||'')}</span></div>`).join('');
 }
 // ─── אוטומציות שהמכונה שלחה (סמוב/קהילה), לתצוגה בכרטיס. הנתון קנוני מה-Worker (followupLog). ───
 const AUTO_NAMES={
@@ -2209,9 +2215,12 @@ function openStats(){document.getElementById('statsOv').classList.add('open');re
 function nis(n){return (n==null)?'—':'₪'+Math.round(n).toLocaleString();}
 // שקלול העלויות מגיע מה-Worker: הוצאה מ-Meta (מצומצם ל-2 הקמפיינים שלנו בלבד) × ספירות ההמרות שלנו.
 // הטוקן החזק נשאר בשרת; כאן מושכים רק את המספרים המצטברים דרך DASH_TOKEN.
+let statsView='sum';
+function setStatsView(v){statsView=v;document.getElementById('segSum').classList.toggle('on',v==='sum');document.getElementById('segAB').classList.toggle('on',v==='ab');document.getElementById('statsRange').style.visibility=v==='ab'?'hidden':'visible';renderStatsModal();}
 async function renderStatsModal(){
   const range=document.getElementById('statsRange')?.value||'maximum';
   const body=document.getElementById('statsBody');
+  if(statsView==='ab'){ body.innerHTML=`<div class="empty"><h3>⏳ טוען את ההשוואה...</h3></div>`; body.innerHTML=await abSection(); return; }
   body.innerHTML=`<div class="empty"><h3>⏳ טוען נתונים חיים...</h3></div>`;
   let j;
   try{
@@ -2369,6 +2378,97 @@ async function funnelSection(){
       אורך הסרטון ${thgMMSS(v.len)}. <b>אחוז לבדו לא מבדיל בין מי שצפה לבין מי שגרר את הסרגל</b>,
       ולכן נמדדות גם שניות הצפייה שנצברו בפועל, וההפרש ביניהן הוא הסיווג.</div>`;
   }
+  return h;
+}
+
+/* ═══════════ A מול B (גל 16/10) ═══════════
+   השוואה לפי תקופות: A רץ 08/09 עד 15/10 ומושהה, B רץ מיום ההשקה. לכן כל מדד מוצג גם מנורמל.
+   הלידים וההוצאה חיים מהשרת. משפך השאלון של A הוא צילום מצב קבוע (המונים שלו לא נקראים לטווח ארוך),
+   ושל B נקרא חי מהמונים הנפרדים שלו. */
+const AB_START='2026-10-19';                       // יום ההשקה של B
+const A_FROM='2026-09-08', A_TO='2026-10-15';
+const A_FUNNEL={views:852,start:165,reached:105,done:34,src:'צילום מצב 15/10: 12/09 עד 15/10, ממומן, אחרי ניכוי ריצות בדיקה. הצפיות הן הערכה, כי המונה של A סופר גם דפים אחרים'};
+function abMet(arr){
+  const att=l=>(l.milestones||{}).attended||!!l.meetingQuality||!!l.attendedAt;
+  const hasH=(l,re)=>(l.history||[]).some(h=>re.test(h.key||''));
+  const n=arr.length;
+  const pb=arr.map(l=>{const p=l.pageBehavior||{};return p.b||p.hot||p.cold||null;}).filter(Boolean);
+  const tnx=arr.map(l=>(l.pageBehavior||{}).tnx).filter(Boolean);
+  const vs=arr.filter(l=>l.vslWatched>0);
+  const avg=(xs,f)=>xs.length?Math.round(xs.reduce((s,x)=>s+(f(x)||0),0)/xs.length):null;
+  return {n, hot:arr.filter(l=>l.temperature==='hot').length,
+    answered:arr.filter(l=>hasH(l,/^(answered|cold_followup|hot_followup|booked|booked_noshow|attended|deal|revival)$/)).length,
+    real:arr.filter(l=>((l.card||{}).calls||[]).some(c=>c.result==='שיחה אמיתית')).length,
+    booked:arr.filter(l=>(l.milestones||{}).booked||att(l)).length, attended:arr.filter(att).length,
+    deal:arr.filter(l=>(l.milestones||{}).deal).length,
+    vslAvg:avg(vs,l=>l.vslWatched), scr:avg(pb,x=>x.maxScroll), sec:avg(pb,x=>x.activeSec), tnxSec:avg(tnx,x=>x.activeSec)};
+}
+async function abSection(){
+  let ms,L,fb=null;
+  try{
+    const r1=await fetch(`${WORKER_URL}/meta-stats?token=${encodeURIComponent(DASH_TOKEN)}&range=maximum`);
+    const r2=await fetch(`${WORKER_URL}/leads`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`}});
+    ms=await r1.json(); L=((await r2.json()).leads)||[];
+  }catch(e){return `<div class="empty"><h3>❌ שגיאת רשת</h3><p>${esc(e.message)}</p></div>`;}
+  const day=864e5, bStart=Date.parse(AB_START+'T00:00:00+03:00'), started=Date.now()>=bStart;
+  const aDays=Math.round((Date.parse(A_TO)-Date.parse(A_FROM))/day)+1, bDays=started?Math.max(1,Math.ceil((Date.now()-bStart)/day)):0;
+  if(started){try{const r=await fetch(`${WORKER_URL}/funnel-stats?days=${Math.min(14,bDays)}&variant=b`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`}});
+    if(r.ok){const d=await r.json();fb={views:0,start:0,reached:0,done:0};(d.days||[]).forEach(x=>{fb.views+=(x.view&&x.view.paid)||0;fb.start+=(x.start&&x.start.paid)||0;fb.done+=(x.done&&x.done.paid)||0;fb.reached+=x.contact||0;});fb.reached+=fb.done;}}catch(e){}}
+  const ok=l=>!l.deleted&&!l.excluded&&!l.qa&&!l.manual&&!l.demo&&String(l.displayName||l.name||'').trim()!=='תום הרוש', ts=l=>Date.parse(l.ts||0)||0;   // תום הרוש = ליד הבדיקה של תום מ־17/09
+  const rmk=l=>/rmk|remarket|retarget/i.test(String((l.utm||{}).campaign||''));
+  const A=abMet(L.filter(l=>ok(l)&&l.variant!=='b'&&!rmk(l)&&ts(l)>=Date.parse(A_FROM+'T00:00:00+03:00')&&ts(l)<=Date.parse(A_TO+'T23:59:59+03:00')));
+  const B=abMet(L.filter(l=>ok(l)&&l.variant==='b'));
+  const cm=((ms&&ms.breakdown)||{}).campaigns||{}, aSp=(cm.main||{}).spend||0, bSp=(cm.b||{}).spend||0;
+  const money=v=>v==null||!isFinite(v)?'—':nis(v), num=v=>v==null?'—':String(v);
+  const rate=v=>v==null?'—':(Math.round(v*1000)/10)+'%', whole=v=>v==null?'—':Math.round(v*100)+'%';
+  const div=(a,b)=>(b>0&&a>0)?a/b:null;
+  const G=(t)=>({grp:t});
+  // [תווית, ערך A, ערך B, תצוגה, כיוון טוב: 1 גבוה עדיף, -1 נמוך עדיף, 0 בלי שיפוט]
+  const R=[
+    G('כסף ונפח'),
+    ['ימים בתקופה',aDays,bDays||null,num,0],
+    ['הוצאה',aSp,started?bSp:null,money,0],
+    ['הוצאה ליום',aSp/aDays,started?div(bSp,bDays):null,money,0],
+    ['לידים חדשים',A.n,started?B.n:null,num,1],
+    ['לידים ליום',Math.round(A.n/aDays*100)/100,started?Math.round(B.n/bDays*100)/100:null,num,1],
+    ['עלות לליד',div(aSp,A.n),started?div(bSp,B.n):null,money,-1],
+    ['אחוז חמים',A.n?A.hot/A.n:null,B.n?B.hot/B.n:null,whole,1],
+    G('השאלון'),
+    ['צפיות (ממומן)',A_FUNNEL.views,fb?fb.views:null,num,0],
+    ['התחילו',A_FUNNEL.start,fb?fb.start:null,num,1],
+    ['הגיעו למסך הפרטים',A_FUNNEL.reached,fb?fb.reached:null,num,1],
+    ['שלחו',A_FUNNEL.done,fb?fb.done:null,num,1],
+    ['צפייה לליד',A_FUNNEL.done/A_FUNNEL.views,fb&&fb.views?fb.done/fb.views:null,rate,1],
+    ['מסך הפרטים לשליחה',A_FUNNEL.done/A_FUNNEL.reached,fb&&fb.reached?fb.done/fb.reached:null,rate,1],
+    G('איכות ומכירה'),
+    ['הגיעו לשיחה (לפי סטטוס)',A.n?A.answered/A.n:null,B.n?B.answered/B.n:null,whole,1],
+    ['שיחה אמיתית (2 עד 3 דקות ומעלה)',A.real,started?B.real:null,num,1],
+    ['קבעו פגישה',A.booked,started?B.booked:null,num,1],
+    ['ליד לפגישה',A.n?A.booked/A.n:null,B.n?B.booked/B.n:null,whole,1],
+    ['פגישות שהתקיימו',A.attended,started?B.attended:null,num,1],
+    ['עלות לפגישה שנקבעה',div(aSp,A.booked),started?div(bSp,B.booked):null,money,-1],
+    ['עלות לפגישה שהתקיימה',div(aSp,A.attended),started?div(bSp,B.attended):null,money,-1],
+    ['עסקאות',A.deal,started?B.deal:null,num,1],
+    G('התנהגות'),
+    ['צפייה ממוצעת בסרטון',A.vslAvg,B.vslAvg,v=>v==null?'—':v+'%',1],
+    ['גלילה ממוצעת בדף',A.scr,B.scr,v=>v==null?'—':v+'%',1],
+    ['זמן פעיל ממוצע בדף',A.sec,B.sec,v=>v==null?'—':thgMMSS(v),1],
+    ['זמן ממוצע בדף התודה',A.tnxSec,B.tnxSec,v=>v==null?'—':thgMMSS(v),1],
+  ];
+  const dmy=d=>d.split('-').reverse().join('/');
+  let h=`<div class="adinfo-box" style="margin-bottom:10px;line-height:1.7;font-size:12.5px"><b>A</b>: ${dmy(A_FROM)} עד ${dmy(A_TO)} (מושהה). <b>B</b>: ${started?`מ־${dmy(AB_START)}, ${bDays} ימים`:`עוד לא עלה. ההשקה מתוכננת ל־${dmy(AB_START)}`}. התקופות באורך שונה, ולכן משווים לפי השורות המנורמלות: ליום ובאחוזים.</div>`;
+  h+=`<div style="overflow-x:auto"><table class="stats-table ab-t"><thead><tr><th>מדד</th><th>A</th><th>B</th><th>שינוי</th></tr></thead><tbody>`;
+  R.forEach(r=>{
+    if(r.grp){h+=`<tr><th class="grp" colspan="4">${r.grp}</th></tr>`;return;}
+    const [t,a,b,f,dir]=r; let d='',cls='';
+    if(dir&&a!=null&&b!=null&&a>0){const ch=(b-a)/a;d=(ch>0?'+':'')+Math.round(ch*100)+'%';cls=(ch*dir>0)?'up':(ch*dir<0?'dn':'');}
+    h+=`<tr><td>${t}</td><td>${f(a)}</td><td>${f(b)}</td><td class="d ${cls}">${d||'—'}</td></tr>`;
+  });
+  h+=`</tbody></table></div><div class="adinfo-box" style="margin-top:8px;font-size:12px;line-height:1.7">
+    <b>הלידים</b> של A: הקמפיין הראשי בתקופה של A, בלי רימרקטינג. של B: כל ליד שהגיע משאלון B. בלי בדיקות, ידניים ונמחקים.<br>
+    <b>שיחה אמיתית</b> נספרת מיומן השיחות בכרטיס (האפשרות "שיחה אמיתית", נוספה ב־16/10). לפני כן לא נמדד, ולכן אצל A המספר חלקי.<br>
+    <b>משפך השאלון של A</b>: ${A_FUNNEL.src}.<br>
+    <b>הוצאה של B</b> נספרת מהרגע שמזהה הקמפיין של B מוגדר בשרת, ביום ההשקה.</div>`;
   return h;
 }
 
