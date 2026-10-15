@@ -1693,6 +1693,14 @@ function saveLead(){
   const _meetChanged=prev?(prev.meetDate!==data.meetDate||prev.meetTime!==data.meetTime||prev.meetPlace!==data.meetPlace):false;
   const _prevName=prev?(prev.name||''):'';   // captured before Object.assign, to detect a name edit → push displayName
   const _prevPhone=prev?(prev.phone||''):'';  // ★ מספר שהשתנה → כל האוטומציות עוברות אליו (גל 14/10)
+  // ★ אישור לפני החלפת מספר (גל 15/10): מסביר מה קורה, ומבחין בין תיקון מספר לא תקין לבין החלפה מכוונת.
+  if(prev&&prev.lead_id&&data.phone&&phoneKey(data.phone)!==phoneKey(_prevPhone)){
+    const _oldOk=/^05\d{8}$/.test(phoneKey(_prevPhone));
+    const _kind=_oldOk?'החלפת מספר':'תיקון מספר לא תקין';
+    const _ok=confirm(_kind+'\n\nמספר נוכחי: '+(_prevPhone||'לא קיים')+'\nמספר חדש: '+data.phone+'\n\nמרגע האישור, המספר החדש יקבל את כל ההודעות האוטומטיות בוואטסאפ במקום המספר הקודם.\n\nלאשר את ההחלפה?');
+    if(!_ok){data.phone=_prevPhone;document.getElementById('fp').value=_prevPhone;toast('המספר לא הוחלף. שאר השינויים נשמרו',4000);}
+    else data.phoneChangeKind=_kind;
+  }
   let saved,isNew=false;
   if(eid){saved=prev;if(saved)Object.assign(saved,data);}
   else {saved={id:Date.now().toString(36)+Math.random().toString(36).slice(2),...data,history:[],createdAt:nowIso()};leads.unshift(saved);isNew=true;}
@@ -1822,7 +1830,7 @@ function phoneKey(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('972'
 async function pushPhoneToWorker(l,loud){
   if(!l.lead_id||!canPush()||!l.phone)return;
   try{
-    const r=await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,phone:l.phone,by:'dashboard'})});
+    const r=await leadFetch(`${WORKER_URL}/lead-flag`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify({lead_id:l.lead_id,phone:l.phone,by:'dashboard',phoneKind:l.phoneChangeKind||''})});
     const j=await r.json().catch(()=>({}));
     if(r.ok&&phoneKey(j.phone)===phoneKey(l.phone)){
       l.phoneSynced=l.phone;
