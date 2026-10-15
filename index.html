@@ -1942,7 +1942,7 @@ function renderAuto(l){
     html=[...log].reverse().map(x=>{
       const nm=AUTO_NAMES[x.key]||x.key;
       const when=x.at?fmtDt(x.at):'';
-      const via=x.via==='smoove'?'סמוב':(x.via==='hook'?'הוק':(x.via==='outbox'?'ממתין לשליחה':(x.via||'')));
+      const via=x.via==='smoove'?'סמוב':(x.via==='hook'?'הוק':(x.via==='outbox'?'ממתין לשליחה':(x.via==='blocked'?'לא נשלח, חסום לוואטסאפ':(x.via==='failed'?'לא נשלח, תקלה בסמוב':(x.via||'')))));
       return `<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line,#eee)"><span style="color:var(--accent,#c2151c);font-weight:800">✓</span><span style="font-weight:700">${esc(nm)}</span><span style="color:var(--text2,#888);font-size:11px;margin-right:auto">${esc(when)}${via?' · '+esc(via):''}</span></div>`;
     }).join('');
   } else {
