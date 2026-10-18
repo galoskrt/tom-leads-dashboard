@@ -1963,8 +1963,8 @@ function renderAuto(l){
   if(l&&l.callback){const c=l.callback;ins+=`<div style="margin-top:7px;padding:8px 10px;border-radius:10px;background:#fdecec"><b style="color:#c2151c">📞 לחזור ${esc(c.label||'')}</b> <span style="color:var(--text2,#888);font-size:11px">נבחר ${esc(fmtDt(c.at))}</span><div style="font-size:12px;margin-top:2px">${c.altPhone?`למספר אחר שהליד ביקש: <a href="tel:${esc(c.altPhone)}" style="font-weight:800">${esc(c.altPhone)}</a>`:'למספר שבטופס. הליד אישר שהוא נכון.'}</div></div>`;}
   const vv=vslVerdict(l);
   if(vv) ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:${vv.c}">▶ VSL: ${vv.t}</span> <span style="color:var(--text2,#888);font-size:11px">צפה ${vv.pct}%${vv.secs?(' · '+thgSecs(vv.secs)):''}${l&&l.vslLen?(' מתוך '+thgSecs(l.vslLen)):''}</span></div>`;
-  const PGN={cold:'דף קר',hot:'דף חם',b:'דף התוצאה B'};
-  ['cold','hot','b'].forEach(pg=>{
+  const PGN={cold:'דף קר',hot:'דף חם',b:'דף התוצאה B',tnx:'דף התודה'};
+  ['cold','hot','b','tnx'].forEach(pg=>{
     const pb=l&&l.pageBehavior&&l.pageBehavior[pg];
     const bv=behaviorVerdict(pb);
     const visits=(pb&&pb.visits)||0;
