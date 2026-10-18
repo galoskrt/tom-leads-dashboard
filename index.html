@@ -118,6 +118,7 @@ tbody td{padding:12px 11px;vertical-align:middle}
 .new7-badge::before{content:'●';font-size:7px}
 #flt7Btn.on{background:#15995c;color:#fff;border-color:#15995c}
 .s-new{background:rgba(194,21,28,.15);color:#d494ff;border:1px solid rgba(194,21,28,.3)}
+.s-callback{background:rgba(245,158,11,.16);color:#f59e0b;border:1px solid rgba(245,158,11,.38)}
 .s-no1,.s-no2,.s-no3,.s-no4{background:rgba(255,26,0,.12);color:#ff8099;border:1px solid rgba(255,26,0,.25)}
 .s-cold-fu{background:rgba(100,160,255,.1);color:#80b8ff;border:1px solid rgba(100,160,255,.2)}
 .s-hot-fu{background:rgba(194,118,28,.12);color:#ffb347;border:1px solid rgba(194,118,28,.25)}
@@ -465,6 +466,7 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
         <option value="not_relevant">לא רלוונטי</option>
         <option value="revival">להחייאה</option>
         <option value="invalid">מספר לא תקין</option>
+        <option value="callback_set">נבחר מועד לחזרה</option>
       </select>
     </div>
     <div class="f">
@@ -1281,6 +1283,7 @@ const ST={
   not_relevant:{l:'לא רלוונטי',c:'s-irrelevant'},
   revival:{l:'להחייאה',c:'s-hot-fu'},
   invalid:{l:'מספר לא תקין',c:'s-invalid'},
+  callback_set:{l:'נבחר מועד לחזרה',c:'s-callback'},   // גל 18/10: הליד בחר בדף התוצאה של B מועד לחזרה (נקבע אוטומטית)
 };
 // סינון הסטטוסים נבנה מהקטלוג הזה בלבד, כך שכל סטטוס חדש מופיע בסינון אוטומטית. (גל 11/10)
 (function(){const f=document.getElementById('fst');if(!f)return;const cur=f.value;f.innerHTML='<option value="">כל הסטטוסים</option>'+Object.entries(ST).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('');f.value=cur;})();
@@ -1296,6 +1299,7 @@ const ST_PRI={
   booked:1, attended:2, hot_followup:3, booked_noshow:4, answered:5, cold_followup:6,
   new:7, no_answer_1:8, no_answer_2:9, no_answer_3:10, no_answer_4:11,
   revival:5.5, deal:12, not_relevant:13, invalid:14,
+  callback_set:1.5,   // ליד שחיכה בחלון שבחר: הכי דחוף אחרי פגישה שנקבעה
 };
 // סטטוסים שעבורם נפתחת תיבת "פרטי הפגישה" (תאריך/שעה/מיקום/הערות היערכות)
 const MEETING_STATUSES=['booked','booked_noshow','attended','deal'];
@@ -1435,7 +1439,7 @@ function render(){
       <td data-label="#">${rows.length-i}</td>
       <td data-label="שם"><b>${esc(l.name)}</b>${isNew7(l)?`<span class="new7-badge" title="נכנס ב-7 הימים האחרונים">נכנס השבוע</span>`:''}${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
-      <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(()=>{const vv=vslVerdict(l);return vv?`<br><span style="font-size:11px;color:${vv.c};font-weight:800">▶ ${vv.t} ${vv.pct}%</span>`:'';})()}${l.callback?`<br><span style="font-size:11px;color:#c2151c;font-weight:800">📞 ${esc(String(l.callback.label||'').split(',')[0])}</span>`:''}</td>
+      <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(()=>{const vv=vslVerdict(l);return vv?`<br><span style="font-size:11px;color:${vv.c};font-weight:800">▶ ${vv.t} ${vv.pct}%</span>`:'';})()}${l.callback?`<br><span style="font-size:11px;color:#c2151c;font-weight:800">📞 מועד לחזרה: ${esc(String(l.callback.label||'').split(',')[0])}</span>`:''}</td>
       <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}${l.seqPaused?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#C2151C" title="${esc(l.seqPausedReason||'')}">⏸ רצף מושהה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
       <td data-label="פולואפ" class="td-rem">${dot}<span style="font-size:12px;color:${remClr}">${remTxt}</span></td>
       <td data-label="WA" class="td-wa"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${waBtn}${commBtn}</div></td>
@@ -1452,6 +1456,10 @@ function renderStats(){
   const od=leads.filter(l=>remSt(l)==='overdue').length;
   const td=leads.filter(l=>remSt(l)==='due').length;
   let h=`<div class="hstat">סה"כ <b>${total}</b></div><div class="hstat">פייפליין <b>${pipe}</b></div><div class="hstat">נסגרו <b>${won}</b></div><div class="hstat">אחוז סגירה <b>${closeRate}%</b></div>`;
+  // גל 18/10: מי שבחר בדף התוצאה של B מועד לחזרה, לפי שלושת המועדים. לחיצה מסננת את הטבלה לסטטוס הזה.
+  const _cb=leads.filter(l=>l.status==='callback_set');
+  if(_cb.length){const _w=w=>_cb.filter(l=>l.callback&&l.callback.window===w).length;
+    h+=`<div class="hstat" style="cursor:pointer;background:rgba(245,158,11,.16);color:#b45309" title="לידים שבחרו בדף מתי לחזור אליהם. לחיצה מסננת" onclick="document.getElementById('fst').value='callback_set';render()">📞 מועד לחזרה <b>${_cb.length}</b> <span style="font-size:11px">בוקר ${_w('morning')} · צהריים ${_w('noon')} · ערב ${_w('evening')}</span></div>`;}
   if(td)h+=`<div class="hstat todayc">היום <b>${td}</b></div>`;
   if(od)h+=`<div class="hstat warn">באיחור <b>${od}</b></div>`;
   const _anom=computeAnomalies();
@@ -1960,7 +1968,7 @@ function renderAuto(l){
   else if(l&&l.subscribed) comm='<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● נכנס לקהילת המשקיעים</div>';
   let ins='';
   if(l&&(l.communityClicked||l.funnelCompleted)) ins+=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● השלים את המשפך · נכנס לקהילה מהדף${l.communityClickedAt?' · '+esc(fmtDt(l.communityClickedAt)):''}</div>`;
-  if(l&&l.callback){const c=l.callback;ins+=`<div style="margin-top:7px;padding:8px 10px;border-radius:10px;background:#fdecec"><b style="color:#c2151c">📞 לחזור ${esc(c.label||'')}</b> <span style="color:var(--text2,#888);font-size:11px">נבחר ${esc(fmtDt(c.at))}</span><div style="font-size:12px;margin-top:2px">${c.altPhone?`למספר אחר שהליד ביקש: <a href="tel:${esc(c.altPhone)}" style="font-weight:800">${esc(c.altPhone)}</a>`:'למספר שבטופס. הליד אישר שהוא נכון.'}</div></div>`;}
+  if(l&&l.callback){const c=l.callback;ins+=`<div style="margin-top:7px;padding:8px 10px;border-radius:10px;background:#fdecec"><b style="color:#c2151c">📞 מועד לחזרה לליד: ${esc(c.label||'')}</b> <span style="color:var(--text2,#888);font-size:11px">נבחר ${esc(fmtDt(c.at))}</span><div style="font-size:12px;margin-top:2px">${c.altPhone?`למספר אחר שהליד ביקש: <a href="tel:${esc(c.altPhone)}" style="font-weight:800">${esc(c.altPhone)}</a>`:'למספר שבטופס. הליד אישר שהוא נכון.'}</div></div>`;}
   const vv=vslVerdict(l);
   if(vv) ins+=`<div style="margin-top:7px"><span style="font-weight:800;color:${vv.c}">▶ VSL: ${vv.t}</span> <span style="color:var(--text2,#888);font-size:11px">צפה ${vv.pct}%${vv.secs?(' · '+thgSecs(vv.secs)):''}${l&&l.vslLen?(' מתוך '+thgSecs(l.vslLen)):''}</span></div>`;
   const PGN={cold:'דף קר',hot:'דף חם',b:'דף התוצאה B',tnx:'דף התודה'};
@@ -2404,6 +2412,7 @@ function abMet(arr){
     real:arr.filter(l=>((l.card||{}).calls||[]).some(c=>c.result==='שיחה אמיתית')).length,
     booked:arr.filter(l=>(l.milestones||{}).booked||att(l)).length, attended:arr.filter(att).length,
     deal:arr.filter(l=>(l.milestones||{}).deal).length, cb:arr.filter(l=>l.callback).length,
+    cbw:['morning','noon','evening'].map(w=>arr.filter(l=>l.callback&&l.callback.window===w).length).join(' / '),
     vslAvg:avg(vs,l=>l.vslWatched), scr:avg(pb,x=>x.maxScroll), sec:avg(pb,x=>x.activeSec), tnxSec:avg(tnx,x=>x.activeSec)};
 }
 async function abSection(){
@@ -2446,7 +2455,8 @@ async function abSection(){
     G('איכות ומכירה'),
     ['הגיעו לשיחה (לפי סטטוס)',A.n?A.answered/A.n:null,B.n?B.answered/B.n:null,whole,1],
     ['שיחה אמיתית (2 עד 3 דקות ומעלה)',A.real,started?B.real:null,num,1],
-    ['בחרו שעה לחזרה (קיים רק ב־B)',null,started?B.cb:null,num,0],
+    ['בחרו מועד לחזרה לליד (קיים רק ב־B)',null,started?B.cb:null,num,0],
+    ['· בבוקר / בצהריים / בערב',null,started&&B.cb?B.cbw:null,v=>v==null?'—':v,0],
     ['קבעו פגישה',A.booked,started?B.booked:null,num,1],
     ['ליד לפגישה',A.n?A.booked/A.n:null,B.n?B.booked/B.n:null,whole,1],
     ['פגישות שהתקיימו',A.attended,started?B.attended:null,num,1],
