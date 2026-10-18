@@ -452,6 +452,7 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
       <label>סטטוס</label>
       <select id="fst2" onchange="onStatusPick()">
         <option value="new">ליד חדש</option>
+        <option value="callback_set">נבחר מועד לחזרה</option>
         <option value="no_answer_1">אין מענה X1</option>
         <option value="no_answer_2">אין מענה X2</option>
         <option value="no_answer_3">אין מענה X3</option>
@@ -466,7 +467,6 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
         <option value="not_relevant">לא רלוונטי</option>
         <option value="revival">להחייאה</option>
         <option value="invalid">מספר לא תקין</option>
-        <option value="callback_set">נבחר מועד לחזרה</option>
       </select>
     </div>
     <div class="f">
@@ -1269,6 +1269,7 @@ async function syncWorker(){
 // תסתנכרן אחד-לאחד. 'new' = מצב הגעה לפני יצירת קשר (לא מוצע בדרופדאון של איש המכירות).
 const ST={
   new:{l:'ליד חדש',c:'s-new'},
+  callback_set:{l:'נבחר מועד לחזרה',c:'s-callback'},   // גל 18/10: הליד בחר בדף התוצאה של B מועד לחזרה (נקבע אוטומטית)
   no_answer_1:{l:'אין מענה X1',c:'s-no1'},
   no_answer_2:{l:'אין מענה X2',c:'s-no2'},
   no_answer_3:{l:'אין מענה X3',c:'s-no3'},
@@ -1283,7 +1284,6 @@ const ST={
   not_relevant:{l:'לא רלוונטי',c:'s-irrelevant'},
   revival:{l:'להחייאה',c:'s-hot-fu'},
   invalid:{l:'מספר לא תקין',c:'s-invalid'},
-  callback_set:{l:'נבחר מועד לחזרה',c:'s-callback'},   // גל 18/10: הליד בחר בדף התוצאה של B מועד לחזרה (נקבע אוטומטית)
 };
 // סינון הסטטוסים נבנה מהקטלוג הזה בלבד, כך שכל סטטוס חדש מופיע בסינון אוטומטית. (גל 11/10)
 (function(){const f=document.getElementById('fst');if(!f)return;const cur=f.value;f.innerHTML='<option value="">כל הסטטוסים</option>'+Object.entries(ST).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('');f.value=cur;})();
@@ -1299,7 +1299,7 @@ const ST_PRI={
   booked:1, attended:2, hot_followup:3, booked_noshow:4, answered:5, cold_followup:6,
   new:7, no_answer_1:8, no_answer_2:9, no_answer_3:10, no_answer_4:11,
   revival:5.5, deal:12, not_relevant:13, invalid:14,
-  callback_set:1.5,   // ליד שחיכה בחלון שבחר: הכי דחוף אחרי פגישה שנקבעה
+  callback_set:6.5,   // גל 18/10: מעל "ליד חדש", ומיד לפני "אין מענה X1" ברשימות
 };
 // סטטוסים שעבורם נפתחת תיבת "פרטי הפגישה" (תאריך/שעה/מיקום/הערות היערכות)
 const MEETING_STATUSES=['booked','booked_noshow','attended','deal'];
