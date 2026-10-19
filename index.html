@@ -992,6 +992,7 @@ async function doLogin(){
     document.getElementById('app').style.display='block';
     startSync(); syncWorker(); render();
     setTimeout(checkOverduePrompts,1500);
+    setTimeout(()=>dashMirror(true),4000);   // העתק מלא לבסיס הנתונים בשרת אחרי הכניסה (גל 19/10)
   }catch(e){err.textContent='שגיאה בטעינה — נסה שוב';console.error(e);}
   btn.disabled=false; info.textContent='';
 }
@@ -1102,6 +1103,27 @@ function deduplicateByPhone(){
   leads=leads.filter(l=>!deletedIds.has(l.id));
   return mergedCount;
 }
+// ★ העתק לבסיס הנתונים בשרת (גל 19/10, שלב 1 של המעבר): כל ליד שהשתנה מאז ההעתק הקודם, ה-deletedIds וה-settings.
+// לא מחליף את השמירה לגיטהאב ולא משפיע עליה; כשל נרשם בקונסול ומנסה שוב בשמירה הבאה. בשרת, הגרסה החדשה יותר מנצחת.
+const dashMirrored=new Map(); let dashMirrorBusy=false, dashMirrorAgain=false;
+async function dashMirror(full){
+  if(!canPush())return;
+  if(dashMirrorBusy){dashMirrorAgain=true;return;}
+  dashMirrorBusy=true;
+  try{
+    const snap=leads.map(l=>[l.id,JSON.stringify(l)]);
+    const changed=snap.filter(([id,s])=>full||dashMirrored.get(id)!==s);
+    const meta=JSON.stringify([[...deletedIds],settings]);
+    if(changed.length||full||dashMirrored.get('__meta')!==meta){
+      const r=await fetch(`${WORKER_URL}/dash/save`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},
+        body:JSON.stringify({why:full?'login':'save',leads:changed.map(([,s])=>JSON.parse(s)),deletedIds:[...deletedIds],settings})});
+      if(!r.ok)throw new Error('http '+r.status);
+      changed.forEach(([id,s])=>dashMirrored.set(id,s)); dashMirrored.set('__meta',meta);
+    }
+  }catch(e){console.warn('dash mirror',e);}
+  dashMirrorBusy=false;
+  if(dashMirrorAgain){dashMirrorAgain=false;setTimeout(()=>dashMirror(false),1000);}
+}
 function scheduleSave(){
   if(saveTimer)clearTimeout(saveTimer);
   saveTimer=setTimeout(()=>saveData(true),2500);
@@ -1117,6 +1139,7 @@ async function saveData(now=false){
     try{ await put(); }
     catch(er){ if(er.status===409||er.status===422){ await mergeRemote(); await put(); } else throw er; }
     updateSyncTime();
+    dashMirror(false);
     if(saveFailCount)toast('✅ השמירה חזרה לעבוד, הכל נשמר',4000);
     saveFailCount=0;
   }
