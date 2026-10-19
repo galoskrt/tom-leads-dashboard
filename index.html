@@ -233,6 +233,44 @@ table.tr-t td.dn{background:rgba(194,21,28,.08);color:var(--accent);font-weight:
 table.tr-t td.thin{color:var(--text2)}
 table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
 .tr-k{font-size:11px;color:var(--text2)}
+/* ── מחזור לידים משכל (גל 19/10) ── */
+.shp-modal{max-width:1100px}
+.shp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.shp-chips button{font-family:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:999px;padding:6px 12px;cursor:pointer}
+.shp-chips button b{font-weight:800;color:var(--text2);margin-inline-start:4px}
+.shp-chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}.shp-chips button.on b{color:#fff}
+.shp-chips button.dnc:not(.on){color:var(--accent)}
+.shp-load{padding:40px 10px;text-align:center;color:var(--text2)}
+.shp-count{font-size:12px;color:var(--text2);margin:2px 0 8px}
+table.shp-t{min-width:760px;font-size:13px}
+table.shp-t thead th{cursor:default}
+table.shp-t tbody td{padding:9px 9px}
+table.shp-t tr.dnc td{color:var(--text2)}
+.shp-seg{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--s3,#f3f3f3);white-space:nowrap}
+.shp-seg.s5{background:rgba(21,122,58,.10);color:#0f6b31}.shp-seg.s7{background:rgba(194,21,28,.07);color:var(--accent2)}
+.shp-seg.s1{background:#0f6b31;color:#fff}.shp-seg.dnc{background:var(--accent);color:#fff}
+.shp-due{font-weight:700;white-space:nowrap}.shp-due.late{color:var(--accent)}
+.shp-card{max-width:720px}
+.shp-ban{border-radius:12px;padding:10px 13px;font-size:13.5px;line-height:1.55;margin:0 0 12px;background:var(--s3,#f5f5f5)}
+.shp-ban.dnc{background:var(--accent);color:#fff;font-weight:700}
+.shp-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;margin:0 0 12px}
+.shp-meta a{color:var(--accent);font-weight:700;text-decoration:none}
+.shp-edit{border:1.5px solid var(--border2);border-radius:14px;padding:12px;margin:0 0 14px;display:grid;gap:8px}
+.shp-edit .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.shp-edit select,.shp-edit input,.shp-edit textarea{font-family:inherit;font-size:13.5px;border:1px solid var(--border);border-radius:9px;padding:8px 10px;background:#fff;color:var(--text)}
+.shp-edit textarea{width:100%;min-height:62px;resize:vertical}
+.shp-edit input[type=text]{flex:1;min-width:140px}
+.shp-sec{margin:14px 0 0}
+.shp-sec h3{font-size:13px;font-weight:800;color:var(--accent2);margin:0 0 6px}
+.shp-it{border-bottom:1px solid rgba(194,21,28,.08);padding:7px 0;font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.shp-it .d{display:block;font-size:11.5px;color:var(--text2);font-weight:700;white-space:nowrap}
+.shp-it.in{border-inline-start:3px solid var(--green);padding-inline-start:9px}
+.shp-tags{display:flex;flex-wrap:wrap;gap:5px}.shp-tags span{font-size:12px;background:var(--s3,#f3f3f3);border-radius:7px;padding:2px 8px}
+@media(max-width:680px){
+  table.shp-t{min-width:0}
+  table.shp-t tbody td:first-child{display:flex;grid-column:1/-1;font-size:15px;font-weight:800}
+  table.shp-t tbody td.shp-wide{grid-column:1/-1}
+}
 .tr-reasons{display:flex;flex-wrap:wrap;gap:6px}
 .tr-reasons span{background:var(--s3);border-radius:999px;padding:4px 11px;font-size:12.5px}
 @media(max-width:680px){
@@ -394,6 +432,7 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
   <button class="btn btn-outline btn-sm" onclick="openStats()" title="סטטיסטיקות וביצועים">📊 ביצועים ועלויות</button>
   <button class="btn btn-outline btn-sm" onclick="previewReport()" title="תצוגה מקדימה של דוח הבוקר כפי שהוא ייראה עכשיו, לפי כל מה שבדשבורד. לא נשלח לאף אחד."><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4 4h16v16H4z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg> דוח הבוקר</button>
   <button class="btn btn-outline btn-sm" onclick="openTrends()" title="מגמות לאורך המשפך: איזו מודעה, שעה ותשובה מביאות לידים טובים יותר"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> מגמות</button>
+  <button class="btn btn-outline btn-sm" onclick="openSehelPool()" title="אנשי הקשר מהייצוא של שכל: מאגר נפרד, בלי הודעות אוטומטיות"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg> מחזור משכל</button>
 </div>
 
 <div class="wrap">
@@ -742,6 +781,28 @@ table.tr-t tr.all td{font-weight:800;border-top:1.5px solid var(--border)}
   <p class="tr-note"><b>התאמה</b> = הסימון שלך בכרטיס אחרי שיחה, ואם אין סימון, ניתוח ה־AI של ההערות בלבד (בלי סטטוס ובלי דירוג). <b>ענו</b> = הגיעו לשיחה (ענה, פגישה, פולואפ, עסקה, או לא רלוונטי אחרי שיחה). <b>ניסיונות</b> = כמה "אין מענה" לפני שענו. <b>יציאה מהירה</b> = פחות מ־15 שניות פעילות בדף אחרי השאלון. ירוק או אדום מסמנים סטייה של 15 נקודות לפחות מהממוצע, רק כשיש 5 לידים ומעלה. אפור = מעט מדי נתונים להסיק.</p>
   <div id="trBody">טוען...</div>
 </div>
+</div>
+
+<!-- מחזור לידים משכל (גל 19/10) -->
+<div class="overlay" id="shpOv" onclick="bgClose(event,'shpOv')">
+<div class="modal shp-modal">
+  <h2>מחזור לידים משכל <button class="modal-close" onclick="closeOv('shpOv')">✕</button></h2>
+  <p class="tr-note">כל אנשי הקשר מהייצוא של שכל, במאגר נפרד מטבלת הלידים. הם לא נספרים בעלות לליד ובדוח הבוקר, ושום הודעה אוטומטית לא יוצאת אליהם. <b>פנייה ראשונה</b> לכל מי שלא היה בפגישה היא בקשת רשות. <b>משימה משכל</b> יורדת מהרשימה ברגע שמעדכנים את איש הקשר כאן, ואם צריך לחזור אליו קובעים תזכורת חדשה.</p>
+  <div class="shp-chips" id="shpChips"></div>
+  <div class="tr-top">
+    <input class="search" id="shpQ" placeholder="חיפוש לפי שם, טלפון, מייל או מקור" oninput="shpShow=200;renderSehelPool()" style="max-width:340px">
+    <select class="sel" id="shpStF" onchange="shpShow=200;renderSehelPool()" style="width:auto;font-size:13px"></select>
+    <select class="sel" id="shpSort" onchange="renderSehelPool()" style="width:auto;font-size:13px">
+      <option value="la">פעילות אחרונה בשכל</option><option value="due">משימה או תזכורת קרובה</option><option value="upd">עודכן אצלנו לאחרונה</option><option value="cd">תאריך כניסה לשכל</option>
+    </select>
+    <button class="btn btn-outline btn-sm" onclick="loadSehelPool()">רענון</button>
+    <span class="tr-k" id="shpStamp"></span>
+  </div>
+  <div id="shpBody"><div class="shp-load">טוען...</div></div>
+</div>
+</div>
+<div class="overlay" id="shpCardOv" onclick="bgClose(event,'shpCardOv')">
+<div class="modal shp-card" id="shpCard"></div>
 </div>
 
 <!-- WHATSAPP MODAL -->
@@ -2638,6 +2699,134 @@ async function setManualFit(fit){
 
 // ═══ לוח מגמות (גל 11/10) ═══
 // מחושב תמיד מהוורקר (מקור האמת להיסטוריה, למיילסטונים, להתנהגות בדף ולניתוח ההערות), לא מהעותק המקומי.
+// ═══════════ מחזור לידים משכל (גל 19/10) ═══════════
+// אנשי הקשר מהייצוא של שכל. מאגר נפרד: נטען מ-/sehel-pool רק כשפותחים, לא נכנס ל-leads ול-data.enc,
+// לא נספר בעלות לליד ובדוח הבוקר, ושום אוטומציה לא נוגעת בו. עדכונים (סטטוס, הערה, תזכורת) נשמרים ב-/sehel-pool/edit.
+const SHP_SEG={1:'קנו',2:'ביקשו הסרה',3:'פסול',4:'כבר בטבלת הלידים',5:'היו בפגישה',6:'קנו במקום אחר',7:'מאגר לחזרה'};
+const SHP_ST={'':'לא טופל',asked:'נשלחה בקשת רשות',agreed:'יש הסכמה להמשיך',talked:'התקיימה שיחה',noanswer:'אין מענה',booked:'נקבעה פגישה',refused:'אין עניין, לא פונים',irrelevant:'לא רלוונטי'};
+const SHP_HINT={
+  1:'רכישת מגרש הושלמה. כאן לשמירת ההיסטוריה.',
+  4:'איש הקשר כבר בטבלת הלידים בדשבורד. כאן רק ההיסטוריה משכל.',
+  5:'התקיימה פגישה. מסלול חזרה נפרד בהכנה, ועד אז הפנייה ידנית בלבד.',
+  6:'בשכל סומנה רכישה במקום אחר או חיפוש דירה. כדאי לקרוא את ההערות לפני פנייה.',
+  7:'פנייה ראשונה: בקשת רשות. ממשיכים רק אחרי הסכמה.'};
+const SHP_TABS=[['all','הכל'],['todo','משימות ותזכורות'],['7','מאגר לחזרה'],['5','היו בפגישה'],['6','קנו במקום אחר'],['4','כבר בטבלת הלידים'],['1','קנו'],['dnc','לא פונים']];
+let shp=null,shpEd={},shpTab='all',shpShow=200,shpCur=null,shpFull=null;
+function shpD(s,withTime){if(!s)return'';const[d,t]=String(s).split('T');const p=d.split('-');if(p.length<3)return s;return p[2]+'/'+p[1]+'/'+p[0].slice(2)+(withTime&&t&&t.slice(0,5)!=='00:00'?' '+t.slice(0,5):'');}
+function shpNowLocal(){const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());}
+function shpDnc(c){return !!c.dnc||(shpEd[c.id]||{}).st==='refused';}
+// מה פתוח לאיש הקשר: תזכורת שנקבעה כאן, ואם עוד לא עודכן כאן, המשימה או התזכורת משכל.
+function shpDue(c){
+  if(shpDnc(c))return'';
+  const e=shpEd[c.id]||{};
+  if(e.rem)return e.rem;
+  if(e.upd)return'';
+  const ds=[(c.rem||{}).d].concat((c.tasks||[]).map(t=>t.d)).filter(Boolean).sort();
+  return ds[0]||'';
+}
+async function openSehelPool(){document.getElementById('shpOv').classList.add('open');if(!shp)await loadSehelPool();}
+async function loadSehelPool(){
+  const b=document.getElementById('shpBody');b.innerHTML='<div class="shp-load">טוען את אנשי הקשר משכל...</div>';
+  try{
+    const r=await fetch(`${WORKER_URL}/sehel-pool`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`},cache:'no-store'});
+    if(!r.ok)throw new Error('http '+r.status);
+    const j=await r.json();if(!j.pool||!Array.isArray(j.pool.contacts))throw new Error('empty');
+    shp=j.pool.contacts;shpEd=j.edits||{};
+    shp.forEach(c=>{c._s=[c.n,c.p,(c.p2||[]).join(' '),c.e,c.src,(c.tags||[]).join(' '),(c.obj||[]).join(' ')].join(' ').toLowerCase();});
+    document.getElementById('shpStamp').textContent='ייצוא שכל מ־'+shpD(j.pool.exportAt)+' · נטען ב־'+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    const sf=document.getElementById('shpStF');
+    sf.innerHTML='<option value="*">כל הסטטוסים</option>'+Object.entries(SHP_ST).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
+    renderSehelPool();
+  }catch(e){shp=null;b.innerHTML='<div class="shp-load">לא הצלחתי לטעון את אנשי הקשר. נסו שוב בעוד רגע.</div>';console.warn('sehel pool',e);}
+}
+function shpInTab(c,tab){
+  if(tab==='all')return true;
+  if(tab==='dnc')return shpDnc(c);
+  if(tab==='todo')return !!shpDue(c);
+  return !shpDnc(c)&&String(c.seg)===tab;
+}
+function shpSetTab(t){shpTab=t;shpShow=200;renderSehelPool();}
+function renderSehelPool(){
+  if(!shp)return;
+  document.getElementById('shpChips').innerHTML=SHP_TABS.map(([k,v])=>`<button class="${k===shpTab?'on':''}${k==='dnc'?' dnc':''}" onclick="shpSetTab('${k}')">${esc(v)}<b>${shp.filter(c=>shpInTab(c,k)).length.toLocaleString('he-IL')}</b></button>`).join('');
+  const q=document.getElementById('shpQ').value.trim().toLowerCase(),qd=q.replace(/\D/g,''),stf=document.getElementById('shpStF').value||'*',so=document.getElementById('shpSort').value;
+  let L=shp.filter(c=>shpInTab(c,shpTab)&&(stf==='*'||((shpEd[c.id]||{}).st||'')===stf)&&(!q||c._s.includes(q)||(qd.length>=4&&(c.p+(c.p2||[]).join('')).includes(qd))));
+  const key={la:c=>c.la||'',cd:c=>c.cd||'',upd:c=>(shpEd[c.id]||{}).upd||'',due:c=>shpDue(c)||'9999'};
+  const k=key[so]||key.la;
+  L=L.slice().sort((a,b)=>so==='due'?(k(a)<k(b)?-1:k(a)>k(b)?1:0):(k(a)<k(b)?1:k(a)>k(b)?-1:0));
+  const now=shpNowLocal();
+  const rows=L.slice(0,shpShow).map(c=>{
+    const e=shpEd[c.id]||{},dnc=shpDnc(c),due=shpDue(c);
+    const seg=dnc?`<span class="shp-seg dnc">לא פונים</span>`:`<span class="shp-seg s${c.seg}">${esc(SHP_SEG[c.seg])}</span>`;
+    return `<tr class="${dnc?'dnc':''}" onclick="openShp('${c.id}')"><td data-label="שם">${esc(c.n||'ללא שם')}</td><td data-label="טלפון" style="direction:ltr;text-align:right">${esc(c.p)}</td><td data-label="קבוצה">${seg}</td><td data-label="סטטוס אצלנו">${esc(SHP_ST[e.st||''])}${e.nn?` · ${e.nn===1?'הערה אחת':e.nn+' הערות'}`:''}</td><td data-label="משימה או תזכורת">${due?`<span class="shp-due${due<now?' late':''}">${shpD(due,true)}</span>`:''}</td><td data-label="פעילות אחרונה בשכל">${shpD(c.la)}</td><td data-label="מקור" class="shp-wide">${esc(c.src||'')}</td></tr>`;
+  }).join('');
+  document.getElementById('shpBody').innerHTML=L.length?`<div class="shp-count">מציג ${Math.min(shpShow,L.length).toLocaleString('he-IL')} מתוך ${L.length.toLocaleString('he-IL')}</div><div class="tr-wrap"><table class="shp-t"><thead><tr><th>שם</th><th>טלפון</th><th>קבוצה</th><th>סטטוס אצלנו</th><th>משימה או תזכורת</th><th>פעילות אחרונה בשכל</th><th>מקור</th></tr></thead><tbody>${rows}</tbody></table></div>`+(L.length>shpShow?`<div style="text-align:center;margin:12px 0"><button class="btn btn-outline btn-sm" onclick="shpShow+=300;renderSehelPool()">הצג עוד ${Math.min(300,L.length-shpShow)}</button></div>`:''):'<div class="shp-load">אין אנשי קשר שמתאימים לסינון</div>';
+}
+function shpSec(title,items){return items&&items.length?`<div class="shp-sec"><h3>${esc(title)}</h3>${items.join('')}</div>`:'';}
+function openShp(id){
+  const c=(shp||[]).find(x=>x.id===id);if(!c)return;
+  shpCur=c;shpFull=null;
+  const dnc=shpDnc(c),tel=c.p?'972'+c.p.replace(/^0/,''):'';
+  const ban=dnc?`<div class="shp-ban dnc">לא פונים לאיש קשר זה: לא שיחה, לא וואטסאפ ולא מייל.${(c.why||[]).length?' בשכל: '+esc(c.why.join(', ')):''}</div>`:(SHP_HINT[c.seg]?`<div class="shp-ban">${esc(SHP_HINT[c.seg])}</div>`:'');
+  const meta=[`<span class="shp-seg ${dnc?'dnc':'s'+c.seg}">${dnc?'לא פונים':esc(SHP_SEG[c.seg])}</span>`,
+    c.p?(dnc?`<span style="direction:ltr">${esc(c.p)}</span>`:`<a href="tel:${esc(c.p)}" style="direction:ltr">${esc(c.p)}</a> <a href="https://wa.me/${tel}" target="_blank" rel="noopener">וואטסאפ</a>`):'',
+    (c.p2||[]).length?`<span>טלפון נוסף: <span style="direction:ltr">${esc(c.p2.join(', '))}</span></span>`:'',
+    c.e?(dnc?`<span>${esc(c.e)}</span>`:`<a href="mailto:${esc(c.e)}">${esc(c.e)}</a>`):'',
+    c.src?`<span>מקור: ${esc(c.src)}</span>`:'',c.cd?`<span>כניסה לשכל: ${shpD(c.cd)}</span>`:''].filter(Boolean).join('');
+  const nd=c.need||{};
+  const needTxt=[nd.city?'אזור: '+nd.city:'',nd.budget?'תקציב: '+Number(nd.budget).toLocaleString('he-IL')+' ₪':'',(nd.types||[]).length?'סוג: '+nd.types.join(', '):''].filter(Boolean).join(' · ');
+  const cl=c.calls;
+  const sehel=[
+    shpSec('משימות ותזכורת משכל',[].concat(c.rem?[`<div class="shp-it"><span class="d">תזכורת · ${shpD(c.rem.d,true)}</span>${esc(c.rem.t||'')}</div>`]:[],(c.tasks||[]).map(t=>`<div class="shp-it"><span class="d">משימה · ${shpD(t.d,true)}</span>${esc(t.t||'')}</div>`))),
+    shpSec('פגישות',(c.meet||[]).map(m=>`<div class="shp-it"><span class="d">${shpD(m.d,true)} · ${esc(m.type||'')}${m.price?' · נמכר ב־'+Number(m.price).toLocaleString('he-IL')+' ₪':''}${m.by?' · '+esc(m.by):''}</span>${esc(m.sum||'')}</div>`)),
+    shpSec('הערות משכל',(c.notes||[]).map(n=>`<div class="shp-it"><span class="d">${shpD(n.d,true)} · ${esc(n.by||'')}</span>${esc(n.t)}</div>`)),
+    shpSec('וואטסאפ משכל (30 אחרונות)',(c.wa||[]).map(w=>`<div class="shp-it${w.in?' in':''}"><span class="d">${shpD(w.d,true)} · ${w.in?'נכנסה':'יצאה'}</span>${esc(w.t)}</div>`)),
+    shpSec('שיחות ומסמכים',(cl||c.docs)?[`<div class="shp-it">${cl?`${cl.o} שיחות יוצאות (${cl.oa} נענו), ${cl.i} נכנסות · אחרונה ${shpD(cl.last,true)}`:''}${cl&&c.docs?'<br>':''}${c.docs?c.docs+' מסמכים נשלחו בוואטסאפ':''}</div>`]:[]),
+    shpSec('הצרכים שנרשמו בשכל',needTxt?[`<div class="shp-it">${esc(needTxt)}</div>`]:[]),
+    shpSec('התנגדויות ותגיות',((c.obj||[]).length||(c.tags||[]).length)?[`<div class="shp-tags">${(c.obj||[]).concat(c.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>`]:[]),
+  ].join('');
+  document.getElementById('shpCard').innerHTML=`<h2>${esc(c.n||'ללא שם')} <button class="modal-close" onclick="closeOv('shpCardOv')">✕</button></h2>${ban}<div class="shp-meta">${meta}</div>
+  <div class="shp-edit"><div class="row"><select id="shpSt">${Object.entries(SHP_ST).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('')}</select>
+  <label style="font-size:12.5px;color:var(--text2)">תזכורת</label><input type="datetime-local" id="shpRemAt"><input type="text" id="shpRemT" placeholder="על מה לחזור" maxlength="200"></div>
+  <textarea id="shpNote" placeholder="הערה חדשה: מה נאמר, מה סוכם" maxlength="2000"></textarea>
+  <div class="row"><button class="btn btn-primary btn-sm" id="shpSave" onclick="saveShp()" disabled>טוען...</button><span class="tr-k" id="shpSaved"></span></div>
+  <div id="shpMine"></div></div>${sehel||'<div class="shp-load">אין היסטוריה משכל</div>'}`;
+  document.getElementById('shpSt').value=(shpEd[c.id]||{}).st||'';
+  document.getElementById('shpCardOv').classList.add('open');
+  fetch(`${WORKER_URL}/sehel-pool?id=${encodeURIComponent(id)}`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`},cache:'no-store'})
+    .then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.json();})
+    .then(j=>{if(!shpCur||shpCur.id!==id)return;shpFull=j.edit||{};shpFillMine();})
+    .catch(()=>{if(shpCur&&shpCur.id===id){document.getElementById('shpSave').textContent='לא נטען, סגרו ופתחו שוב';}});
+}
+function shpFillMine(){
+  const f=shpFull||{};
+  document.getElementById('shpSt').value=f.st||'';
+  document.getElementById('shpRemAt').value=(f.rem&&f.rem.at)||'';
+  document.getElementById('shpRemT').value=(f.rem&&f.rem.t)||'';
+  document.getElementById('shpMine').innerHTML=(f.notes||[]).length?`<div class="shp-sec" style="margin-top:4px"><h3>ההערות שלנו</h3>${f.notes.map(n=>`<div class="shp-it"><span class="d">${esc(fmtDt(n.at))}</span>${esc(n.t)}</div>`).join('')}</div>`:'';
+  const b=document.getElementById('shpSave');b.disabled=false;b.textContent='שמירה';
+}
+async function saveShp(){
+  const c=shpCur;if(!c||!shpFull)return;
+  const b=document.getElementById('shpSave');
+  const st=document.getElementById('shpSt').value,note=document.getElementById('shpNote').value.trim();
+  const ra=document.getElementById('shpRemAt').value,rt=document.getElementById('shpRemT').value.trim();
+  const body={id:c.id,by:'דשבורד',rem:ra?{at:ra,t:rt}:null};
+  if(st!==(shpFull.st||''))body.st=st;
+  if(note)body.note=note;
+  b.disabled=true;b.textContent='שומר...';
+  try{
+    const r=await fetch(`${WORKER_URL}/sehel-pool/edit`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok)throw new Error(j.error||('http '+r.status));
+    shpEd[c.id]=j.meta;shpFull=j.edit;
+    document.getElementById('shpNote').value='';shpFillMine();
+    document.getElementById('shpSaved').textContent='נשמר '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    renderSehelPool();
+    if(st==='refused')openShp(c.id);
+  }catch(e){b.disabled=false;b.textContent='שמירה';toast('השמירה נכשלה. שום דבר לא נמחק, נסו שוב.',6000);console.warn('sehel pool save',e);}
+}
+
 let trData=null;
 const TR_TEST=['תום הרוש'];
 const TR_ANS=['answered','booked','booked_noshow','attended','cold_followup','hot_followup','deal','not_relevant','revival'];
