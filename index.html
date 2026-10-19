@@ -387,9 +387,16 @@ table.shp-t tr.dnc td{color:var(--text2)}
     <div class="login-logo"><img src="logo.png" alt="קבוצת תום הרוש"/></div>
     <div class="login-title">קבוצת תום הרוש</div>
     <div class="login-sub">מערכת ניהול לידים ופרפורמנס</div>
+    <div id="loginForm">
     <div class="lf"><label>שם משתמש</label><input type="text" id="lu" placeholder="שם משתמש" autocomplete="username" dir="ltr"/></div>
-    <div class="lf"><label>סיסמה</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="lf"><label>סיסמה או קוד כניסה</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="login-btn" id="loginBtn" onclick="doLogin()">כניסה</button>
+    </div>
+    <div id="setPassForm" style="display:none">
+    <div class="lf"><label>סיסמה חדשה</label><input type="password" id="np1" autocomplete="new-password" placeholder="לפחות 10 תווים"/></div>
+    <div class="lf"><label>שוב, לאימות</label><input type="password" id="np2" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSetPass()"/></div>
+    <button class="login-btn" id="setPassBtn" onclick="doSetPass()">שמירה וכניסה</button>
+    </div>
     <div class="login-err" id="loginErr"></div>
     <div class="login-info" id="loginInfo"></div>
   </div>
@@ -403,6 +410,7 @@ table.shp-t tr.dnc td{color:var(--text2)}
   <div class="hstats" id="hstats"></div>
   <div class="hright">
     <span class="sync-time" id="syncTime"></span>
+    <span class="sync-time" id="whoEl" style="font-weight:700"></span>
     <button class="btn-logout" onclick="logout()">יציאה</button>
   </div>
 </header>
@@ -889,19 +897,16 @@ table.shp-t tr.dnc td{color:var(--text2)}
 // ═══════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════
-const USERS=[
-  {email:'tomharush',hash:'4dc0db01107a6c43ddae935425e8e2c2a388f9340f175ae55df607826e69c4bc',name:'תום'},
-];
-const GH_TOKEN=[103,105,116,104,117,98,95,112,97,116,95,49,49,66,84,79,87,76,66,89,48,99,55,50,97,71,72,117,87,116,115,52,49,95,108,73,72,119,105,68,51,86,101,81,89,112,88,54,104,69,100,50,56,50,100,107,101,116,104,55,101,103,68,114,116,49,88,98,99,73,119,77,65,84,53,109,111,79,50,85,80,72,66,76,54,48,67,82,110,88,56,81,83].map(c=>String.fromCharCode(c)).join('');
-const REPO='galoskrt/tom-leads-dashboard';
-const DATA_FILE='data.enc';
-const SNAP_FILE='snapshots.enc';
+// ★ (גל 19/10) הכניסה נבדקת בשרת (/auth/login), עם משתמש אישי לכל אחד. אין יותר רשימת משתמשים או hash בקוד.
+// ★ (גל 19/10) הנתונים יושבים בבסיס הנתונים בשרת (D1), לא בקובץ בגיטהאב. אין מפתח גיטהאב בקוד.
 // ── מנוע המשפך (Cloudflare Worker) — המקור האמיתי היחיד ללידים, סטטוסים ומדידה ──
 // הלידים נכנסים מהשאלון ל-Worker (לא מוורדפרס). הדשבורד קורא אותם מ-/leads, כותב סטטוסים ל-/lead-status,
 // ומושך את שקלול העלויות מ-/meta-stats. ה-DASH_TOKEN מורשה רק ללידים+סטטוס+סטטיסטיקה מצטברת —
 // הוא לא נוגע בחשבון המודעות. הטוקן החזק של Meta נשאר בצד השרת (env.META_TOKEN) ולעולם לא כאן בדפדפן.
 const WORKER_URL='https://tom-funnel.tom-harush.workers.dev';
-const DASH_TOKEN=[100,97,115,104,95,101,98,100,50,54,100,50,51,50,98,51,102,102,54,101,49,101,49,54,49,48,53,57,97,48,50,97,51,55,98,57,49,98,54,50,100,54,49,53,98,101,98,54,48,55,48,98,97].map(c=>String.fromCharCode(c)).join('');
+// ★ (גל 19/10) DASH_TOKEN = הסשן האישי שהשרת נותן אחרי כניסה (ses_...). שום מפתח קבוע בקוד.
+let DASH_TOKEN='', ME=null;
+const SES_KEY='tom_ses';
 
 // ═══════════════════════════════════════════════
 // STATE
@@ -909,7 +914,7 @@ const DASH_TOKEN=[100,97,115,104,95,101,98,100,50,54,100,50,51,50,98,51,102,102,
 let leads=[], deletedIds=new Set(), eid=null, waLid=null;
 let settings={};
 let srt={k:'createdAt',d:-1};
-let sessionPass=null, fileSha=null, snapSha=null;
+let sessionPass=null;   // סימן ש'מחוברים' (וגם 'audit' בבדיקות). כבר לא סיסמה ולא מפתח הצפנה
 // ★ (גל 12/10) שום דחיפה לשרת לפני שהקובץ האמיתי פוענח. במצב בדיקה/תצוגה הכרטיסים ריקים, ודחיפה הייתה מוחקת את האמת בשרת.
 let realData=false;
 function canPush(){return realData && !!sessionPass && sessionPass!=='audit';}
@@ -944,26 +949,33 @@ async function dec(b64,pass){
 }
 
 // ═══════════════════════════════════════════════
-// GITHUB API
+// אחסון: בסיס הנתונים בשרת (גל 19/10). במקום data.enc בגיטהאב
 // ═══════════════════════════════════════════════
-async function ghGet(){
-  const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${DATA_FILE}`,{headers:{'Authorization':`Bearer ${GH_TOKEN}`,'Accept':'application/vnd.github+json'}});
-  const j=await r.json(); fileSha=j.sha;
-  return atob(j.content.replace(/\n/g,''));
+function authH(extra){return Object.assign({'Authorization':`Bearer ${DASH_TOKEN}`},extra||{});}
+async function srvState(){
+  const r=await fetch(`${WORKER_URL}/dash/state`,{headers:authH(),cache:'no-store'});
+  if(r.status===401){sessionExpired();throw new Error('session');}
+  if(!r.ok)throw new Error('server '+r.status);
+  return r.json();
 }
-async function ghPut(content){
-  const b64=btoa(unescape(encodeURIComponent(content)));
-  const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${DATA_FILE}`,{method:'PUT',headers:{'Authorization':`Bearer ${GH_TOKEN}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify({message:'sync',content:b64,sha:fileSha})});
-  const j=await r.json().catch(()=>({})); if(j.content?.sha)fileSha=j.content.sha;
-  // ★ (גל 13/10) כשל נזרק ולא נבלע: 409/422 = מכשיר אחר שמר בינתיים, saveData ממזג ומנסה שוב.
-  if(!r.ok){const e=new Error('GitHub '+r.status+(j.message?' '+j.message:''));e.status=r.status;throw e;}
+// שומר בשרת כל ליד שהשתנה מאז השמירה הקודמת, ואת ה-deletedIds וה-settings. בשרת, הגרסה שעודכנה אחרונה מנצחת.
+const dashSaved=new Map();
+function dashMarkSaved(){leads.forEach(l=>dashSaved.set(l.id,JSON.stringify(l)));dashSaved.set('__meta',JSON.stringify([[...deletedIds],settings]));}
+async function dashSave(){
+  const changed=leads.map(l=>[l.id,JSON.stringify(l)]).filter(([id,x])=>dashSaved.get(id)!==x);
+  const meta=JSON.stringify([[...deletedIds],settings]);
+  if(!changed.length&&dashSaved.get('__meta')===meta)return;
+  const r=await fetch(`${WORKER_URL}/dash/save`,{method:'POST',headers:authH({'Content-Type':'application/json'}),
+    body:JSON.stringify({why:'save',leads:changed.map(([,x])=>JSON.parse(x)),deletedIds:[...deletedIds],settings})});
+  if(r.status===401){sessionExpired();throw new Error('session');}
+  if(!r.ok){const e=new Error('server '+r.status);e.status=r.status;throw e;}
+  changed.forEach(([id,x])=>dashSaved.set(id,x)); dashSaved.set('__meta',meta);
 }
-// ממזג את מה שבקובץ ב-GitHub (מכשיר/לשונית אחרים) עם המקומי: לכל ליד, הגרסה שעודכנה אחרונה.
+// ממזג את מה שבשרת (מכשיר/לשונית אחרים) עם המקומי: לכל ליד, הגרסה שעודכנה אחרונה.
 async function mergeRemote(){
-  const raw=await ghGet(); if(raw==='init')return;
-  const remote=await dec(raw,sessionPass);
-  const rl=Array.isArray(remote)?remote:(remote.leads||[]);
-  if(!Array.isArray(remote)&&Array.isArray(remote.deletedIds))remote.deletedIds.forEach(x=>deletedIds.add(x));
+  const remote=await srvState();
+  const rl=remote.leads||[];
+  (remote.deletedIds||[]).forEach(x=>deletedIds.add(x));
   const merged={};
   [...leads,...rl].forEach(l=>{const ex=merged[l.id];if(!ex||new Date(l.updatedAt||l.createdAt)>new Date(ex.updatedAt||ex.createdAt))merged[l.id]=l;});
   leads=Object.values(merged).filter(l=>!deletedIds.has(l.id)).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
@@ -972,37 +984,88 @@ async function mergeRemote(){
 // ═══════════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════════
+function loginMsg(t,isErr){const e=document.getElementById('loginErr'),i=document.getElementById('loginInfo');if(isErr){e.textContent=t;i.textContent='';}else{i.textContent=t;e.textContent='';}}
 async function doLogin(){
   const user=document.getElementById('lu').value.trim().toLowerCase();
   const pass=document.getElementById('lp').value;
-  const err=document.getElementById('loginErr');
-  const info=document.getElementById('loginInfo');
   const btn=document.getElementById('loginBtn');
-  err.textContent='';
-  if(!user||!pass){err.textContent='נא למלא שם משתמש וסיסמה';return}
-  const h=await sha256hex(pass);
-  const match=USERS.find(u=>u.email.toLowerCase()===user&&u.hash===h);
-  if(!match){err.textContent='שם משתמש או סיסמה שגויים';return}
-  btn.disabled=true; info.textContent='טוען נתונים...';
+  if(!user||!pass){loginMsg('נא למלא שם משתמש וסיסמה',true);return}
+  btn.disabled=true; loginMsg('בודק...');
   try{
-    sessionPass=pass;
-    await loadData();
-    sessionStorage.setItem('gal_s','1');
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    startSync(); syncWorker(); render();
-    setTimeout(checkOverduePrompts,1500);
-    setTimeout(()=>dashMirror(true),4000);   // העתק מלא לבסיס הנתונים בשרת אחרי הכניסה (גל 19/10)
-  }catch(e){err.textContent='שגיאה בטעינה — נסה שוב';console.error(e);}
-  btn.disabled=false; info.textContent='';
+    const r=await fetch(`${WORKER_URL}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user,pass})});
+    const j=await r.json().catch(()=>({}));
+    if(r.status===429){loginMsg('יותר מדי ניסיונות שגויים. הכניסה נעולה ל־15 דקות.',true);btn.disabled=false;return;}
+    if(!r.ok||!j.ok){loginMsg('שם משתמש או סיסמה שגויים',true);btn.disabled=false;return;}
+    DASH_TOKEN=j.token; ME=j.user;
+    try{localStorage.setItem(SES_KEY,JSON.stringify({t:j.token,exp:j.expires,user:j.user}));}catch(e){}
+    if(j.mustChange){showSetPass(pass);btn.disabled=false;return;}
+    await enterApp();
+  }catch(e){loginMsg('אין חיבור לשרת. נסו שוב בעוד רגע.',true);console.error(e);}
+  btn.disabled=false;
 }
-function logout(){
-  sessionStorage.removeItem('gal_s'); sessionPass=null; leads=[]; realData=false;
+// כניסה ראשונה עם קוד חד פעמי: בוחרים סיסמה אישית לפני שנכנסים.
+let setPassOld='';
+function showSetPass(oldPass){
+  setPassOld=oldPass;
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('setPassForm').style.display='block';
+  loginMsg('ברוכים הבאים, '+((ME&&ME.name)||'')+'. בחרו סיסמה אישית.');
+  setTimeout(()=>document.getElementById('np1').focus(),50);
+}
+async function doSetPass(){
+  const a=document.getElementById('np1').value,b=document.getElementById('np2').value,btn=document.getElementById('setPassBtn');
+  if(a.length<10){loginMsg('הסיסמה צריכה לפחות 10 תווים',true);return}
+  if(a!==b){loginMsg('שתי הסיסמאות לא זהות',true);return}
+  btn.disabled=true; loginMsg('שומר...');
+  try{
+    const r=await fetch(`${WORKER_URL}/auth/password`,{method:'POST',headers:authH({'Content-Type':'application/json'}),body:JSON.stringify({old:setPassOld,new:a})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok){loginMsg(j.error==='same password'?'בחרו סיסמה שונה מהקוד':'לא הצלחתי לשמור את הסיסמה. נסו שוב.',true);btn.disabled=false;return;}
+    setPassOld=''; document.getElementById('np1').value=''; document.getElementById('np2').value='';
+    await enterApp();
+  }catch(e){loginMsg('אין חיבור לשרת. נסו שוב בעוד רגע.',true);}
+  btn.disabled=false;
+}
+async function enterApp(){
+  loginMsg('טוען נתונים...');
+  sessionPass='server';
+  await loadData();
+  if(!realData){loginMsg('לא הצלחתי לטעון את הנתונים מהשרת. נסו שוב בעוד רגע.',true);sessionPass=null;return;}
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('whoEl').textContent=(ME&&ME.name)||'';
+  startSync(); syncWorker(); render();
+  setTimeout(checkOverduePrompts,1500);
+  loginMsg('');
+}
+// סשן שמור במכשיר (14 יום): נכנסים ישר, אחרי בדיקה בשרת שהוא עדיין תקף.
+async function resumeSession(){
+  let s=null; try{s=JSON.parse(localStorage.getItem(SES_KEY)||'null');}catch(e){}
+  if(!s||!s.t||Date.parse(s.exp||0)<Date.now())return;
+  DASH_TOKEN=s.t; ME=s.user||null;
+  try{
+    const r=await fetch(`${WORKER_URL}/auth/me`,{headers:authH(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok&&!j.mustChange){ME=j.user;await enterApp();return;}
+  }catch(e){return;}
+  DASH_TOKEN=''; ME=null; try{localStorage.removeItem(SES_KEY);}catch(e){}
+}
+function sessionExpired(){
+  if(!sessionPass)return;
+  toast('החיבור פג. צריך להתחבר מחדש.',8000);
+  logout(true);
+}
+async function logout(silent){
+  if(!silent&&DASH_TOKEN)try{await fetch(`${WORKER_URL}/auth/logout`,{method:'POST',headers:authH()});}catch(e){}
+  try{localStorage.removeItem(SES_KEY);}catch(e){}
+  DASH_TOKEN=''; ME=null; sessionPass=null; leads=[]; realData=false; dashSaved.clear();
   if(syncInt)clearInterval(syncInt);
   if(liveInt)clearInterval(liveInt);
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('lp').value=''; document.getElementById('loginErr').textContent='';
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('setPassForm').style.display='none';
+  document.getElementById('lp').value=''; loginMsg('');
 }
 
 // ═══════════════════════════════════════════════
@@ -1033,15 +1096,13 @@ async function migrateGL2(){
 async function loadData(){
   // ריק בהתחלה — הלידים נכנסים רק מהמשפך (Worker) כשהתקציב רץ. אין עוד נתוני דמו.
   try{
-    const raw=await ghGet();
-    if(raw==='init'){leads=[];deletedIds=new Set();settings={};realData=true;await saveData(true);}
-    else{
-      const parsed=await dec(raw,sessionPass);
-      if(Array.isArray(parsed)){leads=parsed;deletedIds=new Set();settings={};}
-      else{leads=parsed.leads||[];deletedIds=new Set(parsed.deletedIds||[]);settings=parsed.settings||{};}
-      realData=true;
-    }
-  }catch(e){leads=[];deletedIds=new Set();settings={};console.warn('Load failed',e);}
+    const st=await srvState();
+    if(!st.ok)throw new Error('state');
+    leads=st.leads||[]; deletedIds=new Set(st.deletedIds||[]); settings=st.settings||{};
+    // ★ שרת ריק = משהו לא בסדר (הנתונים הועברו ב־19/10). לא נכנסים, כדי ששמירה של רשימה ריקה לא תיראה כמו "הכל נמחק".
+    if(!leads.length){console.warn('server state is empty');return;}
+    realData=true; dashMarkSaved();
+  }catch(e){leads=[];deletedIds=new Set();settings={};realData=false;console.warn('Load failed',e);return;}
   const migrated=await migrateGL2();
   if(migrated)toast('✅ הנתונים הישנים שוחזרו בהצלחה!',6000);
   // מיגרציה חד-פעמית: סטטוסים ישנים → ל-13 החדשים + ברירות מחדל לשדות חדשים.
@@ -1057,9 +1118,8 @@ async function loadData(){
   if(needsSave)scheduleSave();
   const merged=deduplicateByPhone();
   if(merged>0){scheduleSave();toast(`🔁 מוזגו ${merged} כניסות כפולות לפי טלפון`,5000);}
-  // Load snapshots: localStorage first, fallback to GitHub
+  // גיבוי ה-UNDO נשמר במכשיר. הגיבוי האמיתי בשרת: יומן שינויים, שחזור לכל דקה בבסיס הנתונים, וגיבוי יומי מוצפן.
   try{const ls=localStorage.getItem('gal_snaps');if(ls)snaps=JSON.parse(ls);}catch(e){}
-  if(!snaps.length)await loadSnapsFromGH();
 }
 
 function leadScore(l){
@@ -1103,27 +1163,6 @@ function deduplicateByPhone(){
   leads=leads.filter(l=>!deletedIds.has(l.id));
   return mergedCount;
 }
-// ★ העתק לבסיס הנתונים בשרת (גל 19/10, שלב 1 של המעבר): כל ליד שהשתנה מאז ההעתק הקודם, ה-deletedIds וה-settings.
-// לא מחליף את השמירה לגיטהאב ולא משפיע עליה; כשל נרשם בקונסול ומנסה שוב בשמירה הבאה. בשרת, הגרסה החדשה יותר מנצחת.
-const dashMirrored=new Map(); let dashMirrorBusy=false, dashMirrorAgain=false;
-async function dashMirror(full){
-  if(!canPush())return;
-  if(dashMirrorBusy){dashMirrorAgain=true;return;}
-  dashMirrorBusy=true;
-  try{
-    const snap=leads.map(l=>[l.id,JSON.stringify(l)]);
-    const changed=snap.filter(([id,s])=>full||dashMirrored.get(id)!==s);
-    const meta=JSON.stringify([[...deletedIds],settings]);
-    if(changed.length||full||dashMirrored.get('__meta')!==meta){
-      const r=await fetch(`${WORKER_URL}/dash/save`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${DASH_TOKEN}`},
-        body:JSON.stringify({why:full?'login':'save',leads:changed.map(([,s])=>JSON.parse(s)),deletedIds:[...deletedIds],settings})});
-      if(!r.ok)throw new Error('http '+r.status);
-      changed.forEach(([id,s])=>dashMirrored.set(id,s)); dashMirrored.set('__meta',meta);
-    }
-  }catch(e){console.warn('dash mirror',e);}
-  dashMirrorBusy=false;
-  if(dashMirrorAgain){dashMirrorAgain=false;setTimeout(()=>dashMirror(false),1000);}
-}
 function scheduleSave(){
   if(saveTimer)clearTimeout(saveTimer);
   saveTimer=setTimeout(()=>saveData(true),2500);
@@ -1132,14 +1171,11 @@ let saveFailCount=0;
 async function saveData(now=false){
   if(!sessionPass)return;
   // ★ (גל 13/10) אם הטעינה מהקובץ נכשלה, לעולם לא שומרים: אחרת רשימה ריקה הייתה דורסת את כל הנתונים.
-  if(!realData){console.warn('save skipped: data file was not loaded');return;}
+  if(!realData||sessionPass==='audit'){console.warn('save skipped: data was not loaded');return;}
   document.getElementById('savingEl').classList.add('show');
-  const put=async()=>ghPut(await enc({leads,deletedIds:[...deletedIds],settings},sessionPass));
   try{
-    try{ await put(); }
-    catch(er){ if(er.status===409||er.status===422){ await mergeRemote(); await put(); } else throw er; }
+    await dashSave();
     updateSyncTime();
-    dashMirror(false);
     if(saveFailCount)toast('✅ השמירה חזרה לעבוד, הכל נשמר',4000);
     saveFailCount=0;
   }
@@ -1162,29 +1198,6 @@ function takeSnapshot(){
   if(snaps.length>25)snaps=snaps.slice(-25);
   try{localStorage.setItem('gal_snaps',JSON.stringify(snaps));}catch(e){console.warn('Snap localStorage failed',e);}
 }
-async function saveSnapsToGH(){
-  if(!sessionPass||!snaps.length)return;
-  try{
-    const e2=await enc(snaps,sessionPass);
-    const b64=btoa(unescape(encodeURIComponent(e2)));
-    const body={message:'snapshots',content:b64};
-    if(snapSha)body.sha=snapSha;
-    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${SNAP_FILE}`,{method:'PUT',headers:{'Authorization':`Bearer ${GH_TOKEN}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    const j=await r.json();
-    if(j.content?.sha)snapSha=j.content.sha;
-  }catch(e){console.warn('Snap GH save failed',e);}
-}
-async function loadSnapsFromGH(){
-  try{
-    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${SNAP_FILE}`,{headers:{'Authorization':`Bearer ${GH_TOKEN}`,'Accept':'application/vnd.github+json'}});
-    if(!r.ok)return;
-    const j=await r.json();
-    snapSha=j.sha;
-    const raw=atob(j.content.replace(/\n/g,''));
-    const parsed=await dec(raw,sessionPass);
-    if(Array.isArray(parsed))snaps=parsed;
-  }catch(e){console.warn('Snap GH load failed',e);}
-}
 async function undoSnapshot(){
   if(!snaps.length){toast('⚠️ אין גיבוי זמין — המתן שעה לאחר הכניסה');return;}
   const target=Date.now()-24*60*60*1000;
@@ -1198,6 +1211,7 @@ async function undoSnapshot(){
   const label=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+' '+d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
   if(!confirm(`שחזור למצב מ-${label}?\n\nכל השינויים מאז יימחקו.`))return;
   leads=JSON.parse(JSON.stringify(best.leads));
+  const _now=nowIso(); leads.forEach(l=>{l.updatedAt=_now;});   // בשרת החדש יותר מנצח: השחזור מסומן כעדכון של עכשיו
   deletedIds=new Set(best.deletedIds||[]);
   await saveData(true);
   render();
@@ -1212,14 +1226,14 @@ async function syncNow(manual){
   document.getElementById('savingEl').classList.add('show');
   // ★ (גל 13/10) כאן היה "שגיאה בסנכרון" כל 5 דקות: הקובץ נשמר כאובייקט {leads,...}, והקוד ניסה לפרוש אותו
   // כמו רשימה ([...remote]) וקרס. עכשיו המיזוג משותף לשמירה, וההודעה אומרת באיזה שלב נכשל.
-  let step='github';
+  let step='server';
   try{
     await mergeRemote();
     step='server'; await syncWorker();
     step='display'; render(); updateSyncTime(); if(manual===true)toast('✅ סונכרן');
   }catch(e){
     console.error('sync failed at',step,e);
-    toast('❌ שגיאה בסנכרון ('+({github:'GitHub',server:'השרת',display:'התצוגה'}[step]||step)+'): '+String(e&&e.message||e).slice(0,60),8000);
+    toast('❌ שגיאה בסנכרון ('+({server:'השרת',display:'התצוגה'}[step]||step)+'): '+String(e&&e.message||e).slice(0,60),8000);
   }
   document.getElementById('savingEl').classList.remove('show');
 }
@@ -1239,7 +1253,6 @@ function startSync(){
   },60000);
   setTimeout(takeSnapshot,5000); // first snapshot shortly after login
   setInterval(takeSnapshot,60*60*1000); // hourly to localStorage
-  setInterval(saveSnapsToGH,6*60*60*1000); // every 6h to GitHub
 }
 
 // ═══════════════════════════════════════════════
@@ -3100,6 +3113,7 @@ function closeToast(){document.getElementById('toast').classList.remove('show')}
 setInterval(checkRem,60000);
 setInterval(checkOverduePrompts,10*60*1000);
 checkRem();
+resumeSession();   // סשן אישי שמור במכשיר: נכנסים ישר (גל 19/10)
 </script>
 <div style="text-align:center;padding:14px 12px 20px;font-size:11px;color:#9aa;opacity:.6">נבנה על ידי דיוק דיגיטלי · © כל הזכויות שמורות</div>
 </body>
