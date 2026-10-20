@@ -1664,7 +1664,12 @@ function openLead(id){
   }
   // דף הנחיתה שהליד ראה (מיכל, 30/09): קישור לצפייה במידע שהליד קיבל, בלי שיוך שלא לזהם נתוני צפייה
   const landBox=document.getElementById('landBox');
-  if(l&&(l.temperature||l.score!=null)){
+  if(l&&l.variant==='b'&&l.lead_id){
+    // ליד של B (גל 20/10): הדף האישי שלו לפי מספר הליד, במצב צפייה (staff=1): לא נספר כביקור שלו ולא שולח כלום
+    const url='https://land.tom-harush.co.il/b/p/?id='+encodeURIComponent(l.lead_id)+'&staff=1';
+    landBox.style.display='block';
+    document.getElementById('landTxt').innerHTML=`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent,#c2151c);font-weight:700;text-decoration:none">🔗 הדף האישי שלו (B) · לחצו לצפייה במה שהליד רואה</a><div style="color:var(--text2,#888);font-size:11px;margin-top:3px">נפתח במצב צפייה: לא נספר כביקור שלו, ולחיצות בו לא נשלחות</div>`;
+  }else if(l&&(l.temperature||l.score!=null)){
     const hot=(l.temperature==='hot')||(Number(l.score)>=4);
     const url='https://land.tom-harush.co.il/'+(hot?'hpage':'cpage')+'/';
     landBox.style.display='block';
