@@ -2040,6 +2040,14 @@ function behaviorVerdict(b){
   else v={t:'עיון חלקי',c:'#d97706'};
   v.d=d; v.a=a; v.scrolls=b.scrolls||0; return v;
 }
+// סיכום הקריאה של דף הנחיתה B (גל 22/10). החלקים לפי סדר הדף; השאלון עצמו נספר בנפרד
+const RD_NAMES={top:'הפתיחה',tl:'ציר הזמן',buy:'מה קונים',docs:'המסמכים',exit:'היציאה',rev:'הביקורות',tom:'על תום',place:'המיקום',faq:'שאלות נפוצות'};
+function readingVerdict(r){
+  const n=(r.seen||[]).filter(k=>k!=='top'&&k!=='faq'&&k!=='sv').length, s=r.readSec||0;   // 7 חלקי תוכן לפני השאלון
+  if(n>=5&&s>=60) return {t:'קרא את הדף לעומק',c:'#16a34a'};
+  if(n<=1||s<20) return {t:'קפץ כמעט ישר לשאלון',c:'#d97706'};
+  return {t:'קרא חלק מהדף',c:'#2563eb'};
+}
 function bookingInsight(l){
   if(!l||(!l.booked && !l.calBooking)) return null;
   const cb=l.calBooking; let when=cb&&cb.bookedAt?cb.bookedAt:null, src, c;
@@ -2085,6 +2093,17 @@ function renderAuto(l){
       ins+=`<div style="margin-top:5px">${line}</div>`;
     }
   });
+  // סיכום הקריאה של דף הנחיתה B (גל 22/10): מה הליד קרא לפני שהשאיר פרטים, ואיך הגיע לשאלון
+  const lr=l&&l.pageBehavior&&l.pageBehavior.landing;
+  if(lr){
+    const rv=readingVerdict(lr), VIA={scroll:'בגלילה',float:'דרך הכפתור הצף',header:'דרך הכפתור למעלה',button:'דרך כפתור בדף'};
+    const seenTxt=(lr.seen||[]).filter(k=>RD_NAMES[k]).map(k=>RD_NAMES[k]+((lr.dwell||{})[k]?(' '+thgSecs(lr.dwell[k])):'')).join(' · ');
+    let h=`<div style="margin-top:7px;padding:8px 10px;border-radius:10px;background:#f3f7f4"><span style="font-weight:800;color:${rv.c}">דף הנחיתה: ${rv.t}</span> <span style="color:var(--text2,#888);font-size:11px">קרא ${thgSecs(lr.readSec||0)} לפני השאלון${lr.via?(' · הגיע לשאלון '+VIA[lr.via]):''}${lr.svSec?(' · בשאלון '+thgSecs(lr.svSec)):''}</span>`;
+    if(seenTxt) h+=`<div style="font-size:12px;margin-top:3px">ראה: ${esc(seenTxt)}</div>`;
+    const ex=[]; if(lr.faq&&lr.faq.length) ex.push('פתח שאלות: '+lr.faq.join(' / ')); if(lr.revOpen) ex.push('פתח '+lr.revOpen+' ביקורות'); if((lr.visits||1)>1) ex.push(lr.visits+' כניסות לדף'+(lr.firstAt?(', הראשונה '+fmtDt(lr.firstAt)):''));
+    if(ex.length) h+=`<div style="font-size:11px;color:var(--text2,#888);margin-top:2px">${esc(ex.join(' · '))}</div>`;
+    ins+=h+'</div>';
+  }
   const bi=bookingInsight(l);
   if(bi) ins+=`<div style="margin-top:5px"><span style="font-weight:800;color:${bi.c}">קביעת פגישה: ${bi.src}</span>${bi.when?` <span style="color:var(--text2,#888);font-size:11px">נקבעה ${esc(fmtDt(bi.when))}</span>`:''}</div>`;
   // רשומת פגישה מתמשכת (גל 04/10): מה שהליד עבר נשאר גלוי גם אחרי שהסטטוס עבר ל"פולואפ חם" וכו'
