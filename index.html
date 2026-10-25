@@ -1971,7 +1971,7 @@ function backfillNotes(){
 async function pushManualLeadToWorker(l){
   if(!l.phone){toast('ℹ️ ליד ללא טלפון נשמר בדשבורד בלבד (לא נדחף לשכל)',5000);return;}
   try{
-    const r=await fetch(`${WORKER_URL}/lead`,{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await fetch(`${WORKER_URL}/lead`,{method:'POST',headers:authH({'Content-Type':'application/json'}), // authH: השרת רושם מי הוסיף (גל 25/10)
       body:JSON.stringify({name:l.name,phone:l.phone,email:l.email||'',manual:true,source:'ידני'})});
     const j=await r.json();
     if(j&&j.lead_id){
