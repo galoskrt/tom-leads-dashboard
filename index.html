@@ -1450,7 +1450,7 @@ function populateCampFilter(){
   const live=leads.filter(l=>!l.demo);
   const cs=document.getElementById('fcmp'), curC=cs.value;
   const cc={}; live.forEach(l=>{const k=campKey(l); cc[k]=(cc[k]||0)+1;});
-  const order=['main-b','main-a','rmk'];
+  const order=['main-b','rmk-nolead','rmk-leads','main-a','rmk'];
   const ck=Object.keys(cc).sort((a,b)=>{const ia=order.indexOf(a), ib=order.indexOf(b); if(a==='none')return 1; if(b==='none')return -1; return (ia<0?9:ia)-(ib<0?9:ib)||a.localeCompare(b);});
   cs.innerHTML='<option value="">כל הקמפיינים</option>'+ck.map(k=>`<option value="${esc(k)}">${esc(CAMP_NAMES[k]||k)} (${cc[k]})</option>`).join('');
   if(ck.includes(curC))cs.value=curC;
@@ -1656,11 +1656,11 @@ function campKey(l){
   if(!l) return 'none';
   const c=String(l.campaign||(l.utm&&l.utm.campaign)||'').toLowerCase();
   const cr=String(l.creative||(l.utm&&l.utm.content)||'').toLowerCase();
-  if(/rmk|remarket|retarget/.test(c)) return 'rmk';
+  if(/rmk|remarket|retarget/.test(c)) return /nolead/.test(c)?'rmk-nolead':(/leads/.test(c)?'rmk-leads':'rmk');   // שתי השכבות של הרימרקטינג (האסטרטגיה של גל, 26/10)
   if(c==='main') return (l.variant==='b'||cr.startsWith('b-'))?'main-b':'main-a';
   return c||'none';
 }
-const CAMP_NAMES={'main-a':'ראשי A','main-b':'ראשי B · בדיקת התאמה','rmk':'רימרקטינג','none':'בלי קמפיין (אורגני, ידני, ייבוא)'};
+const CAMP_NAMES={'main-a':'ראשי A','main-b':'ראשי B · בדיקת התאמה','rmk-nolead':'רימרקטינג · לא השאירו לידים','rmk-leads':'רימרקטינג · לידים במשפך','rmk':'רימרקטינג (לפני 26/10)','none':'בלי קמפיין (אורגני, ידני, ייבוא)'};
 // שיוך מודעה/קמפיין בשפה פשוטה (לא UTM גולמי). main→ראשי A/B, rmk→רימרקטינג, image9→תמונה 9, +תמונת קריאייטיב.
 function adLabel(l){
   if(!l) return {camp:'',ad:'',img:''};
