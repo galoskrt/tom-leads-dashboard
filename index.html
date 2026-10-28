@@ -1511,12 +1511,41 @@ function ensureAnomalyModal(){
 }
 function _anomColor(lvl){ return lvl==='crit'?'#c2151c':lvl==='warn'?'#b4690e':'#2563eb'; }
 function _anomTag(lvl){ return lvl==='crit'?'דחוף':lvl==='warn'?'לטפל':'הזדמנות'; }
+// ★ (גל 28/10) לידים עונים להודעות האוטומטיות, והתשובות נוחתות בתיבה של סמוב ולא כאן. סמוב לא מעביר אותן לשרת,
+// אז סירוב בכתב לא עוצר את הרצף לבד. פעם ביום, בכל כניסה עד שמסמנים, מזכירים לעבור על התיבה ולסמן סירובים.
+const SMOOVE_INBOX_URL='https://studio-ui.admin.smoove.io/whatsapp-chat';
+function ilDay(){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date()); }
+function inboxKey(){ return 'tom_inbox_check:'+((ME&&(ME.name||ME.user||ME.id))||'x'); }
+function inboxCheckedToday(){ try{ return localStorage.getItem(inboxKey())===ilDay(); }catch(e){ return false; } }
+function markInboxChecked(){
+  try{ localStorage.setItem(inboxKey(),ilDay()); }catch(e){}
+  renderStats();
+  if(computeAnomalies().length)openAnomalyModal(); else closeAnomalyModal();
+  toast('✓ נרשם שעברת על התשובות היום. מחר התזכורת חוזרת.',4000);
+}
+function inboxBlockHtml(){
+  return '<div id="inboxDaily" style="border:1.5px solid #c2151c;border-radius:12px;padding:12px 14px;margin:6px 0 12px;background:rgba(194,21,28,.05)">'
+    +'<div style="font-weight:800;font-size:14.5px;margin-bottom:4px">בדיקה יומית: התשובות של הלידים בוואטסאפ</div>'
+    +'<div style="font-size:13px;line-height:1.6">לידים עונים להודעות האוטומטיות, והתשובות נוחתות בתיבה של סמוב, לא כאן. פעם ביום עוברים על כל התשובות החדשות:</div>'
+    +'<ol style="font-size:13px;line-height:1.6;margin:6px 0;padding-right:18px">'
+    +'<li>פותחים את התיבה בסמוב, בכפתור למטה.</li>'
+    +'<li><b>מי שסירב</b> ("לא רלוונטי", "תפסיקו", "תסירו אותי" או כל דבר דומה): מוצאים אותו כאן, מעבירים לסטטוס "לא רלוונטי", ובסיבה כותבים "ביקש להפסיק לקבל הודעות". מרגע השמירה הוא לא מקבל יותר אף הודעה אוטומטית.</li>'
+    +'<li><b>מי ששאל או ביקש שיחה</b>: עונים לו מהתיבה או מתקשרים, וכותבים הערה בכרטיס שלו.</li>'
+    +'</ol>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+    +'<a class="btn" href="'+SMOOVE_INBOX_URL+'" target="_blank" rel="noopener" style="background:#fff;color:#c2151c;border:1.5px solid #c2151c;padding:8px 16px;border-radius:9px;font-weight:700;text-decoration:none">פתיחת התיבה בסמוב ↗</a>'
+    +'<button class="btn" onclick="markInboxChecked()" style="background:#c2151c;color:#fff;padding:8px 16px;border-radius:9px;font-weight:700">עברתי על כל התשובות היום</button>'
+    +'</div>'
+    +'<div style="font-size:11.5px;color:var(--text2,#777);margin-top:6px">הסימון נשמר במכשיר הזה עד מחר. עד שמסמנים, התזכורת מופיעה בכל כניסה.</div>'
+    +'</div>';
+}
 function openAnomalyModal(){
   ensureAnomalyModal();
   const items=computeAnomalies();
   const box=document.getElementById('anomList');
-  if(!items.length){ box.innerHTML='<div style="padding:18px 4px;color:var(--text2,#777)">הכל נקי כרגע. אין נקודות פתוחות.</div>'; }
-  else box.innerHTML=items.map(a=>`<div onclick="closeAnomalyModal();openLead('${a.id}')" style="display:flex;gap:10px;align-items:flex-start;padding:11px 10px;border-radius:10px;cursor:pointer;border-right:4px solid ${_anomColor(a.lvl)};background:rgba(0,0,0,.02);margin-bottom:8px">
+  const inbox=inboxCheckedToday()?'':inboxBlockHtml();
+  if(!items.length){ box.innerHTML=inbox+'<div style="padding:18px 4px;color:var(--text2,#777)">'+(inbox?'חוץ מזה, אין נקודות פתוחות.':'הכל נקי כרגע. אין נקודות פתוחות.')+'</div>'; }
+  else box.innerHTML=inbox+items.map(a=>`<div onclick="closeAnomalyModal();openLead('${a.id}')" style="display:flex;gap:10px;align-items:flex-start;padding:11px 10px;border-radius:10px;cursor:pointer;border-right:4px solid ${_anomColor(a.lvl)};background:rgba(0,0,0,.02);margin-bottom:8px">
     <span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#fff;background:${_anomColor(a.lvl)};padding:3px 8px;border-radius:7px;margin-top:1px">${_anomTag(a.lvl)}</span>
     <span style="font-size:13px;line-height:1.5"><b>${esc(a.name||'ליד')}</b> · ${esc(a.msg)}</span></div>`).join('');
   document.getElementById('anomOv').style.display='flex';
@@ -1526,7 +1555,7 @@ let _anomShown=false;
 function maybeShowAnomaliesOnEntry(){
   if(_anomShown)return;
   const items=computeAnomalies();
-  if(items.some(a=>a.lvl==='crit'||a.lvl==='warn')){ _anomShown=true; openAnomalyModal(); }
+  if(!inboxCheckedToday()||items.some(a=>a.lvl==='crit'||a.lvl==='warn')){ _anomShown=true; openAnomalyModal(); }
   else _anomShown=true;
 }
 function render(){
@@ -1575,6 +1604,7 @@ function renderStats(){
   if(od)h+=`<div class="hstat warn">באיחור <b>${od}</b></div>`;
   const _anom=computeAnomalies();
   if(_anom.length)h+=`<div class="hstat warn" style="cursor:pointer;background:#c2151c;color:#fff" title="דברים שדורשים טיפול, לחצו לפירוט" onclick="openAnomalyModal()">⚠ דורש טיפול <b>${_anom.length}</b></div>`;
+  if(!inboxCheckedToday())h+=`<div class="hstat warn" style="cursor:pointer" title="התשובות של הלידים בוואטסאפ נמצאות בתיבה של סמוב. לחיצה פותחת את ההסבר" onclick="openAnomalyModal()">תשובות בסמוב: עוד לא נבדק היום</div>`;
   document.getElementById('hstats').innerHTML=h;
 }
 
