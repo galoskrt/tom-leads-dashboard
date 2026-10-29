@@ -1514,6 +1514,8 @@ function _anomTag(lvl){ return lvl==='crit'?'דחוף':lvl==='warn'?'לטפל':'
 // ★ (גל 28/10) לידים עונים להודעות האוטומטיות, והתשובות נוחתות בתיבה של סמוב ולא כאן. סמוב לא מעביר אותן לשרת,
 // אז סירוב בכתב לא עוצר את הרצף לבד. פעם ביום, בכל כניסה עד שמסמנים, מזכירים לעבור על התיבה ולסמן סירובים.
 const SMOOVE_INBOX_URL='https://studio-ui.admin.smoove.io/whatsapp-chat';
+// ★ (גל 29/10) התיבה נפתחת גם בלי חיבור, אבל אז לא נטענים אנשי קשר ("טעינת אנשי קשר נכשלה"). admin.smoove.io מעביר להתחברות.
+const SMOOVE_LOGIN_URL='https://admin.smoove.io/';
 function ilDay(){ return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date()); }
 function inboxKey(){ return 'tom_inbox_check:'+((ME&&(ME.name||ME.user||ME.id))||'x'); }
 function inboxCheckedToday(){ try{ return localStorage.getItem(inboxKey())===ilDay(); }catch(e){ return false; } }
@@ -1528,11 +1530,12 @@ function inboxBlockHtml(){
     +'<div style="font-weight:800;font-size:14.5px;margin-bottom:4px">בדיקה יומית: התשובות של הלידים בוואטסאפ</div>'
     +'<div style="font-size:13px;line-height:1.6">לידים עונים להודעות האוטומטיות, והתשובות נוחתות בתיבה של סמוב, לא כאן. פעם ביום עוברים על כל התשובות החדשות:</div>'
     +'<ol style="font-size:13px;line-height:1.6;margin:6px 0;padding-right:18px">'
-    +'<li>פותחים את התיבה בסמוב, בכפתור למטה.</li>'
+    +'<li>נכנסים לסמוב עם המשתמש של תום ("כניסה לסמוב"), ואז פותחים את התיבה ("פתיחת התיבה בסמוב"). אם בתיבה כתוב "טעינת אנשי קשר נכשלה", הדפדפן עוד לא מחובר לסמוב: נכנסים קודם, וחוזרים לכפתור של התיבה.</li>'
     +'<li><b>מי שסירב</b> ("לא רלוונטי", "תפסיקו", "תסירו אותי" או כל דבר דומה): מוצאים אותו כאן, מעבירים לסטטוס "לא רלוונטי", ובסיבה כותבים "ביקש להפסיק לקבל הודעות". מרגע השמירה הוא לא מקבל יותר אף הודעה אוטומטית.</li>'
     +'<li><b>מי ששאל או ביקש שיחה</b>: עונים לו מהתיבה או מתקשרים, וכותבים הערה בכרטיס שלו.</li>'
     +'</ol>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+    +'<a class="btn" href="'+SMOOVE_LOGIN_URL+'" target="_blank" rel="noopener" style="background:#fff;color:#c2151c;border:1.5px solid #c2151c;padding:8px 16px;border-radius:9px;font-weight:700;text-decoration:none">כניסה לסמוב ↗</a>'
     +'<a class="btn" href="'+SMOOVE_INBOX_URL+'" target="_blank" rel="noopener" style="background:#fff;color:#c2151c;border:1.5px solid #c2151c;padding:8px 16px;border-radius:9px;font-weight:700;text-decoration:none">פתיחת התיבה בסמוב ↗</a>'
     +'<button class="btn" onclick="markInboxChecked()" style="background:#c2151c;color:#fff;padding:8px 16px;border-radius:9px;font-weight:700">עברתי על כל התשובות היום</button>'
     +'</div>'
