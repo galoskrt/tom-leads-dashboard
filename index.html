@@ -1268,7 +1268,7 @@ async function syncWorker(){
     const r=await fetch(`${WORKER_URL}/leads?limit=2000`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`}});
     if(!r.ok)return;
     const j=await r.json();
-    let added=0,updated=0;
+    let added=0,updated=0,commCh=false;
     for(const w of (j.leads||[])){
       const wid=w.lead_id;
       if(!wid)continue;
@@ -1315,6 +1315,7 @@ async function syncWorker(){
         // תצוגה בלבד, קנוני מה-Worker, מתרענן בכל סנכרון (בלי updated++ כדי לא ליצור שמירות מיותרות).
         existing.followupLog=w.followupLog||[]; existing.subscribed=!!w.subscribed;
         if('joinedCommunity' in w){existing.joinedCommunity=w.joinedCommunity; if(w.joinedCommunityAt)existing.joinedCommunityAt=w.joinedCommunityAt;}
+        if(w.communityJoins){if((existing.communityJoins||[]).length!==w.communityJoins.length)commCh=true;existing.communityJoins=w.communityJoins;existing.communityJoinedAt=w.communityJoinedAt||'';}   // דף הקהילה /rpage/ (גל 02/11), השרת קנוני
         existing.vslWatched=w.vslWatched; existing.vslSecs=w.vslSecs; existing.vslLen=w.vslLen;
         if(w.pageBehavior)existing.pageBehavior=w.pageBehavior;
         if(w.callback)existing.callback=w.callback; if(w.variant)existing.variant=w.variant;   // בורר השעה של B (גל 16/10)
@@ -1351,6 +1352,7 @@ async function syncWorker(){
           doc:'',notes:'',remAt:'',remNote:'',history:[],returnsCount:0,dealAmount:0,dealMeters:0,
           meetDate:w.meetDate||'',meetTime:w.meetTime||'',meetPlace:w.meetPlace||'',meetDoc:w.meetDoc||'',calBooking:w.calBooking||null,booked:!!w.booked,
           followupLog:w.followupLog||[],subscribed:!!w.subscribed,joinedCommunity:!!w.joinedCommunity,joinedCommunityAt:w.joinedCommunityAt||'',
+          communityJoins:w.communityJoins||[],communityJoinedAt:w.communityJoinedAt||'',
           vslWatched:w.vslWatched,vslSecs:w.vslSecs,vslLen:w.vslLen,pageBehavior:w.pageBehavior||null,callback:w.callback||null,variant:w.variant||'',communityClicked:!!w.communityClicked,funnelCompleted:!!w.funnelCompleted,communityClickedAt:w.communityClickedAt||'',
           revival:w.revival||null,notRelevantReason:w.notRelevantReason||null,noteAt:w.noteAt||'',aiFit:w.aiFit||null,manualFit:w.manualFit||null,
           createdAt:w.ts||nowIso(),updatedAt:nowIso()});
@@ -1358,6 +1360,7 @@ async function syncWorker(){
       }
     }
     if(added||updated){render();scheduleSave();if(added)toast(`✅ ${added} לידים חדשים מהמשפך`);}
+    else if(commCh)render();   // כניסה חדשה לקהילה (גל 02/11): מרנדרים כדי שהחלון יקפוץ, בלי שמירה
     backfillNotes();   // דחיפה חד-פעמית של הערות שעדיין לא סונכרנו למנוע (למדידת תיעוד בדוח)
   }catch(e){console.warn('Worker sync',e);}
 }
@@ -1544,11 +1547,36 @@ function inboxBlockHtml(){
     +'<div style="font-size:11.5px;color:var(--text2,#777);margin-top:6px">הסימון נשמר במכשיר הזה עד מחר. עד שמסמנים, התזכורת מופיעה בכל כניסה.</div>'
     +'</div>';
 }
+// ★ (גל 02/11) דף הקהילה /rpage/ (שכבה 3 של הרימרקטינג): מי שנכנס לקהילה דרך הדף קופץ בחלון הכניסה,
+// "{שם} נכנס לקהילה דרך קמפיין הרימרקטינג", עד שמסמנים "ראיתי". הסימון במכשיר, כמו התזכורת היומית. 14 הימים האחרונים.
+function commSeenKey(){ return 'tom_comm_seen:'+((ME&&(ME.name||ME.user||ME.id))||'x'); }
+function commSeen(){ try{ return new Set(JSON.parse(localStorage.getItem(commSeenKey())||'[]')); }catch(e){ return new Set(); } }
+function markCommSeen(keys){ try{ const s=commSeen(); keys.forEach(k=>s.add(k)); localStorage.setItem(commSeenKey(),JSON.stringify([...s].slice(-500))); }catch(e){} }
+function commJoinText(j){ return /rmk|remarket/i.test(((j&&j.utm)||{}).campaign||'')?'נכנס לקהילה דרך קמפיין הרימרקטינג':'נכנס לקהילה דרך דף הקהילה'; }
+function commUnseen(){
+  const seen=commSeen(), since=Date.now()-14*86400000, out=[];
+  (leads||[]).forEach(l=>{ if(l.demo)return; (l.communityJoins||[]).forEach(j=>{ const t=Date.parse(j.at||''); if(!t||t<since)return; const k=(l.lead_id||l.id)+'|'+j.at; if(!seen.has(k))out.push({k,id:l.id,name:l.name,at:j.at,utm:j.utm||{}}); }); });
+  return out.sort((a,b)=>a.at<b.at?1:-1);
+}
+function commBlockHtml(){
+  const js=commUnseen(); if(!js.length)return '';
+  return '<div id="commJoins" style="border:1.5px solid #16a34a;border-radius:12px;padding:12px 14px;margin:6px 0 12px;background:rgba(22,163,74,.06)">'
+    +'<div style="font-weight:800;font-size:14.5px;margin-bottom:6px">נכנסו לקהילת המשקיעים בוואטסאפ</div>'
+    +js.map(j=>{const ad=adLabel({utm:j.utm,createdAt:j.at}).ad;return `<div onclick="markCommSeen(['${esc(j.k)}']);closeAnomalyModal();openLead('${esc(j.id)}')" style="cursor:pointer;padding:8px 10px;border-radius:9px;background:rgba(0,0,0,.02);margin-bottom:6px;font-size:13px;line-height:1.5"><b>${esc(j.name||'ליד')}</b> ${commJoinText(j)} · ${esc(fmtDt(j.at))}${ad?' · מודעה '+esc(ad):''}</div>`;}).join('')
+    +'<button class="btn" onclick="commAck()" style="background:#16a34a;color:#fff;padding:8px 16px;border-radius:9px;font-weight:700;margin-top:4px">ראיתי</button>'
+    +'<div style="font-size:11.5px;color:var(--text2,#777);margin-top:6px">לחיצה על שם פותחת את הכרטיס. אין צורך לשלוח להם הודעה, הם כבר בקבוצה. "ראיתי" מסתיר אותם במכשיר הזה.</div>'
+    +'</div>';
+}
+function commAck(){
+  markCommSeen(commUnseen().map(j=>j.k));
+  if(computeAnomalies().length||!inboxCheckedToday())openAnomalyModal(); else closeAnomalyModal();
+}
+const _commShown=new Set();
 function openAnomalyModal(){
   ensureAnomalyModal();
   const items=computeAnomalies();
   const box=document.getElementById('anomList');
-  const inbox=inboxCheckedToday()?'':inboxBlockHtml();
+  const inbox=commBlockHtml()+(inboxCheckedToday()?'':inboxBlockHtml());
   if(!items.length){ box.innerHTML=inbox+'<div style="padding:18px 4px;color:var(--text2,#777)">'+(inbox?'חוץ מזה, אין נקודות פתוחות.':'הכל נקי כרגע. אין נקודות פתוחות.')+'</div>'; }
   else box.innerHTML=inbox+items.map(a=>`<div onclick="closeAnomalyModal();openLead('${a.id}')" style="display:flex;gap:10px;align-items:flex-start;padding:11px 10px;border-radius:10px;cursor:pointer;border-right:4px solid ${_anomColor(a.lvl)};background:rgba(0,0,0,.02);margin-bottom:8px">
     <span style="flex:0 0 auto;font-size:10.5px;font-weight:800;color:#fff;background:${_anomColor(a.lvl)};padding:3px 8px;border-radius:7px;margin-top:1px">${_anomTag(a.lvl)}</span>
@@ -1558,9 +1586,10 @@ function openAnomalyModal(){
 function closeAnomalyModal(){ const o=document.getElementById('anomOv'); if(o)o.style.display='none'; }
 let _anomShown=false;
 function maybeShowAnomaliesOnEntry(){
-  if(_anomShown)return;
+  const cu=commUnseen().filter(j=>!_commShown.has(j.k));   // כניסה חדשה לקהילה, גם כשהיא מגיעה בסנכרון אחרי שהדשבורד כבר פתוח
+  if(_anomShown){ if(cu.length){ cu.forEach(j=>_commShown.add(j.k)); openAnomalyModal(); } return; }
   const items=computeAnomalies();
-  if(!inboxCheckedToday()||items.some(a=>a.lvl==='crit'||a.lvl==='warn')){ _anomShown=true; openAnomalyModal(); }
+  if(!inboxCheckedToday()||items.some(a=>a.lvl==='crit'||a.lvl==='warn')||cu.length){ cu.forEach(j=>_commShown.add(j.k)); _anomShown=true; openAnomalyModal(); }
   else _anomShown=true;
 }
 function render(){
@@ -1585,7 +1614,7 @@ function render(){
       <td data-label="שם"><b>${esc(l.name)}</b>${isNew7(l)?`<span class="new7-badge" title="נכנס ב-7 הימים האחרונים">נכנס השבוע</span>`:''}${l.returnsCount>0?`<span class="returns-badge" title="השאיר פרטים ${l.returnsCount+1} פעמים">×${l.returnsCount+1}</span>`:''}<br><span style="font-size:11px;color:var(--text2)">${esc(l.phone||'')}</span>${l.createdAt?`<br><span style="font-size:10.5px;color:var(--text2)">הגיע ${esc(fmtDt(l.createdAt))}</span>`:''}</td>
       <td data-label="טלפון" style="direction:ltr;text-align:right">${esc(l.phone||'—')}</td>
       <td data-label="חום · ניקוד" style="font-size:12px">${l.temperature?`<span style="display:inline-block;padding:2px 9px;border-radius:10px;font-weight:800;font-size:11px;color:#fff;background:${l.temperature==='hot'?'#c2151c':'#2563eb'}">${l.temperature==='hot'?'חם':'קר'}</span>`:''}${(l.score!=null&&l.score!=='')?` <b>${esc(String(l.score))}</b><span style="color:var(--text2)">/6</span>`:(l.temperature?'':'—')}${(()=>{const a=adLabel(l);const t=[a.camp,a.ad].filter(Boolean).join(' · ');if(!t)return '';const im=a.img?`<img src="${a.img}" alt="" style="width:18px;height:32px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"/>`:'';return `<br><span style="font-size:11px;color:var(--accent)">📢 ${im}${esc(t)}</span>`;})()}${(()=>{const vv=vslVerdict(l);return vv?`<br><span style="font-size:11px;color:${vv.c};font-weight:800">▶ ${vv.t} ${vv.pct}%</span>`:'';})()}${l.callback?`<br><span style="font-size:11px;color:#c2151c;font-weight:800">📞 מועד לחזרה: ${esc(String(l.callback.label||'').split(',')[0])}</span>`:''}</td>
-      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:''}${l.seqPaused?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#C2151C" title="${esc(l.seqPausedReason||'')}">⏸ רצף מושהה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
+      <td data-label="סטטוס"><span class="badge ${ST[l.status]?.c||'s-new'}">${ST[l.status]?.l||l.status}</span>${l.joinedCommunity?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">● בקהילה</span>`:(l.communityJoinedAt?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)" title="${esc(commJoinText((l.communityJoins||[]).slice(-1)[0]||{}))}">● נכנס לקהילה</span>`:'')}${l.seqPaused?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#C2151C" title="${esc(l.seqPausedReason||'')}">⏸ רצף מושהה</span>`:''}${(l.communityClicked||l.funnelCompleted)?`<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:var(--green)">✓ השלים משפך</span>`:''}</td>
       <td data-label="פולואפ" class="td-rem">${dot}<span style="font-size:12px;color:${remClr}">${remTxt}</span></td>
       <td data-label="WA" class="td-wa"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${waBtn}${commBtn}</div></td>
       <td data-label="מסמך">${doc}</td>
@@ -2176,6 +2205,8 @@ function renderAuto(l){
   if(l&&l.joinedCommunity) comm=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● הליד נכנס לקהילת הוואטסאפ${l.joinedCommunityAt?' · '+esc(fmtDt(l.joinedCommunityAt)):''}</div>`;
   else if(l&&l.subscribed) comm='<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● נכנס לקהילת המשקיעים</div>';
   let ins='';
+  if(l&&l.communityJoinedAt){const js=l.communityJoins||[];const last=js[js.length-1]||{};const ad=adLabel({utm:last.utm||{},createdAt:last.at}).ad;
+    ins+=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● ${commJoinText(last)} · ${esc(fmtDt(l.communityJoinedAt))}${ad?' · מודעה '+esc(ad):''}${js.length>1?' · '+js.length+' כניסות':''}</div>`;}
   if(l&&(l.communityClicked||l.funnelCompleted)) ins+=`<div style="margin-top:7px;color:var(--green,#16a34a);font-weight:800">● השלים את המשפך · נכנס לקהילה מהדף${l.communityClickedAt?' · '+esc(fmtDt(l.communityClickedAt)):''}</div>`;
   if(l&&l.callback){const c=l.callback;ins+=`<div style="margin-top:7px;padding:8px 10px;border-radius:10px;background:#fdecec"><b style="color:#c2151c">📞 מועד לחזרה לליד: ${esc(c.label||'')}</b> <span style="color:var(--text2,#888);font-size:11px">נבחר ${esc(fmtDt(c.at))}</span><div style="font-size:12px;margin-top:2px">${c.altPhone?`למספר אחר שהליד ביקש: <a href="tel:${esc(c.altPhone)}" style="font-weight:800">${esc(c.altPhone)}</a>`:'למספר שבטופס. הליד אישר שהוא נכון.'}</div></div>`;}
   const vv=vslVerdict(l);
