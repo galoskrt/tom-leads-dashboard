@@ -411,6 +411,7 @@ table.shp-t tr.dnc td{color:var(--text2)}
   <div class="hright">
     <span class="sync-time" id="syncTime"></span>
     <span class="sync-time" id="whoEl" style="font-weight:700"></span>
+    <a class="btn-logout" href="yad2/" style="text-decoration:none" title="לידים של קמפיין נכסי יד שנייה (תיווך)">נכסי יד שנייה</a>
     <button class="btn-logout" onclick="logout()">יציאה</button>
   </div>
 </header>
@@ -1030,6 +1031,8 @@ async function doSetPass(){
   btn.disabled=false;
 }
 async function enterApp(){
+  // רז (תפקיד broker, גל 05/11) רואה רק את נכסי יד שנייה. השרת חוסם אותו מכל השאר, וכאן רק מעבירים אותו לדף שלו.
+  if(ME&&ME.role==='broker'){location.replace('yad2/');return;}
   loginMsg('טוען נתונים...');
   sessionPass='server';
   await loadData();

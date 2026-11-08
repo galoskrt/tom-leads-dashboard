@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>נכסי יד שנייה · קבוצת תום הרוש</title>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap">
+<link rel="icon" href="../logo.png">
+<!-- נכסי יד שנייה · הדשבורד של התיווך (גל 05/11/2026).
+     כניסה: אותו משתמש וסיסמה של הדשבורד הראשי (הסשן נשמר במכשיר). רז (תפקיד broker) רואה רק את הדף הזה, והשרת חוסם אותו מכל השאר.
+     הכל נשמר בשרת (D1, טבלאות y2_*). אין שמירה מקומית של לידים, אין data.enc. שינוי סטטוס = חובה לכתוב מה היה בשיחה. -->
+<style>
+:root{--bg:#F7F7F7;--s1:#fff;--line:rgba(15,18,22,.10);--line2:rgba(194,21,28,.22);--red:#C2151C;--red2:#A20C22;--green:#157a3a;--amber:#9a6200;--blue:#1f5ccc;
+  --ink:#0f1216;--muted:rgba(15,18,22,.6);--tint:rgba(194,21,28,.06);--grad:linear-gradient(135deg,#C2151C,#A20C22,#7F0224)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+button,input,select,textarea{font-family:inherit;font-size:inherit}
+header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line2);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px}
+.logo img{width:34px;height:34px;object-fit:contain}
+.logo small{font-weight:500;color:var(--muted)}
+.hr{margin-inline-start:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.who{font-weight:700;font-size:14px}
+.hbtn{border:1px solid var(--line2);background:#fff;border-radius:9px;padding:7px 12px;font-weight:700;color:var(--red2);cursor:pointer;text-decoration:none;font-size:14px}
+nav{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+nav button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer;color:var(--ink)}
+nav button.on{background:var(--grad);color:#fff;border-color:transparent}
+nav button .n{display:inline-block;min-width:20px;margin-inline-start:6px;padding:0 6px;border-radius:999px;background:rgba(15,18,22,.08);font-size:12px}
+nav button.on .n{background:rgba(255,255,255,.25)}
+main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;font-weight:900}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi.warn b{color:var(--red)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bar input,.bar select{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+.bar input{flex:1;min-width:180px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:1.3fr 1.6fr 1.2fr auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer}
+.row:hover{border-color:var(--line2)}
+.row:focus-visible{outline:3px solid rgba(194,21,28,.35)}
+.row .nm b{display:block;font-size:16px}
+.row .nm small,.row .sr small{color:var(--muted);font-size:13px}
+.row .sr{font-size:14px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;background:#F2F3F5;color:#333;white-space:nowrap}
+.tag.qa{background:#fff4e5;color:var(--amber)}
+.tag.ret{background:#eaf1ff;color:var(--blue)}
+.tag.ms{background:#e8f5ee;color:var(--green)}
+.tag.late{background:#fdecec;color:var(--red2)}
+.st{font-size:13px;font-weight:800;border-radius:999px;padding:5px 12px;white-space:nowrap;background:#F2F3F5}
+.st.new{background:#fdecec;color:var(--red2)}
+.st.tour_req,.st.tour_set{background:#fff4e5;color:var(--amber)}
+.st.toured,.st.offer,.st.deal{background:#e8f5ee;color:var(--green)}
+.st.not_relevant,.st.referred{color:var(--muted)}
+.empty{background:#fff;border:1px dashed var(--line2);border-radius:14px;padding:22px;text-align:center;color:var(--muted)}
+@media (max-width:760px){.row{grid-template-columns:1fr auto}.row .sr,.row .src{grid-column:1/-1}}
+/* כרטיס ליד */
+.ov{position:fixed;inset:0;background:rgba(15,18,22,.45);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow-y:auto}
+.ov.on{display:flex}
+.md{background:#fff;border-radius:18px;width:min(760px,100%);padding:18px 18px 20px;position:relative}
+.md h2{font-size:22px;font-weight:900}
+.md .x{position:absolute;top:12px;left:12px;border:0;background:#F2F3F5;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer}
+.md h3{font-size:14px;font-weight:800;color:var(--red2);margin:16px 0 6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.kv small{display:block;color:var(--muted);font-size:12.5px}
+.kv b{font-weight:600}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.act a,.act button{display:inline-flex;align-items:center;min-height:42px;padding:0 14px;border-radius:10px;font-weight:800;text-decoration:none;border:0;cursor:pointer}
+.call{background:var(--grad);color:#fff}.wa{background:#1fa855;color:#fff}.lnk{background:#F2F3F5;color:var(--ink)}
+.do{background:var(--tint);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-weight:600;margin-top:12px}
+.matches li{margin:4px 0}
+.form label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+.form select,.form textarea,.form input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff}
+.form textarea{min-height:76px;resize:vertical}
+.save{margin-top:12px;min-height:46px;width:100%;border:0;border-radius:12px;background:var(--grad);color:#fff;font-weight:800;font-size:16px;cursor:pointer}
+.save:disabled{opacity:.5}
+.msg{font-size:14px;font-weight:700;margin-top:8px;min-height:1em}
+.msg.err{color:var(--red2)}.msg.ok{color:var(--green)}
+.tl{list-style:none;border-inline-start:2px solid var(--line);padding-inline-start:12px}
+.tl li{position:relative;margin:8px 0;font-size:14px}
+.tl li::before{content:"";position:absolute;inset-inline-start:-18px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--red)}
+.tl small{color:var(--muted);display:block;font-size:12.5px}
+.del{background:none;border:0;color:var(--red2);text-decoration:underline;cursor:pointer;margin-top:14px;font-size:13px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);font-size:14px}
+th{background:#FAFAFB;font-size:13px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 14px}
+#login{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<div id="login"><p>כדי לראות את לידי התיווך צריך להתחבר.</p><a class="hbtn" href="../">כניסה לדשבורד</a></div>
+<div id="app" hidden>
+<header>
+  <div class="logo"><img src="../logo.png" alt="קבוצת תום הרוש"><span>קבוצת תום הרוש</span><small>· נכסי יד שנייה</small></div>
+  <div class="hr"><span class="who" id="who"></span><a class="hbtn" id="toMain" href="../" hidden>הלידים של קדימה צורן</a><button class="hbtn" id="out">יציאה</button></div>
+</header>
+<nav id="tabs">
+  <button data-t="leads" class="on">לידים <span class="n" id="nLeads">0</span></button>
+  <button data-t="refs">הפניות לאזור אחר <span class="n" id="nRefs">0</span></button>
+  <button data-t="props">הנכסים</button>
+  <button data-t="perf">ביצועים</button>
+</nav>
+<main id="main"></main>
+</div>
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-labelledby="mdTitle"><div class="md" id="md"></div></div>
+<script>
+(function(){
+var API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? 'http://127.0.0.1:8799' : 'https://tom-funnel.tom-harush.workers.dev'   /* מקומי = בדיקה מול wrangler dev */, SES_KEY = 'tom_ses';
+var TOK = '', ME = null, LEADS = [], STATUSES = {}, PROPS = [], TAB = 'leads', F = { q: '', st: '', prop: '' }, OPEN = null;
+var $ = function(s, r){ return (r || document).querySelector(s); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function H(x){ return Object.assign({ Authorization: 'Bearer ' + TOK }, x || {}); }
+function when(iso){ if (!iso) return ''; return new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
+function intl(p){ var d = String(p || '').replace(/\D/g, ''); return d.charAt(0) === '0' ? '972' + d.slice(1) : d; }
+function nis(n){ return Math.round(n).toLocaleString('he-IL') + ' ₪'; }
+function api(path, opt){ return fetch(API + path, Object.assign({ cache: 'no-store' }, opt || {}, { headers: H((opt || {}).headers) })).then(function(r){ if (r.status === 401 || r.status === 403) { gone(); throw new Error('auth'); } return r.json(); }); }
+function gone(){ try { localStorage.removeItem(SES_KEY); } catch (e) {} location.replace('../'); }
+
+/* מה עושים עכשיו, לפי הסטטוס. הדשבורד אומר לרז את הצעד הבא, כדי שלא יצטרך לזכור נוהל */
+var NEXT = {
+  new: 'להתקשר תוך שעה. לא ענה? לסמן "אין מענה 1" ולנסות שוב היום.',
+  na1: 'לנסות שוב בעוד כמה שעות. לא ענה? "אין מענה 2".',
+  na2: 'לנסות שוב מחר, בשעה אחרת. לא ענה? "אין מענה 3".',
+  na3: 'ניסיון אחרון. לשלוח לו וואטסאפ קצר מהנייד ולסמן מה קרה.',
+  talked: 'לסכם מה הוא מחפש, לשאול מתי רוצה לעבור והאם צריך למכור דירה קודם, ולהציע סיור.',
+  tour_req: 'הוא ביקש לראות דירה. להתקשר עכשיו ולקבוע סיור.',
+  tour_set: 'לוודא יום לפני שהסיור עומד. אחרי הסיור לסמן "הגיע לסיור" או לחזור לתאם.',
+  toured: 'לשאול מה חשב, להציע דירה נוספת אם לא התאים, או להתקדם להצעה.',
+  offer: 'ללוות את ההצעה עד סגירה.',
+  deal: 'עסקה. לעדכן את גל, כדי שהנכס יירד מהמלאי ומהקמפיין.',
+  not_relevant: 'לא רלוונטי. נשאר ברשימה, לא מקבל הודעות.',
+  referral: 'להחליט לאיזה מתווך להעביר אותו, ולסמן "הועבר למתווך".',
+  referred: 'הועבר. אין צורך בפעולה נוספת.'
+};
+var MOVE = ['', 'כמה שיותר מהר', 'בחצי השנה הקרובה', 'בשנה הקרובה', 'רק מתחילים לבדוק'];
+var SELL = ['', 'כן, צריך למכור קודם', 'כן, כבר מכרו', 'לא'];
+var WA = { sent: 'נשלח בוואטסאפ', pending: 'וואטסאפ ממתין ל־08:00', not_ready: 'וואטסאפ עוד לא פעיל', error: 'וואטסאפ נכשל', no_consent: 'בלי אישור וואטסאפ' };
+var MS = { tourReqAt: 'ביקש סיור', tourSetAt: 'סיור נקבע', touredAt: 'הגיע לסיור', offerAt: 'הצעה', dealAt: 'עסקה' };
+
+function lateNew(l){ return l.status === 'new' && !l.qa && Date.now() - Date.parse(l.ts) > 3600e3; }
+
+function load(){
+  return Promise.all([api('/yad2/leads'), api('/yad2/props')]).then(function(r){
+    LEADS = r[0].leads || []; STATUSES = r[0].statuses || {}; PROPS = r[1].props || [];
+    $('#nLeads').textContent = LEADS.filter(function(l){ return l.kind !== 'referral'; }).length;
+    $('#nRefs').textContent = LEADS.filter(function(l){ return l.kind === 'referral' && l.status === 'referral'; }).length;
+    render();
+    if (OPEN) { var l = LEADS.find(function(x){ return x.id === OPEN; }); if (l && !$('#md').contains(document.activeElement)) openCard(l); }
+  }).catch(function(e){ if (String(e.message) !== 'auth') $('#main').innerHTML = '<div class="empty">לא הצלחתי לטעון מהשרת. מנסה שוב בעוד דקה.</div>'; });
+}
+
+function render(){
+  var m = $('#main');
+  if (TAB === 'leads') return renderLeads(m);
+  if (TAB === 'refs') return renderRefs(m);
+  if (TAB === 'props') return renderProps(m);
+  return renderPerf(m);
+}
+function propLabel(k){ var p = PROPS.find(function(x){ return x.key === k; }); return p ? (p.street || '') + ' ' + (p.number || '') + ', ' + (p.city || '') : k; }
+function rowHtml(l){
+  var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + '</span>'; }).join('');
+  var tags = (l.qa ? '<span class="tag qa">ליד בדיקה</span>' : '') + ((l.returns || []).length ? '<span class="tag ret">חזר ' + l.returns.length + '×</span>' : '')
+    + (lateNew(l) ? '<span class="tag late">עברה שעה בלי טיפול</span>' : '') + (l.wa && WA[l.wa.state] ? '<span class="tag">' + WA[l.wa.state] + '</span>' : '') + ms;
+  return '<div class="row" tabindex="0" data-id="' + esc(l.id) + '"><div class="nm"><b>' + esc(l.displayName || l.name) + '</b><small>' + esc(when(l.ts)) + '</small></div>'
+    + '<div class="sr">' + esc(l.kind === 'referral' ? 'מחפש ב' + (l.areaText || 'אזור אחר') : (l.search || '')) + '<div class="tags">' + tags + '</div></div>'
+    + '<div class="src"><small>' + esc(l.propLabel ? 'מהמודעה של ' + l.propLabel : (l.kind === 'referral' ? 'הפניה' : 'כניסה ישירה')) + '</small></div>'
+    + '<span class="st ' + esc(l.status) + '">' + esc(STATUSES[l.status] || l.status) + '</span></div>';
+}
+function renderLeads(m){
+  var all = LEADS.filter(function(l){ return l.kind !== 'referral'; }), real = all.filter(function(l){ return !l.qa; });
+  var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
+  var isToday = function(l){ return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date(l.ts)) === today; };
+  var k = '<div class="kpis">'
+    + '<div class="kpi"><b>' + real.filter(isToday).length + '</b><span>לידים היום</span></div>'
+    + '<div class="kpi' + (real.filter(lateNew).length ? ' warn' : '') + '"><b>' + real.filter(lateNew).length + '</b><span>חדשים שעברה שעה בלי טיפול</span></div>'
+    + '<div class="kpi"><b>' + real.filter(function(l){ return l.milestones && l.milestones.tourReqAt; }).length + '</b><span>ביקשו סיור</span></div>'
+    + '<div class="kpi"><b>' + real.filter(function(l){ return l.milestones && l.milestones.touredAt; }).length + '</b><span>הגיעו לסיור</span></div>'
+    + '<div class="kpi"><b>' + real.length + '</b><span>כל הלידים</span></div></div>';
+  var opts = '<option value="">כל הסטטוסים</option>' + Object.keys(STATUSES).filter(function(s){ return s !== 'referral' && s !== 'referred'; }).map(function(s){ return '<option value="' + s + '"' + (F.st === s ? ' selected' : '') + '>' + esc(STATUSES[s]) + '</option>'; }).join('');
+  var props = '<option value="">כל המודעות</option>' + ['kr', 'dv', 'bz'].concat(PROPS.map(function(p){ return p.key; })).filter(function(v, i, a){ return a.indexOf(v) === i; })
+    .filter(function(k2){ return all.some(function(l){ return l.prop === k2; }); }).map(function(k2){ return '<option value="' + esc(k2) + '"' + (F.prop === k2 ? ' selected' : '') + '>' + esc(propLabel(k2)) + '</option>'; }).join('');
+  var list = all.filter(function(l){
+    if (F.st && l.status !== F.st) return false; if (F.prop && l.prop !== F.prop) return false;
+    if (F.q) { var t = (l.name + ' ' + (l.displayName || '') + ' ' + l.phone + ' ' + (l.search || '')).toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
+    return true;
+  });
+  m.innerHTML = k + '<div class="bar"><input id="fq" placeholder="חיפוש לפי שם, טלפון או מה מחפש" value="' + esc(F.q) + '"><select id="fst">' + opts + '</select><select id="fprop">' + props + '</select></div>'
+    + (list.length ? '<div class="list">' + list.map(rowHtml).join('') + '</div>' : '<div class="empty">' + (all.length ? 'אין לידים שמתאימים לסינון.' : 'עוד אין לידים. ברגע שקונה ישאיר פרטים בשאלון, הוא יופיע כאן ותגיע התראה במייל.') + '</div>');
+  $('#fq').oninput = function(e){ F.q = e.target.value; var p = e.target.selectionStart; renderLeads(m); var i = $('#fq'); i.focus(); i.setSelectionRange(p, p); };
+  $('#fst').onchange = function(e){ F.st = e.target.value; renderLeads(m); };
+  $('#fprop').onchange = function(e){ F.prop = e.target.value; renderLeads(m); };
+}
+function renderRefs(m){
+  var r = LEADS.filter(function(l){ return l.kind === 'referral'; });
+  m.innerHTML = '<p class="note">מי שמחפש מחוץ לרמת גן, גבעתיים ותל אביב ומבקש שנעביר אותו למתווך באזור שלו. הם לא לידים ולא נשלחים למטא. מחליטים למי להעביר, ומסמנים "הועבר למתווך".</p>'
+    + (r.length ? '<div class="list">' + r.map(rowHtml).join('') + '</div>' : '<div class="empty">עוד אין בקשות להפניה.</div>');
+}
+function renderProps(m){
+  var admin = ME && ME.role === 'admin';
+  m.innerHTML = '<p class="note">המלאי שממנו הקונים מקבלים דירות. נכס שנמכר מסמנים "נמכר", והוא יוצא מההתאמות מיד. אם הנכס בקמפיין, לעדכן גם את גל, כדי לעצור את המודעה.</p>'
+    + (PROPS.length ? '<table><thead><tr><th>נכס</th><th>חדרים</th><th>מחיר</th><th>מצב</th></tr></thead><tbody>' + PROPS.map(function(p){
+      return '<tr><td><b>' + esc((p.street || '') + ' ' + (p.number || '')) + '</b>, ' + esc(p.city || '') + '</td><td>' + esc(p.rooms || '') + '</td><td>' + (p.price ? nis(p.price) : '') + '</td><td><select data-pk="' + esc(p.key) + '">'
+        + [['for_sale', 'למכירה'], ['sold', 'נמכר'], ['paused', 'מושהה']].map(function(o){ return '<option value="' + o[0] + '"' + (p.status === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></td></tr>';
+    }).join('') + '</tbody></table>' : '<div class="empty">המלאי עוד לא נטען.</div>');
+  [].slice.call(m.querySelectorAll('select[data-pk]')).forEach(function(s){
+    s.onchange = function(){ var v = s.value, k = s.dataset.pk; if (v === 'sold' && !confirm('לסמן את ' + propLabel(k) + ' כנמכר? הוא יוצא מההתאמות לקונים.')) { render(); return; }
+      api('/yad2/props/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: k, status: v }) }).then(load); };
+  });
+  void admin;
+}
+function renderPerf(m){
+  m.innerHTML = '<div class="empty">טוען...</div>';
+  api('/yad2/stats?days=30').then(function(j){
+    var order = ['view', 'area', 'rooms', 'budget', 'must', 'contact', 'done'], names = { view: 'נכנסו לשאלון', area: 'שאלת האזור', rooms: 'שאלת החדרים', budget: 'שאלת התקציב', must: 'מה חובה', contact: 'מסך הפרטים', done: 'השאירו פרטים' };
+    var sum = {}; (j.steps || []).forEach(function(s){ if (s.src !== 'paid') return; sum[s.step] = (sum[s.step] || 0) + s.n; });
+    var rows = order.map(function(k, i){ var n = sum[k] || 0, prev = i ? (sum[order[i - 1]] || 0) : 0; return '<tr><td>' + names[k] + '</td><td>' + n + '</td><td>' + (i && prev ? Math.round(100 * n / prev) + '%' : '') + '</td></tr>'; }).join('');
+    var real = LEADS.filter(function(l){ return !l.qa && l.kind !== 'referral'; });
+    var keys = Object.keys(j.spend || {}).filter(function(k){ return k.charAt(0) !== '_'; });
+    var camp = (j.campaigns || []).map(function(k){
+      var s = (j.spend || {})[k] || { spend: 0 }, L = real.filter(function(l){ return l.prop === k; }), T = L.filter(function(l){ return l.milestones && l.milestones.tourReqAt; }), V = L.filter(function(l){ return l.milestones && l.milestones.touredAt; });
+      return '<tr><td>' + esc(propLabel(k)) + '</td><td>' + nis(s.spend || 0) + '</td><td>' + L.length + '</td><td>' + (L.length ? nis(s.spend / L.length) : '') + '</td><td>' + T.length + '</td><td>' + V.length + '</td><td>' + (V.length ? nis(s.spend / V.length) : '') + '</td></tr>';
+    }).join('');
+    void keys;
+    m.innerHTML = '<h3 style="margin:4px 0 8px">עלות לפי נכס · 30 הימים האחרונים</h3>'
+      + (camp ? '<table><thead><tr><th>נכס</th><th>הוצאה</th><th>לידים</th><th>עלות לליד</th><th>ביקשו סיור</th><th>הגיעו לסיור</th><th>עלות לסיור</th></tr></thead><tbody>' + camp + '</tbody></table>' : '<div class="empty">הקמפיינים עוד לא מחוברים. ההוצאה תופיע כאן מהיום שהם עולים.</div>')
+      + ((j.spend || {})._error ? '<p class="note">מטא לא החזירה נתונים כרגע.</p>' : '')
+      + '<h3 style="margin:18px 0 8px">איפה עוצרים בשאלון · תנועה ממומנת</h3><table><thead><tr><th>שלב</th><th>אנשים</th><th>מהשלב הקודם</th></tr></thead><tbody>' + rows + '</tbody></table>'
+      + '<p class="note">מחוץ לאזור: ' + ((j.steps || []).filter(function(s){ return s.step === 'other'; }).reduce(function(a, s){ return a + s.n; }, 0)) + ' בחרו "אזור אחר", ' + LEADS.filter(function(l){ return l.kind === 'referral'; }).length + ' ביקשו הפניה.</p>';
+  }).catch(function(){ m.innerHTML = '<div class="empty">לא הצלחתי לטעון את הביצועים.</div>'; });
+}
+
+function openCard(l){
+  OPEN = l.id;
+  var a = l.answers || {}, f = l.fields || {}, ref = l.kind === 'referral';
+  var st = Object.keys(STATUSES).filter(function(s){ return ref ? (s === 'referral' || s === 'referred' || s === 'not_relevant') : (s !== 'referral' && s !== 'referred'); });
+  var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + ' · ' + esc(when(l.milestones[k])) + '</span>'; }).join('');
+  var matches = (l.matches || []).map(function(x){ return '<li>' + esc(propLabel(x.key)) + (x.state === 'tour_req' ? ' · <b style="color:var(--amber)">ביקש לראות</b>' : '') + '</li>'; }).join('');
+  var hist = (l.history || []).slice().reverse().map(function(h){ return '<li>' + esc(h.text) + '<small>' + esc(when(h.at)) + (h.by && h.by !== 'system' ? ' · ' + esc(h.by) : '') + '</small></li>'; }).join('');
+  $('#md').innerHTML = '<button class="x" id="mx" aria-label="סגירה">×</button>'
+    + '<h2 id="mdTitle">' + esc(l.displayName || l.name) + (l.qa ? ' <span class="tag qa">ליד בדיקה</span>' : '') + '</h2>'
+    + '<div class="tags" style="margin-top:6px"><span class="st ' + esc(l.status) + '">' + esc(STATUSES[l.status] || l.status) + '</span>' + ms + '</div>'
+    + '<div class="act"><a class="call" href="tel:' + esc(l.phone) + '">חייג ' + esc(l.phone) + '</a><a class="wa" href="https://wa.me/' + esc(intl(l.phone)) + '" target="_blank" rel="noopener">וואטסאפ</a>'
+    + (l.code ? '<a class="lnk" href="https://land.tom-harush.co.il/dira/m/?c=' + esc(l.code) + '" target="_blank" rel="noopener">הדף האישי שלו</a>' : '') + '</div>'
+    + '<div class="do">מה עושים עכשיו: ' + esc(NEXT[l.status] || '') + '</div>'
+    + '<h3>מה הוא מחפש</h3><div class="grid2">'
+    + (ref ? '<div class="kv"><small>אזור</small><b>' + esc(l.areaText || 'אזור אחר') + '</b></div>'
+      : '<div class="kv"><small>חיפוש</small><b>' + esc(l.search || '') + '</b></div><div class="kv"><small>הגיע מהמודעה של</small><b>' + esc(l.propLabel || 'כניסה ישירה') + '</b></div>'
+      + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>')
+    + '</div>'
+    + (ref ? '' : '<h3>הדירות שנשלחו לו</h3>' + (matches ? '<ul class="matches">' + matches + '</ul>' : '<p>לא נמצאה דירה מתאימה במאגר.</p>'))
+    + '<h3>עדכון אחרי שיחה</h3><div class="form">'
+    + '<label for="cSt">סטטוס</label><select id="cSt">' + st.map(function(s){ return '<option value="' + s + '"' + (s === l.status ? ' selected' : '') + '>' + esc(STATUSES[s]) + '</option>'; }).join('') + '</select>'
+    + '<div id="tourBox"' + (l.status === 'tour_set' ? '' : ' hidden') + '><label for="cTour">מועד הסיור</label><input id="cTour" type="datetime-local" value="' + esc(f.tourAt || '') + '"></div>'
+    + (ref ? '' : '<div class="grid2"><div><label for="cMove">מתי רוצה לעבור (לשאול בשיחה)</label><select id="cMove">' + MOVE.map(function(o){ return '<option' + (f.moveWhen === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div>'
+      + '<div><label for="cSell">יש לו דירה למכור קודם?</label><select id="cSell">' + SELL.map(function(o){ return '<option' + (f.mustSellFirst === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></div></div>'
+      + (f.mustSellFirst === 'כן, צריך למכור קודם' ? '<div class="do">צריך למכור קודם: להציע לו הערכת שווי לדירה שלו. הוא גם מוכר פוטנציאלי.</div>' : ''))
+    + '<label for="cNote">מה היה בשיחה (חובה כשמשנים סטטוס)</label><textarea id="cNote" placeholder="למשל: דיברנו, מחפש 4 חדרים עם מעלית, רוצה לראות את קריניצי ביום ראשון"></textarea>'
+    + '<button class="save" id="cSave">שמירה</button><div class="msg" id="cMsg" role="status"></div></div>'
+    + '<h3>מה קרה עד עכשיו</h3><ul class="tl">' + hist + '</ul>'
+    + (ME && ME.role === 'admin' ? '<button class="del" id="cDel">מחיקת הליד' + (l.qa ? ' (ליד בדיקה)' : '') + '</button>' : '');
+  $('#ov').classList.add('on');
+  $('#mx').onclick = closeCard;
+  $('#cSt').onchange = function(e){ $('#tourBox').hidden = e.target.value !== 'tour_set'; };
+  $('#cSave').onclick = function(){ save(l); };
+  if ($('#cDel')) $('#cDel').onclick = function(){ if (!confirm('למחוק את ' + (l.displayName || l.name) + '? אי אפשר לבטל.')) return;
+    api('/yad2/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: l.id }) }).then(function(){ closeCard(); load(); }); };
+}
+function closeCard(){ OPEN = null; $('#ov').classList.remove('on'); }
+function save(l){
+  var st = $('#cSt').value, note = $('#cNote').value.trim(), msg = $('#cMsg'), b = $('#cSave');
+  var fields = {}; if ($('#cMove')) { fields.moveWhen = $('#cMove').value; fields.mustSellFirst = $('#cSell').value; }
+  if (st === 'tour_set') { if (!$('#cTour').value) { msg.className = 'msg err'; msg.textContent = 'סיור נקבע: צריך לבחור מועד.'; return; } fields.tourAt = $('#cTour').value; }
+  if (st !== l.status && !note) { msg.className = 'msg err'; msg.textContent = 'כדי לשנות סטטוס צריך לכתוב בקצרה מה היה בשיחה.'; $('#cNote').focus(); return; }
+  b.disabled = true; msg.className = 'msg'; msg.textContent = 'שומר...';
+  api('/yad2/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: l.id, status: st, note: note, fields: fields }) })
+    .then(function(j){ if (!j.ok) throw new Error(j.error || 'x'); msg.className = 'msg ok'; msg.textContent = 'נשמר.'; return load(); })
+    .catch(function(e){ b.disabled = false; msg.className = 'msg err'; msg.textContent = e.message === 'note required' ? 'כדי לשנות סטטוס צריך לכתוב מה היה בשיחה.' : 'לא נשמר. נסו שוב.'; });
+}
+
+$('#main').addEventListener('click', function(e){ var r = e.target.closest('.row'); if (r) { var l = LEADS.find(function(x){ return x.id === r.dataset.id; }); if (l) openCard(l); } });
+$('#main').addEventListener('keydown', function(e){ if (e.key === 'Enter') { var r = e.target.closest('.row'); if (r) r.click(); } });
+$('#ov').addEventListener('click', function(e){ if (e.target.id === 'ov') closeCard(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeCard(); });
+$('#tabs').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; TAB = b.dataset.t; [].slice.call($('#tabs').children).forEach(function(x){ x.classList.toggle('on', x === b); }); render(); });
+$('#out').onclick = function(){ fetch(API + '/auth/logout', { method: 'POST', headers: H() }).catch(function(){}).then(gone); };
+
+var s = null; try { s = JSON.parse(localStorage.getItem(SES_KEY) || 'null'); } catch (e) {}
+if (!s || !s.t || Date.parse(s.exp || 0) < Date.now()) { $('#login').style.display = 'flex'; return; }
+TOK = s.t;
+api('/auth/me').then(function(j){
+  if (!j.ok || j.mustChange) return gone();
+  ME = j.user; $('#who').textContent = ME.name || '';
+  $('#toMain').hidden = ME.role === 'broker';
+  $('#app').hidden = false;
+  return load().then(function(){ setInterval(function(){ if (!document.hidden) load(); }, 60000); });
+}).catch(function(){});
+})();
+</script>
+</body>
+</html>
