@@ -1148,13 +1148,22 @@ function deduplicateByPhone(){
   }
   for(const group of Object.values(phoneMap)){
     if(group.length<2)continue;
-    // Keep the most complete lead
+    // גל 08/11: ליד שהגיע מהשרת (יש לו lead_id) הוא הרשומה החיה. האיחוד לא מוחק אותו לעולם: נשאר החדש ביותר מביניהם,
+    // והישנים מתמזגים לתוכו עם ההערות וההיסטוריה שלהם. כפילות כזו נוצרת כשהרשומה הישנה נמחקה בשרת והאדם השאיר פרטים שוב
+    // (אחרת השרת ממזג לפי טלפון בעצמו). 08/11 ליד בדיקה חדש של גל נמחק כך, כי ליד ישן עם אותו טלפון היה "שלם" יותר.
+    // בלי ליד מהשרת בקבוצה: כמו פעם, נשאר השלם ביותר.
+    const live=group.filter(l=>l.lead_id).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
     group.sort((a,b)=>leadScore(b)-leadScore(a));
-    const keeper=group[0];
+    const keeper=live[0]||group[0];
     if(!keeper.history)keeper.history=[];
     if(!keeper.returnsCount)keeper.returnsCount=0;
-    for(let i=1;i<group.length;i++){
-      const dup=group[i];
+    for(const dup of group){
+      if(dup===keeper)continue;
+      if(dup.notes&&!String(keeper.notes||'').includes(dup.notes))keeper.notes=(keeper.notes?keeper.notes+'\n':'')+dup.notes;
+      if((dup.history||[]).length)keeper.history=keeper.history.concat(dup.history);
+      if(!keeper.doc&&dup.doc)keeper.doc=dup.doc;
+      if(!keeper.business&&dup.business)keeper.business=dup.business;
+      if(!keeper.remAt&&dup.remAt){keeper.remAt=dup.remAt;keeper.remNote=dup.remNote||'';}
       keeper.returnsCount++;
       keeper.history.unshift({
         date:(dup.createdAt||'').slice(0,10)||nowIso().slice(0,10),
