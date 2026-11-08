@@ -1141,6 +1141,9 @@ function deduplicateByPhone(){
   const phoneMap={};
   let mergedCount=0;
   for(const l of leads){
+    // גל 08/11: השרת שומר גם שורות של לידים שכבר נמחקו או מוזגו, והן חוזרות בכל טעינה. ליד מחוק לא משתתף באיחוד,
+    // אחרת הוא ממוזג שוב בכל טעינה ומוסיף שורת "חזר" כפולה (124 שורות בליד בדיקה), או נבחר כרשומה שנשארת והליד החי נמחק.
+    if(deletedIds.has(l.id))continue;
     const p=(l.phone||'').replace(/\D/g,'');
     if(!p)continue;
     if(!phoneMap[p])phoneMap[p]=[];
