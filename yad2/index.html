@@ -70,6 +70,8 @@ main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
 .kv small{display:block;color:var(--muted);font-size:12.5px}
 .kv b{font-weight:600}
 .act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.smv{background:#5b3fc4;color:#fff}
+.smvmsg{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1c1e22;color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;z-index:99;max-width:92vw;text-align:center}
 .act a,.act button{display:inline-flex;align-items:center;min-height:42px;padding:0 14px;border-radius:10px;font-weight:800;text-decoration:none;border:0;cursor:pointer}
 .call{background:var(--grad);color:#fff}.wa{background:#1fa855;color:#fff}.lnk{background:#F2F3F5;color:var(--ink)}
 .do{background:var(--tint);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-weight:600;margin-top:12px}
@@ -153,6 +155,11 @@ var NEXT = {
 var MOVE = ['', 'כמה שיותר מהר', 'בחצי השנה הקרובה', 'בשנה הקרובה', 'רק מתחילים לבדוק'];
 var SELL = ['', 'כן, צריך למכור קודם', 'כן, כבר מכרו', 'לא'];
 var WA = { sent: 'נשלח בוואטסאפ', pending: 'וואטסאפ ממתין ל־08:00', not_ready: 'וואטסאפ עוד לא פעיל', error: 'וואטסאפ נכשל', no_consent: 'בלי אישור וואטסאפ' };
+// גל 09/11: בסמוב אין קישור ישיר לשיחה אחת, אז הכפתור פותח את הצ׳אט ומעתיק את הטלפון של הקונה
+document.addEventListener('click', function(e){ var a = e.target.closest && e.target.closest('a.smv'); if (!a) return; var ph = a.getAttribute('data-phone') || '';
+  try { navigator.clipboard && navigator.clipboard.writeText(ph); } catch (x) {}
+  var t = document.createElement('div'); t.className = 'smvmsg'; t.setAttribute('role', 'status'); t.textContent = 'הטלפון ' + ph + ' הועתק. בסמוב: להדביק בחיפוש איש קשר'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 6000); });
+var N1 = { sent: 'נכנס לנדל״ן וואן', error: 'נדל״ן וואן נכשל', qa_skip: 'בדיקה, לא נשלח לנדל״ן וואן', not_ready: 'נדל״ן וואן לא מחובר' };
 var MS = { tourReqAt: 'ביקש סיור', tourSetAt: 'סיור נקבע', touredAt: 'הגיע לסיור', offerAt: 'הצעה', dealAt: 'עסקה' };
 
 function lateNew(l){ return l.status === 'new' && !l.qa && Date.now() - Date.parse(l.ts) > 3600e3; }
@@ -178,7 +185,8 @@ function propLabel(k){ var p = PROPS.find(function(x){ return x.key === k; }); r
 function rowHtml(l){
   var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + '</span>'; }).join('');
   var tags = (l.qa ? '<span class="tag qa">ליד בדיקה</span>' : '') + ((l.returns || []).length ? '<span class="tag ret">חזר ' + l.returns.length + '×</span>' : '')
-    + (lateNew(l) ? '<span class="tag late">עברה שעה בלי טיפול</span>' : '') + (l.wa && WA[l.wa.state] ? '<span class="tag">' + WA[l.wa.state] + '</span>' : '') + ms;
+    + (lateNew(l) ? '<span class="tag late">עברה שעה בלי טיפול</span>' : '') + (l.wa && WA[l.wa.state] ? '<span class="tag' + (l.wa.state === 'error' ? ' late' : '') + '">' + WA[l.wa.state] + '</span>' : '')
+    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
   return '<div class="row" tabindex="0" data-id="' + esc(l.id) + '"><div class="nm"><b>' + esc(l.displayName || l.name) + '</b><small>' + esc(when(l.ts)) + '</small></div>'
     + '<div class="sr">' + esc(l.kind === 'referral' ? 'מחפש ב' + (l.areaText || 'אזור אחר') : (l.search || '')) + '<div class="tags">' + tags + '</div></div>'
     + '<div class="src"><small>' + esc(l.propLabel ? 'מהמודעה של ' + l.propLabel : (l.kind === 'referral' ? 'הפניה' : 'כניסה ישירה')) + '</small></div>'
@@ -258,12 +266,13 @@ function openCard(l){
     + '<h2 id="mdTitle">' + esc(l.displayName || l.name) + (l.qa ? ' <span class="tag qa">ליד בדיקה</span>' : '') + '</h2>'
     + '<div class="tags" style="margin-top:6px"><span class="st ' + esc(l.status) + '">' + esc(STATUSES[l.status] || l.status) + '</span>' + ms + '</div>'
     + '<div class="act"><a class="call" href="tel:' + esc(l.phone) + '">חייג ' + esc(l.phone) + '</a><a class="wa" href="https://wa.me/' + esc(intl(l.phone)) + '" target="_blank" rel="noopener">וואטסאפ</a>'
+    + '<a class="smv" href="https://studio-ui.admin.smoove.io/whatsapp-chat" target="_blank" rel="noopener" data-phone="' + esc(l.phone) + '" title="פותח את הצ׳אט בסמוב ומעתיק את הטלפון. להדביק בחיפוש איש קשר">השיחה בסמוב</a>'
     + (l.code ? '<a class="lnk" href="https://land.tom-harush.co.il/dira/m/?c=' + esc(l.code) + '" target="_blank" rel="noopener">הדף האישי שלו</a>' : '') + '</div>'
     + '<div class="do">מה עושים עכשיו: ' + esc(NEXT[l.status] || '') + '</div>'
     + '<h3>מה הוא מחפש</h3><div class="grid2">'
     + (ref ? '<div class="kv"><small>אזור</small><b>' + esc(l.areaText || 'אזור אחר') + '</b></div>'
       : '<div class="kv"><small>חיפוש</small><b>' + esc(l.search || '') + '</b></div><div class="kv"><small>הגיע מהמודעה של</small><b>' + esc(l.propLabel || 'כניסה ישירה') + '</b></div>'
-      + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>')
+      + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>' + (l.n1 ? '<div class="kv"><small>נדל״ן וואן</small><b>' + esc(N1[l.n1.state] || l.n1.state) + '</b></div>' : ''))
     + '</div>'
     + (ref ? '' : '<h3>הדירות שנשלחו לו</h3>' + (matches ? '<ul class="matches">' + matches + '</ul>' : '<p>לא נמצאה דירה מתאימה במאגר.</p>'))
     + '<h3>עדכון אחרי שיחה</h3><div class="form">'
