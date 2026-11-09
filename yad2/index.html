@@ -91,6 +91,13 @@ th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);font
 th{background:#FAFAFB;font-size:13px;color:var(--muted)}
 .note{font-size:13px;color:var(--muted);margin:8px 0 14px}
 #login{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:20px}
+
+/* לשוניות המאגרים (גל 09/11): קדימה צורן, מחזור משכל, נכסי יד שנייה. לבנה עם טקסט שחור וקו תחתון מודגש, פעילה או בריחוף אדומה עם טקסט לבן */
+.dtabs{display:flex;gap:8px;align-items:flex-end;padding:16px 20px 0;flex-wrap:wrap}
+.dtab{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-width:180px;min-height:52px;padding:0 26px;font-family:inherit;font-size:17px;font-weight:800;line-height:1;color:#0f1216;background:#fff;border:1px solid rgba(15,18,22,.14);border-bottom:4px solid #0f1216;border-radius:12px 12px 0 0;text-decoration:none;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.dtab:hover,.dtab.on{background:#C2151C;color:#fff;border-color:#C2151C;border-bottom-color:#6e0a12}
+.dtab:focus-visible{outline:3px solid rgba(194,21,28,.45);outline-offset:2px}
+@media (max-width:640px){.dtabs{padding:12px 10px 0;gap:6px}.dtab{flex:1;min-width:0;padding:0 8px;font-size:15px;min-height:48px}}
 </style>
 </head>
 <body>
@@ -98,8 +105,13 @@ th{background:#FAFAFB;font-size:13px;color:var(--muted)}
 <div id="app" hidden>
 <header>
   <div class="logo"><img src="../logo.png" alt="קבוצת תום הרוש"><span>קבוצת תום הרוש</span><small>· נכסי יד שנייה</small></div>
-  <div class="hr"><span class="who" id="who"></span><a class="hbtn" id="toMain" href="../" hidden>הלידים של קדימה צורן</a><button class="hbtn" id="out">יציאה</button></div>
+  <div class="hr"><span class="who" id="who"></span><button class="hbtn" id="out">יציאה</button></div>
 </header>
+<div class="dtabs" id="dtabs" role="navigation" aria-label="המאגרים">
+  <a class="dtab" href="../">קדימה צורן</a>
+  <a class="dtab" href="../?pool=1">מחזור משכל</a>
+  <a class="dtab on" href="./" aria-current="page">נכסי יד שנייה</a>
+</div>
 <nav id="tabs">
   <button data-t="leads" class="on">לידים <span class="n" id="nLeads">0</span></button>
   <button data-t="refs">הפניות לאזור אחר <span class="n" id="nRefs">0</span></button>
@@ -296,7 +308,7 @@ TOK = s.t;
 api('/auth/me').then(function(j){
   if (!j.ok || j.mustChange) return gone();
   ME = j.user; $('#who').textContent = ME.name || '';
-  $('#toMain').hidden = ME.role === 'broker';
+  $('#dtabs').hidden = ME.role === 'broker';   // רז רואה רק את נכסי יד שנייה
   $('#app').hidden = false;
   return load().then(function(){ setInterval(function(){ if (!document.hidden) load(); }, 60000); });
 }).catch(function(){});
