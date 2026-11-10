@@ -317,6 +317,7 @@ TOK = s.t;
 api('/auth/me').then(function(j){
   if (!j.ok || j.mustChange) return gone();
   ME = j.user; $('#who').textContent = ME.name || '';
+  if (ME.role === 'lands') return location.replace('../');   // מיכל (גל 10/11): בלי נכסי יד שנייה, חוזרת לדשבורד הראשי
   $('#dtabs').hidden = ME.role === 'broker';   // רז רואה רק את נכסי יד שנייה
   $('#app').hidden = false;
   return load().then(function(){ setInterval(function(){ if (!document.hidden) load(); }, 60000); });

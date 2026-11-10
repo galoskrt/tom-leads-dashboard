@@ -1043,6 +1043,8 @@ async function doSetPass(){
 async function enterApp(){
   // רז (תפקיד broker, גל 05/11) רואה רק את נכסי יד שנייה. השרת חוסם אותו מכל השאר, וכאן רק מעבירים אותו לדף שלו.
   if(ME&&ME.role==='broker'){location.replace('yad2/');return;}
+  // מיכל (תפקיד lands, גל 10/11) בלי נכסי יד שנייה: השרת חוסם, וכאן רק מסתירים את הלשונית.
+  {const t=document.querySelector('.dtabs a[href="yad2/"]');if(t)t.style.display=(ME&&ME.role==='lands')?'none':'';}
   loginMsg('טוען נתונים...');
   sessionPass='server';
   await loadData();
