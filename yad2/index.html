@@ -274,7 +274,10 @@ function openCard(l){
       : '<div class="kv"><small>חיפוש</small><b>' + esc(l.search || '') + '</b></div><div class="kv"><small>הגיע מהמודעה של</small><b>' + esc(l.propLabel || 'כניסה ישירה') + '</b></div>'
       + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>' + (l.n1 ? '<div class="kv"><small>נדל״ן וואן</small><b>' + esc(N1[l.n1.state] || l.n1.state) + '</b></div>' : ''))
     + '</div>'
-    + (ref ? '' : '<h3>הדירות שנשלחו לו</h3>' + (matches ? '<ul class="matches">' + matches + '</ul>' : '<p>לא נמצאה דירה מתאימה במאגר.</p>'))
+    + (ref ? '' : l.single
+      ? '<h3>עמוד הנכס שנשלח לו</h3><ul class="matches"><li>' + esc(propLabel(l.single)) + (l.singleTour ? ' · <b style="color:var(--amber)">ביקש לראות</b>' : '') + '</li></ul>'
+        + (matches ? '<h3>עוד דירות במלאי שמתאימות לו (לא נשלחו, להציע בטלפון)</h3><ul class="matches">' + matches + '</ul>' : '')
+      : '<h3>הדירות שנשלחו לו</h3>' + (matches ? '<ul class="matches">' + matches + '</ul>' : '<p>לא נמצאה דירה מתאימה במאגר.</p>'))
     + '<h3>עדכון אחרי שיחה</h3><div class="form">'
     + '<label for="cSt">סטטוס</label><select id="cSt">' + st.map(function(s){ return '<option value="' + s + '"' + (s === l.status ? ' selected' : '') + '>' + esc(STATUSES[s]) + '</option>'; }).join('') + '</select>'
     + '<div id="tourBox"' + (l.status === 'tour_set' ? '' : ' hidden') + '><label for="cTour">מועד הסיור</label><input id="cTour" type="datetime-local" value="' + esc(f.tourAt || '') + '"></div>'
