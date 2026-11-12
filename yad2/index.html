@@ -57,6 +57,32 @@ main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
 .st.toured,.st.offer,.st.deal{background:#e8f5ee;color:var(--green)}
 .st.not_relevant,.st.referred{color:var(--muted)}
 .empty{background:#fff;border:1px dashed var(--line2);border-radius:14px;padding:22px;text-align:center;color:var(--muted)}
+/* ביצועים ועלויות לפי נכס (גל 12/11) */
+.rules{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.rules b{color:var(--red2)}
+.rules ul{margin:6px 18px 0 0;padding:0}
+.rules li{margin:2px 0}
+.pcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:18px}
+.pc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;border-top:5px solid #c9ccd1}
+.pc.go{border-top-color:var(--green)}.pc.warn{border-top-color:#e39b00}.pc.stop{border-top-color:var(--red)}
+.pch{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pch b{font-size:17px}
+.pst{font-size:13px;font-weight:800;border-radius:999px;padding:4px 12px;background:#F2F3F5;color:var(--muted)}
+.pc.go .pst{background:#e8f5ee;color:var(--green)}.pc.warn .pst{background:#fff4e5;color:var(--amber)}.pc.stop .pst{background:#fdecec;color:var(--red2)}
+.pwhy{margin:8px 0 10px;font-size:14px;font-weight:600}
+.pc.stop .pwhy{color:var(--red2)}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pg div{background:#F7F7F7;border-radius:10px;padding:8px 10px}
+.pg b{display:block;font-size:19px;font-weight:900;line-height:1.1}
+.pg span{font-size:12px;color:var(--muted)}
+.pg div.hi b{color:var(--red2)}
+.pbar{margin-top:10px;font-size:13px;color:var(--muted)}
+.pbar i{display:block;height:8px;border-radius:999px;background:#eee;margin-top:4px;overflow:hidden}
+.pbar i em{display:block;height:100%;background:var(--grad);border-radius:999px}
+.pwk{margin-top:10px;font-size:13px;display:flex;gap:10px;flex-wrap:wrap}
+.pwk span{background:#F7F7F7;border-radius:999px;padding:3px 10px}
+.pwk .up{color:var(--green)}.pwk .dn{color:var(--red2)}
+@media (max-width:640px){.pg{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:760px){.row{grid-template-columns:1fr auto}.row .sr,.row .src{grid-column:1/-1}}
 /* כרטיס ליד */
 .ov{position:fixed;inset:0;background:rgba(15,18,22,.45);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow-y:auto}
@@ -118,7 +144,7 @@ th{background:#FAFAFB;font-size:13px;color:var(--muted)}
   <button data-t="leads" class="on">לידים <span class="n" id="nLeads">0</span></button>
   <button data-t="refs">הפניות לאזור אחר <span class="n" id="nRefs">0</span></button>
   <button data-t="props">הנכסים</button>
-  <button data-t="perf">ביצועים</button>
+  <button data-t="perf">ביצועים ועלויות</button>
 </nav>
 <main id="main"></main>
 </div>
@@ -181,7 +207,7 @@ function render(){
   if (TAB === 'props') return renderProps(m);
   return renderPerf(m);
 }
-function propLabel(k){ var p = PROPS.find(function(x){ return x.key === k; }); return p ? (p.street || '') + ' ' + (p.number || '') + ', ' + (p.city || '') : k; }
+function propLabel(k){ var p = PROPS.find(function(x){ return x.key === k; }); return p ? ((p.street || '') + ' ' + (p.number || '')).trim() + ', ' + (p.city || '') : k; }
 function rowHtml(l){
   var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + '</span>'; }).join('');
   var tags = (l.qa ? '<span class="tag qa">ליד בדיקה</span>' : '') + ((l.returns || []).length ? '<span class="tag ret">חזר ' + l.returns.length + '×</span>' : '')
@@ -234,23 +260,62 @@ function renderProps(m){
   });
   void admin;
 }
+/* ביצועים ועלויות לפי נכס (גל 12/11: "שנדע בדיוק מתי עוצרים ומתי ממשיכים"). הכללים שסוכמו עם תום (08-10/11):
+   60 ₪ ליום לנכס; נכס שהוציא 1,000 ₪ בלי סיור שנקבע מוחלף; מודדים עלות לסיור ולא עלות לליד.
+   הייחוס = ההיסטוריה של תום עצמו (40 קמפיינים 2023-2025, מטא + BMBY): 55 ₪ לליד, 617 ₪ לפגישה. */
+var RULES = { daily: 60, swapAt: 1000, leadAvg: 55, tourAvg: 617 };
+function ilDay(off, t){ return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date((t ? Date.parse(t) : Date.now()) + (off || 0) * 864e5)); }
+function perfCard(k, s, real){
+  var L = real.filter(function(l){ return l.prop === k; });
+  var T = L.filter(function(l){ return l.milestones && l.milestones.tourReqAt; });
+  var S = L.filter(function(l){ return l.milestones && (l.milestones.tourSetAt || l.milestones.touredAt); });
+  var V = L.filter(function(l){ return l.milestones && l.milestones.touredAt; });
+  var days = s.days || [], active = days.filter(function(d){ return d.spend > 0; }).length;
+  var d7 = ilDay(-6), d14 = ilDay(-13);
+  var sum = function(from, to){ return days.filter(function(d){ return d.d >= from && (!to || d.d < to); }).reduce(function(a, d){ return a + d.spend; }, 0); };
+  var cnt = function(arr, from, to){ return arr.filter(function(l){ var d = ilDay(0, l.ts); return d >= from && (!to || d < to); }).length; };
+  var sp7 = sum(d7), spP = sum(d14, d7), l7 = cnt(L, d7), lP = cnt(L, d14, d7);
+  var cpl = L.length ? s.spend / L.length : 0, cpt = S.length ? s.spend / S.length : 0;
+  var st, why;
+  if (!s.spend) { st = 'idle'; why = 'הקמפיין עוד לא הוציא כסף.'; }
+  else if (s.spend >= RULES.swapAt && !S.length) { st = 'stop'; why = 'עבר ' + nis(RULES.swapAt) + ' בלי סיור שנקבע. לפי הכלל עם תום: לעצור את המודעה ולהחליף לנכס אחר.'; }
+  else if (S.length && cpt > RULES.tourAvg * 2) { st = 'warn'; why = 'עלות לסיור ' + nis(cpt) + ', פי 2 מהממוצע ההיסטורי של תום (' + nis(RULES.tourAvg) + '). לבדוק את המודעה והקהל לפני שממשיכים.'; }
+  else if (!S.length && s.spend >= RULES.swapAt * 0.6) { st = 'warn'; why = 'כבר ' + nis(s.spend) + ' בלי סיור שנקבע. נשארו ' + nis(RULES.swapAt - s.spend) + ' עד נקודת ההחלטה. לוודא שרז חוזר לכל ליד.'; }
+  else if (L.length >= 5 && cpl > RULES.leadAvg * 2) { st = 'warn'; why = 'עלות לליד ' + nis(cpl) + ', כפולה מהממוצע ההיסטורי (' + nis(RULES.leadAvg) + '). לבדוק את המודעה, הקהל והשאלון.'; }
+  else { st = 'go'; why = S.length ? 'יש סיורים והעלות בטווח. ממשיכים.' : 'בתוך תקציב ההחלטה (' + nis(RULES.swapAt) + ' בלי סיור). ממשיכים, ועוקבים אחרי בקשות הסיור.'; }
+  var stName = { idle: 'עוד לא רץ', go: 'ממשיכים', warn: 'שימו לב', stop: 'לעצור ולהחליף' }[st];
+  var delta = function(a, b, money){ if (!b) return ''; var p = Math.round(100 * (a - b) / b); return ' <small class="' + (money ? (p > 0 ? 'dn' : 'up') : (p >= 0 ? 'up' : 'dn')) + '">' + (p > 0 ? '+' : '') + p + '%</small>'; };
+  var bar = (!S.length && s.spend) ? '<div class="pbar">' + nis(s.spend) + ' מתוך ' + nis(RULES.swapAt) + ' בלי סיור שנקבע<i><em style="width:' + Math.min(100, Math.round(100 * s.spend / RULES.swapAt)) + '%"></em></i></div>' : '';
+  return '<div class="pc ' + st + '"><div class="pch"><b>' + esc(propLabel(k)) + '</b><span class="pst">' + stName + '</span></div><div class="pwhy">' + esc(why) + '</div>'
+    + '<div class="pg">'
+    + '<div><b>' + nis(s.spend) + '</b><span>הוצאה סה״כ' + (active ? ' · ' + active + ' ימים · ' + nis(s.spend / active) + ' ליום' : '') + '</span></div>'
+    + '<div><b>' + L.length + '</b><span>לידים אצלנו' + (s.meta_leads != null ? ' · לפי מטא ' + s.meta_leads : '') + '</span></div>'
+    + '<div' + (cpl > RULES.leadAvg * 2 ? ' class="hi"' : '') + '><b>' + (L.length ? nis(cpl) : '–') + '</b><span>עלות לליד · ייחוס ' + nis(RULES.leadAvg) + '</span></div>'
+    + '<div><b>' + T.length + '</b><span>ביקשו סיור' + (T.length ? ' · ' + nis(s.spend / T.length) + ' לבקשה' : '') + '</span></div>'
+    + '<div><b>' + S.length + '</b><span>סיורים נקבעו · הגיעו ' + V.length + '</span></div>'
+    + '<div' + (cpt > RULES.tourAvg * 2 ? ' class="hi"' : '') + '><b>' + (S.length ? nis(cpt) : '–') + '</b><span>עלות לסיור · ייחוס ' + nis(RULES.tourAvg) + '</span></div>'
+    + '</div>' + bar
+    + '<div class="pwk"><span>7 ימים: ' + nis(sp7) + delta(sp7, spP, true) + '</span><span>לידים: ' + l7 + delta(l7, lP) + '</span><span>עלות לליד: ' + (l7 ? nis(sp7 / l7) : '–') + (l7 && lP ? delta(sp7 / l7, spP / lP, true) : '') + '</span><span>7 הקודמים: ' + nis(spP) + ' · ' + lP + ' לידים</span></div>'
+    + '</div>';
+}
 function renderPerf(m){
   m.innerHTML = '<div class="empty">טוען...</div>';
-  api('/yad2/stats?days=30').then(function(j){
+  api('/yad2/stats?days=90').then(function(j){
+    var real = LEADS.filter(function(l){ return !l.qa && l.kind !== 'referral'; });
+    var camps = j.campaigns || [], sp = j.spend || {};
+    var cards = camps.map(function(k){ return perfCard(k, sp[k] || { spend: 0, days: [], meta_leads: 0 }, real); }).join('');
+    var rules = '<div class="rules"><b>איך מחליטים (מה שסוכם עם תום):</b><ul>'
+      + '<li>כל נכס רץ על ' + nis(RULES.daily) + ' ליום. המדד הוא <b>עלות לסיור</b>, לא עלות לליד.</li>'
+      + '<li>נכס שהוציא <b>' + nis(RULES.swapAt) + ' בלי סיור שנקבע</b> עוצרים ומחליפים לנכס אחר מהמלאי.</li>'
+      + '<li>ייחוס מההיסטוריה של תום (40 קמפיינים, 2023-2025): ' + nis(RULES.leadAvg) + ' לליד, ' + nis(RULES.tourAvg) + ' לפגישה. פי 2 מזה = "שימו לב".</li>'
+      + '<li>ההוצאה מגיעה ממטא ומתעדכנת כל 10 דקות. הלידים נספרים אצלנו (בלי לידי בדיקה), ומטא סופרת לידים משלה לפי ייחוס, לכן המספרים יכולים להיות שונים.</li></ul></div>';
     var order = ['view', 'area', 'rooms', 'budget', 'must', 'contact', 'done'], names = { view: 'נכנסו לשאלון', area: 'שאלת האזור', rooms: 'שאלת החדרים', budget: 'שאלת התקציב', must: 'מה חובה', contact: 'מסך הפרטים', done: 'השאירו פרטים' };
     var sum = {}; (j.steps || []).forEach(function(s){ if (s.src !== 'paid') return; sum[s.step] = (sum[s.step] || 0) + s.n; });
     var rows = order.map(function(k, i){ var n = sum[k] || 0, prev = i ? (sum[order[i - 1]] || 0) : 0; return '<tr><td>' + names[k] + '</td><td>' + n + '</td><td>' + (i && prev ? Math.round(100 * n / prev) + '%' : '') + '</td></tr>'; }).join('');
-    var real = LEADS.filter(function(l){ return !l.qa && l.kind !== 'referral'; });
-    var keys = Object.keys(j.spend || {}).filter(function(k){ return k.charAt(0) !== '_'; });
-    var camp = (j.campaigns || []).map(function(k){
-      var s = (j.spend || {})[k] || { spend: 0 }, L = real.filter(function(l){ return l.prop === k; }), T = L.filter(function(l){ return l.milestones && l.milestones.tourReqAt; }), V = L.filter(function(l){ return l.milestones && l.milestones.touredAt; });
-      return '<tr><td>' + esc(propLabel(k)) + '</td><td>' + nis(s.spend || 0) + '</td><td>' + L.length + '</td><td>' + (L.length ? nis(s.spend / L.length) : '') + '</td><td>' + T.length + '</td><td>' + V.length + '</td><td>' + (V.length ? nis(s.spend / V.length) : '') + '</td></tr>';
-    }).join('');
-    void keys;
-    m.innerHTML = '<h3 style="margin:4px 0 8px">עלות לפי נכס · 30 הימים האחרונים</h3>'
-      + (camp ? '<table><thead><tr><th>נכס</th><th>הוצאה</th><th>לידים</th><th>עלות לליד</th><th>ביקשו סיור</th><th>הגיעו לסיור</th><th>עלות לסיור</th></tr></thead><tbody>' + camp + '</tbody></table>' : '<div class="empty">הקמפיינים עוד לא מחוברים. ההוצאה תופיע כאן מהיום שהם עולים.</div>')
-      + ((j.spend || {})._error ? '<p class="note">מטא לא החזירה נתונים כרגע.</p>' : '')
-      + '<h3 style="margin:18px 0 8px">איפה עוצרים בשאלון · תנועה ממומנת</h3><table><thead><tr><th>שלב</th><th>אנשים</th><th>מהשלב הקודם</th></tr></thead><tbody>' + rows + '</tbody></table>'
+    m.innerHTML = '<h3 style="margin:4px 0 8px">ביצועים ועלויות לפי נכס · מאז העלייה לאוויר</h3>' + rules
+      + (cards ? '<div class="pcs">' + cards + '</div>' : '<div class="empty">הקמפיינים עוד לא מחוברים. ההוצאה תופיע כאן מהיום שהם עולים.</div>')
+      + (sp._error ? '<p class="note">מטא לא החזירה נתונים כרגע (' + esc(sp._error) + '). הלידים נכונים, ההוצאה תתעדכן ברענון הבא.</p>' : '')
+      + '<h3 style="margin:18px 0 8px">איפה עוצרים בשאלון · תנועה ממומנת · 90 יום</h3><table><thead><tr><th>שלב</th><th>אנשים</th><th>מהשלב הקודם</th></tr></thead><tbody>' + rows + '</tbody></table>'
       + '<p class="note">מחוץ לאזור: ' + ((j.steps || []).filter(function(s){ return s.step === 'other'; }).reduce(function(a, s){ return a + s.n; }, 0)) + ' בחרו "אזור אחר", ' + LEADS.filter(function(l){ return l.kind === 'referral'; }).length + ' ביקשו הפניה.</p>';
   }).catch(function(){ m.innerHTML = '<div class="empty">לא הצלחתי לטעון את הביצועים.</div>'; });
 }
