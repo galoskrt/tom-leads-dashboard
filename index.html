@@ -2514,7 +2514,7 @@ async function renderStatsModal(){
   body.innerHTML=`<div class="empty"><h3>⏳ טוען נתונים חיים...</h3></div>`;
   let j;
   try{
-    const r=await fetch(`${WORKER_URL}/meta-stats?token=${encodeURIComponent(DASH_TOKEN)}&range=${range}`);
+    const r=await fetch(`${WORKER_URL}/meta-stats?range=${range}`,{headers:authH(),cache:'no-store'});
     j=await r.json();
     if(!r.ok||j.error){body.innerHTML=`<div class="empty"><h3>❌ שגיאה</h3><p>${esc(j&&j.error||'שגיאת רשת')}</p></div>`;return;}
   }catch(e){body.innerHTML=`<div class="empty"><h3>❌ שגיאת רשת</h3><p>${esc(e.message)}</p></div>`;return;}
@@ -2697,7 +2697,7 @@ function abMet(arr){
 async function abSection(){
   let ms,L,fb=null;
   try{
-    const r1=await fetch(`${WORKER_URL}/meta-stats?token=${encodeURIComponent(DASH_TOKEN)}&range=maximum`);
+    const r1=await fetch(`${WORKER_URL}/meta-stats?range=maximum`,{headers:authH(),cache:'no-store'});
     const r2=await fetch(`${WORKER_URL}/leads`,{headers:{'Authorization':`Bearer ${DASH_TOKEN}`}});
     ms=await r1.json(); L=((await r2.json()).leads)||[];
   }catch(e){return `<div class="empty"><h3>❌ שגיאת רשת</h3><p>${esc(e.message)}</p></div>`;}
