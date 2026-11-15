@@ -180,7 +180,21 @@ var NEXT = {
 };
 var MOVE = ['', 'כמה שיותר מהר', 'בחצי השנה הקרובה', 'בשנה הקרובה', 'רק מתחילים לבדוק'];
 var SELL = ['', 'כן, צריך למכור קודם', 'כן, כבר מכרו', 'לא'];
-var WA = { sent: 'נשלח בוואטסאפ', pending: 'וואטסאפ ממתין ל־08:00', not_ready: 'וואטסאפ עוד לא פעיל', error: 'וואטסאפ נכשל', no_consent: 'בלי אישור וואטסאפ' };
+var WA = { sent: 'נשלח בוואטסאפ', pending: 'וואטסאפ ממתין', not_ready: 'וואטסאפ עוד לא פעיל', error: 'וואטסאפ נכשל', no_consent: 'בלי אישור וואטסאפ', off: 'וואטסאפ כבוי לסוג הזה (גל 15/11)' };
+// 15/11 (גל): מה הקונה סימן בשאלון, תשובה-תשובה. הקודים והתוויות כמו בשאלון land.tom-harush.co.il/dira
+var ANS = { area: { rg: 'רמת גן', giv: 'גבעתיים', tlv: 'תל אביב', any: 'כל אחד מהשלושה', other: 'אזור אחר' },
+  rooms: { r2: '2 עד 2.5 חדרים', r3: '3 עד 3.5 חדרים', r4: '4 עד 4.5 חדרים', r5: '5 עד 5.5 חדרים', r6: '6 חדרים ומעלה' },
+  budget: { b1: 'עד 2.5 מיליון ₪', b2: '2.5 עד 3 מיליון ₪', b3: '3 עד 3.5 מיליון ₪', b4: '3.5 עד 4.5 מיליון ₪', b5: 'מעל 4.5 מיליון ₪' },
+  must: { mamad: 'ממ״ד', parking: 'חניה', elevator: 'מעלית', balcony: 'מרפסת', none: 'אין דרישה מיוחדת' } };
+var ANS_Q = { area: 'באיזה אזור מחפש', rooms: 'כמה חדרים', budget: 'תקציב', must: 'חייב בדירה' };
+function ansRows(a){
+  var keys = ['area', 'rooms', 'budget', 'must'].concat(Object.keys(a).filter(function(k){ return ['area', 'rooms', 'budget', 'must'].indexOf(k) < 0; }));
+  return keys.filter(function(k){ return a[k] != null && a[k] !== ''; }).map(function(k){
+    var v = a[k], m = ANS[k] || {};
+    var txt = Array.isArray(v) ? v.map(function(x){ return m[x] || x; }).join(', ') : (m[v] || String(v));
+    return '<div class="kv"><small>' + esc(ANS_Q[k] || k) + '</small><b>' + esc(txt) + '</b></div>';
+  }).join('');
+}
 // גל 09/11: בסמוב אין קישור ישיר לשיחה אחת, אז הכפתור פותח את הצ׳אט ומעתיק את הטלפון של הקונה
 document.addEventListener('click', function(e){ var a = e.target.closest && e.target.closest('a.smv'); if (!a) return; var ph = a.getAttribute('data-phone') || '';
   try { navigator.clipboard && navigator.clipboard.writeText(ph); } catch (x) {}
@@ -339,6 +353,7 @@ function openCard(l){
       : '<div class="kv"><small>חיפוש</small><b>' + esc(l.search || '') + '</b></div><div class="kv"><small>הגיע מהמודעה של</small><b>' + esc(l.propLabel || 'כניסה ישירה') + '</b></div>'
       + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>' + (l.n1 ? '<div class="kv"><small>נדל״ן וואן</small><b>' + esc(N1[l.n1.state] || l.n1.state) + '</b></div>' : ''))
     + '</div>'
+    + (ref || !Object.keys(a).length ? '' : '<h3>מה סימן בשאלון</h3><div class="grid2">' + ansRows(a) + '</div>')
     + (ref ? '' : l.single
       ? '<h3>עמוד הנכס שנשלח לו</h3><ul class="matches"><li>' + esc(propLabel(l.single)) + (l.singleTour ? ' · <b style="color:var(--amber)">ביקש לראות</b>' : '') + '</li></ul>'
         + (matches ? '<h3>עוד דירות במלאי שמתאימות לו (לא נשלחו, להציע בטלפון)</h3><ul class="matches">' + matches + '</ul>' : '')
