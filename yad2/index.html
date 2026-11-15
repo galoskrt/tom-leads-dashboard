@@ -51,6 +51,11 @@ main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
 .tag.ret{background:#eaf1ff;color:var(--blue)}
 .tag.ms{background:#e8f5ee;color:var(--green)}
 .tag.late{background:#fdecec;color:var(--red2)}
+.tag.fit{background:#e8f5ee;color:var(--green);font-weight:800}
+.fit{margin:12px 0 4px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.5}
+.fit.full{background:#e8f5ee;color:var(--green);border:1px solid #bfe3cc}.fit.full b{font-size:15px}
+.fit.gap{background:#fff4e5;color:var(--amber);border:1px solid #f3dcb3}
+.fit.check{background:#eaf1ff;color:var(--blue);border:1px solid #c9d9f5}
 .st{font-size:13px;font-weight:800;border-radius:999px;padding:5px 12px;white-space:nowrap;background:#F2F3F5}
 .st.new{background:#fdecec;color:var(--red2)}
 .st.tour_req,.st.tour_set{background:#fff4e5;color:var(--amber)}
@@ -195,6 +200,36 @@ function ansRows(a){
     return '<div class="kv"><small>' + esc(ANS_Q[k] || k) + '</small><b>' + esc(txt) + '</b></div>';
   }).join('');
 }
+// 15/11 (גל, אחרי הליד של הצנחנים): "לרשום גם בדשבורד וגם בדוח שהנכס מתאים לו בכל הפרמטרים שהוזנו בשאלון ושיש התאמה חזקה".
+// אותם טווחים כמו בשאלון ובשרת. מלאה = עיר שבחר, חדרים בתוך הטווח, מחיר בתוך התקציב, וכל דרישה שסימן קיימת בנכס. לא ידוע = "לבדוק". אותה לוגיקה בדוח (yad2report.js).
+var FIT_CITIES = { rg: ['rg'], giv: ['giv'], tlv: ['tlv'], any: ['rg', 'giv', 'tlv'] };
+var FIT_ROOMS = { r2: [2, 2.5], r3: [3, 3.5], r4: [4, 4.5], r5: [5, 5.5], r6: [6, 99] };
+var FIT_BUDGET = { b1: [0, 2500000], b2: [2500000, 3000000], b3: [3000000, 3500000], b4: [3500000, 4500000], b5: [4500000, 99000000] };
+var FIT_MUST = { mamad: 'ממ״ד', parking: 'חניה', elevator: 'מעלית', balcony: 'מרפסת' };
+function fitProp(p, a){
+  if (!p || !a || !a.area || !a.rooms || !a.budget) return null;
+  var ok = [], gaps = [], unknown = [];
+  var cities = FIT_CITIES[a.area] || [];
+  if (cities.indexOf(p.cityKey) >= 0) ok.push('אזור'); else gaps.push('האזור (סימן ' + (ANS.area[a.area] || a.area) + ')');
+  var R = FIT_ROOMS[a.rooms];
+  if (R && p.rooms == null) unknown.push('חדרים'); else if (R && p.rooms >= R[0] && p.rooms <= R[1]) ok.push('חדרים'); else if (R) gaps.push(p.rooms > R[1] ? 'יותר חדרים ממה שסימן' : 'פחות חדרים ממה שסימן');
+  var B = FIT_BUDGET[a.budget];
+  if (B && p.price == null) unknown.push('מחיר'); else if (B && p.price >= B[0] && p.price <= B[1]) ok.push('תקציב'); else if (B) gaps.push(p.price > B[1] ? 'מעל התקציב שסימן' : 'מתחת לתקציב שסימן');
+  (a.must || []).forEach(function(k){
+    if (!FIT_MUST[k]) return;
+    var v = k === 'parking' ? (p.parking == null ? null : p.parking > 0) : k === 'balcony' ? (p.balcony == null ? null : !!p.balcony) : p[k];
+    if (v === true) ok.push(FIT_MUST[k]); else if (v === false) gaps.push(FIT_MUST[k] + ' (ביקש, בנכס אין)'); else unknown.push(FIT_MUST[k]);
+  });
+  return { level: gaps.length ? 'gap' : unknown.length ? 'check' : 'full', ok: ok, gaps: gaps, unknown: unknown };
+}
+function leadFit(l){ if (l.kind === 'referral') return null; var k = l.single || l.prop; if (!k) return null; return fitProp(PROPS.find(function(x){ return x.key === k; }), l.answers || {}); }
+function fitTag(l){ var f = leadFit(l); return f && f.level === 'full' ? '<span class="tag fit">התאמה מלאה</span>' : ''; }
+function fitBox(l){
+  var f = leadFit(l); if (!f) return '';
+  if (f.level === 'full') return '<div class="fit full"><b>התאמה מלאה</b><br>הנכס מתאים לו בכל מה שסימן בשאלון: ' + esc(f.ok.join(', ')) + '. התאמה חזקה בין הקונה לנכס.</div>';
+  if (f.level === 'check') return '<div class="fit check"><b>מתאים ב' + esc(f.ok.join(', ')) + '</b><br>לבדוק עם רז: ' + esc(f.unknown.join(', ')) + ' (לא ידוע בנכס).</div>';
+  return '<div class="fit gap"><b>פער: ' + esc(f.gaps.join(' · ')) + '</b>' + (f.ok.length ? '<br>מתאים ב' + esc(f.ok.join(', ')) + '.' : '') + '</div>';
+}
 // גל 09/11: בסמוב אין קישור ישיר לשיחה אחת, אז הכפתור פותח את הצ׳אט ומעתיק את הטלפון של הקונה
 document.addEventListener('click', function(e){ var a = e.target.closest && e.target.closest('a.smv'); if (!a) return; var ph = a.getAttribute('data-phone') || '';
   try { navigator.clipboard && navigator.clipboard.writeText(ph); } catch (x) {}
@@ -226,7 +261,7 @@ function rowHtml(l){
   var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + '</span>'; }).join('');
   var tags = (l.qa ? '<span class="tag qa">ליד בדיקה</span>' : '') + ((l.returns || []).length ? '<span class="tag ret">חזר ' + l.returns.length + '×</span>' : '')
     + (lateNew(l) ? '<span class="tag late">עברה שעה בלי טיפול</span>' : '') + (l.wa && WA[l.wa.state] ? '<span class="tag' + (l.wa.state === 'error' ? ' late' : '') + '">' + WA[l.wa.state] + '</span>' : '')
-    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
+    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + fitTag(l) + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
   return '<div class="row" tabindex="0" data-id="' + esc(l.id) + '"><div class="nm"><b>' + esc(l.displayName || l.name) + '</b><small>' + esc(when(l.ts)) + '</small></div>'
     + '<div class="sr">' + esc(l.kind === 'referral' ? 'מחפש ב' + (l.areaText || 'אזור אחר') : (l.search || '')) + '<div class="tags">' + tags + '</div></div>'
     + '<div class="src"><small>' + esc(l.propLabel ? 'מהמודעה של ' + l.propLabel : (l.kind === 'referral' ? 'הפניה' : 'כניסה ישירה')) + '</small></div>'
@@ -353,7 +388,7 @@ function openCard(l){
       : '<div class="kv"><small>חיפוש</small><b>' + esc(l.search || '') + '</b></div><div class="kv"><small>הגיע מהמודעה של</small><b>' + esc(l.propLabel || 'כניסה ישירה') + '</b></div>'
       + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>' + (l.n1 ? '<div class="kv"><small>נדל״ן וואן</small><b>' + esc(N1[l.n1.state] || l.n1.state) + '</b></div>' : ''))
     + '</div>'
-    + (ref || !Object.keys(a).length ? '' : '<h3>מה סימן בשאלון</h3><div class="grid2">' + ansRows(a) + '</div>')
+    + (ref || !Object.keys(a).length ? '' : '<h3>מה סימן בשאלון</h3><div class="grid2">' + ansRows(a) + '</div>' + fitBox(l))
     + (ref ? '' : l.single
       ? '<h3>עמוד הנכס שנשלח לו</h3><ul class="matches"><li>' + esc(propLabel(l.single)) + (l.singleTour ? ' · <b style="color:var(--amber)">ביקש לראות</b>' : '') + '</li></ul>'
         + (matches ? '<h3>עוד דירות במלאי שמתאימות לו (לא נשלחו, להציע בטלפון)</h3><ul class="matches">' + matches + '</ul>' : '')
