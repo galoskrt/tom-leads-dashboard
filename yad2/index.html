@@ -214,7 +214,7 @@ function fitProp(p, a){
   var R = FIT_ROOMS[a.rooms];
   if (R && p.rooms == null) unknown.push('חדרים'); else if (R && p.rooms >= R[0] && p.rooms <= R[1]) ok.push('חדרים'); else if (R) gaps.push(p.rooms > R[1] ? 'יותר חדרים ממה שסימן' : 'פחות חדרים ממה שסימן');
   var B = FIT_BUDGET[a.budget];
-  if (B && p.price == null) unknown.push('מחיר'); else if (B && p.price >= B[0] && p.price <= B[1]) ok.push('תקציב'); else if (B) gaps.push(p.price > B[1] ? 'מעל התקציב שסימן' : 'מתחת לתקציב שסימן');
+  if (B && p.price == null) unknown.push('מחיר'); else if (B && p.price <= B[1]) ok.push('תקציב'); else if (B) gaps.push('מעל התקציב שסימן');   // 16/11: מחיר מתחת לתקציב אינו פער
   (a.must || []).forEach(function(k){
     if (!FIT_MUST[k]) return;
     var v = k === 'parking' ? (p.parking == null ? null : p.parking > 0) : k === 'balcony' ? (p.balcony == null ? null : !!p.balcony) : p[k];
@@ -361,10 +361,18 @@ function renderPerf(m){
     var order = ['view', 'area', 'rooms', 'budget', 'must', 'contact', 'done'], names = { view: 'נכנסו לשאלון', area: 'שאלת האזור', rooms: 'שאלת החדרים', budget: 'שאלת התקציב', must: 'מה חובה', contact: 'מסך הפרטים', done: 'השאירו פרטים' };
     var sum = {}; (j.steps || []).forEach(function(s){ if (s.src !== 'paid') return; sum[s.step] = (sum[s.step] || 0) + s.n; });
     var rows = order.map(function(k, i){ var n = sum[k] || 0, prev = i ? (sum[order[i - 1]] || 0) : 0; return '<tr><td>' + names[k] + '</td><td>' + n + '</td><td>' + (i && prev ? Math.round(100 * n / prev) + '%' : '') + '</td></tr>'; }).join('');
+    // 16/11 (גל): דף הנחיתה החדש (עמוד הנכס + שאלון פתוח בתחתית) נמדד בשמות p_*. כל צעד = כמה הגיעו אליו. לפי נכס ובסך הכול.
+    var pOrder = ['p_view', 'p_cta', 'p_quiz', 'p_rooms', 'p_budget', 'p_must', 'p_done'], pNames = { p_view: 'נכנסו לדף הנכס', p_cta: 'לחצו על "לתיאום סיור"', p_quiz: 'הגיעו לשאלון', p_rooms: 'ענו על החדרים', p_budget: 'ענו על התקציב', p_must: 'ענו מה חובה', p_done: 'השאירו פרטים' };
+    var pSum = { _all: {} }; (j.steps || []).forEach(function(s){ if (s.src !== 'paid' || s.step.indexOf('p_') !== 0) return; (pSum[s.prop] = pSum[s.prop] || {})[s.step] = ((pSum[s.prop] || {})[s.step] || 0) + s.n; pSum._all[s.step] = (pSum._all[s.step] || 0) + s.n; });
+    var pKeys = camps.filter(function(k){ return pSum[k]; });
+    var pRows = pOrder.map(function(k, i){ var cell = function(o){ var n = (o || {})[k] || 0, base = (o || {}).p_view || 0; return '<td>' + n + (i && base ? ' <small style="color:var(--muted)">(' + Math.round(100 * n / base) + '%)</small>' : '') + '</td>'; };
+      return '<tr><td>' + pNames[k] + '</td>' + cell(pSum._all) + pKeys.map(function(pk){ return cell(pSum[pk]); }).join('') + '</tr>'; }).join('');
+    var pTable = pSum._all.p_view ? '<h3 style="margin:18px 0 8px">דף הנחיתה החדש · מהמודעה ועד ליד · תנועה ממומנת</h3><table><thead><tr><th>שלב</th><th>הכול</th>' + pKeys.map(function(pk){ return '<th>' + esc(propLabel(pk).split(',')[0]) + '</th>'; }).join('') + '</tr></thead><tbody>' + pRows + '</tbody></table><p class="note">באחוזים: מתוך מי שנכנס לדף הנכס. מ-16/11 המודעות נוחתות על עמוד הנכס עם שאלון פתוח בתחתית; הטבלה למטה היא השאלון הישן.</p>' : '';
     m.innerHTML = '<h3 style="margin:4px 0 8px">ביצועים ועלויות לפי נכס · מאז העלייה לאוויר</h3>' + rules
       + (cards ? '<div class="pcs">' + cards + '</div>' : '<div class="empty">הקמפיינים עוד לא מחוברים. ההוצאה תופיע כאן מהיום שהם עולים.</div>')
       + (sp._error ? '<p class="note">מטא לא החזירה נתונים כרגע (' + esc(sp._error) + '). הלידים נכונים, ההוצאה תתעדכן ברענון הבא.</p>' : '')
-      + '<h3 style="margin:18px 0 8px">איפה עוצרים בשאלון · תנועה ממומנת · 90 יום</h3><table><thead><tr><th>שלב</th><th>אנשים</th><th>מהשלב הקודם</th></tr></thead><tbody>' + rows + '</tbody></table>'
+      + pTable
+      + '<h3 style="margin:18px 0 8px">איפה עוצרים בשאלון (הישן, עד 16/11) · תנועה ממומנת · 90 יום</h3><table><thead><tr><th>שלב</th><th>אנשים</th><th>מהשלב הקודם</th></tr></thead><tbody>' + rows + '</tbody></table>'
       + '<p class="note">מחוץ לאזור: ' + ((j.steps || []).filter(function(s){ return s.step === 'other'; }).reduce(function(a, s){ return a + s.n; }, 0)) + ' בחרו "אזור אחר", ' + LEADS.filter(function(l){ return l.kind === 'referral'; }).length + ' ביקשו הפניה.</p>';
   }).catch(function(){ m.innerHTML = '<div class="empty">לא הצלחתי לטעון את הביצועים.</div>'; });
 }
