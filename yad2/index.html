@@ -257,11 +257,26 @@ function render(){
   return renderPerf(m);
 }
 function propLabel(k){ var p = PROPS.find(function(x){ return x.key === k; }); return p ? ((p.street || '') + ' ' + (p.number || '')).trim() + ', ' + (p.city || '') : k; }
+/* 22/11: ליד מטופס מטא, 3 השאלות והעדיפות (השרת: rec.qual) */
+var RANKS = { hot: 'חם', warm: 'פושר', other: 'לדירה אחרת' };
+var QL = { price: { in: 'בתוך התקציב', near: 'קרוב, תלוי בדירה', low: 'מחיר נמוך יותר' },
+  must: { mamad: 'ממ״ד', parking: 'חניה', elevator: 'מעלית', balcony: 'מרפסת', none: 'אין תנאי חובה' },
+  money: { ready: 'יש הון עצמי ואפשר להתקדם', sell: 'צריך למכור דירה קודם', check: 'עוד לא בדק מימון', start: 'רק מתחיל לחפש' } };
+function fromForm(l){ return l.lastVia ? l.lastVia === 'form' : !!(l.src && l.src.form); }
+function qualTag(l){
+  return (fromForm(l) ? '<span class="tag">טופס פייסבוק</span>' : '') + (l.qual && RANKS[l.qual.rank] ? '<span class="tag' + (l.qual.rank === 'hot' ? ' fit' : '') + '">עדיפות: ' + RANKS[l.qual.rank] + '</span>' : '') + (l.qual && l.qual.callAt ? '<span class="tag">ביקש שיחה</span>' : '');
+}
+function qualBox(l){
+  var q = l.qual; if (!q) return '';
+  var kv = function(t, v){ return '<div class="kv"><small>' + t + '</small><b>' + esc(v || '') + '</b></div>'; };
+  return '<h3>3 השאלות · עדיפות: ' + esc(RANKS[q.rank] || '') + '</h3><div class="grid2">' + kv('תקציב מול המחיר', QL.price[q.price])
+    + kv('חובה בבית', (q.must || []).map(function(k){ return QL.must[k] || k; }).join(', ')) + kv('פער מול הדירה', (q.gaps || []).join(', ') || 'אין') + kv('מוכנות', QL.money[q.money]) + '</div>';
+}
 function rowHtml(l){
   var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + '</span>'; }).join('');
   var tags = (l.qa ? '<span class="tag qa">ליד בדיקה</span>' : '') + ((l.returns || []).length ? '<span class="tag ret">חזר ' + l.returns.length + '×</span>' : '')
     + (lateNew(l) ? '<span class="tag late">עברה שעה בלי טיפול</span>' : '') + (l.wa && WA[l.wa.state] ? '<span class="tag' + (l.wa.state === 'error' ? ' late' : '') + '">' + WA[l.wa.state] + '</span>' : '')
-    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + fitTag(l) + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
+    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + fitTag(l) + qualTag(l) + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
   return '<div class="row" tabindex="0" data-id="' + esc(l.id) + '"><div class="nm"><b>' + esc(l.displayName || l.name) + '</b><small>' + esc(when(l.ts)) + '</small></div>'
     + '<div class="sr">' + esc(l.kind === 'referral' ? 'מחפש ב' + (l.areaText || 'אזור אחר') : (l.search || '')) + '<div class="tags">' + tags + '</div></div>'
     + '<div class="src"><small>' + esc(l.propLabel ? 'מהמודעה של ' + l.propLabel : (l.kind === 'referral' ? 'הפניה' : 'כניסה ישירה')) + '</small></div>'
@@ -396,7 +411,8 @@ function openCard(l){
       : '<div class="kv"><small>חיפוש</small><b>' + esc(l.search || '') + '</b></div><div class="kv"><small>הגיע מהמודעה של</small><b>' + esc(l.propLabel || 'כניסה ישירה') + '</b></div>'
       + '<div class="kv"><small>נכנס</small><b>' + esc(when(l.ts)) + '</b></div><div class="kv"><small>וואטסאפ</small><b>' + esc((l.wa && WA[l.wa.state]) || '') + '</b></div>' + (l.n1 ? '<div class="kv"><small>נדל״ן וואן</small><b>' + esc(N1[l.n1.state] || l.n1.state) + '</b></div>' : ''))
     + '</div>'
-    + (ref || !Object.keys(a).length ? '' : '<h3>מה סימן בשאלון</h3><div class="grid2">' + ansRows(a) + '</div>' + fitBox(l))
+    + (ref ? '' : qualBox(l))
+    + (ref || !(a.rooms || a.budget || (a.must || []).length) ? '' : '<h3>מה סימן בשאלון</h3><div class="grid2">' + ansRows(a) + '</div>' + fitBox(l))
     + (ref ? '' : l.single
       ? '<h3>עמוד הנכס שנשלח לו</h3><ul class="matches"><li>' + esc(propLabel(l.single)) + (l.singleTour ? ' · <b style="color:var(--amber)">ביקש לראות</b>' : '') + '</li></ul>'
         + (matches ? '<h3>עוד דירות במלאי שמתאימות לו (לא נשלחו, להציע בטלפון)</h3><ul class="matches">' + matches + '</ul>' : '')
