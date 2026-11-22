@@ -107,6 +107,7 @@ main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
 .call{background:var(--grad);color:#fff}.wa{background:#1fa855;color:#fff}.lnk{background:#F2F3F5;color:var(--ink)}
 .do{background:var(--tint);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-weight:600;margin-top:12px}
 .matches li{margin:4px 0}
+.tag.tst{background:#eaf1ff;color:#1d4f96;border-color:#b9cdf0}
 .form label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
 .form select,.form textarea,.form input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff}
 .form textarea{min-height:76px;resize:vertical}
@@ -241,7 +242,7 @@ function lateNew(l){ return l.status === 'new' && !l.qa && Date.now() - Date.par
 
 function load(){
   return Promise.all([api('/yad2/leads'), api('/yad2/props')]).then(function(r){
-    LEADS = r[0].leads || []; STATUSES = r[0].statuses || {}; PROPS = r[1].props || [];
+    LEADS = r[0].leads || []; TESTS = r[0].tests || {}; STATUSES = r[0].statuses || {}; PROPS = r[1].props || [];
     $('#nLeads').textContent = LEADS.filter(function(l){ return l.kind !== 'referral'; }).length;
     $('#nRefs').textContent = LEADS.filter(function(l){ return l.kind === 'referral' && l.status === 'referral'; }).length;
     render();
@@ -256,6 +257,9 @@ function render(){
   if (TAB === 'props') return renderProps(m);
   return renderPerf(m);
 }
+var TESTS = {};   /* 22/11: הטסט של בן צבי. השרת מסווג (y2test.js), כאן רק מציגים */
+function testTag(l){ var t = TESTS[l.id]; return t ? '<span class="tag' + (t.v === 'b' ? ' tst' : '') + '">' + (t.v === 'b' ? 'טסט ' : '') + esc(t.label) + '</span>' : ''; }
+function testHit(l, f){ var t = TESTS[l.id]; return !!t && (f === 'b' ? t.v === 'b' : (t.v === 'a' || t.from === 'a')); }
 function propLabel(k){ var p = PROPS.find(function(x){ return x.key === k; }); return p ? ((p.street || '') + ' ' + (p.number || '')).trim() + ', ' + (p.city || '') : k; }
 /* 22/11: ליד מטופס מטא, 3 השאלות והעדיפות (השרת: rec.qual) */
 var RANKS = { hot: 'חם', warm: 'פושר', other: 'לדירה אחרת' };
@@ -276,7 +280,7 @@ function rowHtml(l){
   var ms = Object.keys(MS).filter(function(k){ return l.milestones && l.milestones[k]; }).map(function(k){ return '<span class="tag ms">' + MS[k] + '</span>'; }).join('');
   var tags = (l.qa ? '<span class="tag qa">ליד בדיקה</span>' : '') + ((l.returns || []).length ? '<span class="tag ret">חזר ' + l.returns.length + '×</span>' : '')
     + (lateNew(l) ? '<span class="tag late">עברה שעה בלי טיפול</span>' : '') + (l.wa && WA[l.wa.state] ? '<span class="tag' + (l.wa.state === 'error' ? ' late' : '') + '">' + WA[l.wa.state] + '</span>' : '')
-    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + fitTag(l) + qualTag(l) + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
+    + (l.n1 && l.n1.state === 'error' ? '<span class="tag late">נדל״ן וואן נכשל</span>' : '') + fitTag(l) + testTag(l) + qualTag(l) + ms;   // גל 09/11: תקלה נראית בכרטיס, וגם מייל לגל
   return '<div class="row" tabindex="0" data-id="' + esc(l.id) + '"><div class="nm"><b>' + esc(l.displayName || l.name) + '</b><small>' + esc(when(l.ts)) + '</small></div>'
     + '<div class="sr">' + esc(l.kind === 'referral' ? 'מחפש ב' + (l.areaText || 'אזור אחר') : (l.search || '')) + '<div class="tags">' + tags + '</div></div>'
     + '<div class="src"><small>' + esc(l.propLabel ? 'מהמודעה של ' + l.propLabel : (l.kind === 'referral' ? 'הפניה' : 'כניסה ישירה')) + '</small></div>'
@@ -295,8 +299,9 @@ function renderLeads(m){
   var opts = '<option value="">כל הסטטוסים</option>' + Object.keys(STATUSES).filter(function(s){ return s !== 'referral' && s !== 'referred'; }).map(function(s){ return '<option value="' + s + '"' + (F.st === s ? ' selected' : '') + '>' + esc(STATUSES[s]) + '</option>'; }).join('');
   var props = '<option value="">כל המודעות</option>' + ['kr', 'dv', 'bz'].concat(PROPS.map(function(p){ return p.key; })).filter(function(v, i, a){ return a.indexOf(v) === i; })
     .filter(function(k2){ return all.some(function(l){ return l.prop === k2; }); }).map(function(k2){ return '<option value="' + esc(k2) + '"' + (F.prop === k2 ? ' selected' : '') + '>' + esc(propLabel(k2)) + '</option>'; }).join('');
+  if (Object.keys(TESTS).length) props += [['b', 'טסט ב׳ · טופס (בן צבי)'], ['a', 'א׳ · אתר (בן צבי)']].map(function(o){ return '<option value="test:' + o[0] + '"' + (F.prop === 'test:' + o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
   var list = all.filter(function(l){
-    if (F.st && l.status !== F.st) return false; if (F.prop && l.prop !== F.prop) return false;
+    if (F.st && l.status !== F.st) return false; if (F.prop && (F.prop.indexOf('test:') === 0 ? !testHit(l, F.prop.slice(5)) : l.prop !== F.prop)) return false;
     if (F.q) { var t = (l.name + ' ' + (l.displayName || '') + ' ' + l.phone + ' ' + (l.search || '')).toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
     return true;
   });
@@ -329,11 +334,13 @@ function renderProps(m){
    הייחוס = ההיסטוריה של תום עצמו (40 קמפיינים 2023-2025, מטא + BMBY): 55 ₪ לליד, 617 ₪ לפגישה. */
 var RULES = { daily: 60, swapAt: 1000, leadAvg: 55, tourAvg: 617 };
 function ilDay(off, t){ return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date((t ? Date.parse(t) : Date.now()) + (off || 0) * 864e5)); }
-function perfCard(k, s, real){
-  var L = real.filter(function(l){ return l.prop === k; });
-  var T = L.filter(function(l){ return l.milestones && l.milestones.tourReqAt; });
-  var S = L.filter(function(l){ return l.milestones && (l.milestones.tourSetAt || l.milestones.touredAt); });
-  var V = L.filter(function(l){ return l.milestones && l.milestones.touredAt; });
+function perfCard(k, s, real, v, moved){
+  var pick = function(ids){ return real.filter(function(l){ return ids.indexOf(l.id) >= 0; }); };
+  var stay = function(l){ return !moved || moved.indexOf(l.id) < 0; };
+  var L = v ? pick(v.leads) : real.filter(function(l){ return l.prop === k; });
+  var T = v ? pick(v.tourReq) : L.filter(stay).filter(function(l){ return l.milestones && l.milestones.tourReqAt; });
+  var S = v ? pick(v.tourSet) : L.filter(stay).filter(function(l){ return l.milestones && (l.milestones.tourSetAt || l.milestones.touredAt); });
+  var V = v ? pick(v.toured) : L.filter(stay).filter(function(l){ return l.milestones && l.milestones.touredAt; });
   var days = s.days || [], active = days.filter(function(d){ return d.spend > 0; }).length;
   var d7 = ilDay(-6), d14 = ilDay(-13);
   var sum = function(from, to){ return days.filter(function(d){ return d.d >= from && (!to || d.d < to); }).reduce(function(a, d){ return a + d.spend; }, 0); };
@@ -341,16 +348,18 @@ function perfCard(k, s, real){
   var sp7 = sum(d7), spP = sum(d14, d7), l7 = cnt(L, d7), lP = cnt(L, d14, d7);
   var cpl = L.length ? s.spend / L.length : 0, cpt = S.length ? s.spend / S.length : 0;
   var st, why;
-  if (!s.spend) { st = 'idle'; why = 'הקמפיין עוד לא הוציא כסף.'; }
+  if (v && v.id === 'x') { st = 'idle'; why = 'לידים של בן צבי שלא באו מהמודעות של הטסט. לא נכנסים לעלות לליד.'; }
+  else if (v && v.closed) { st = 'idle'; why = 'נסגר ' + when(v.closed) + ' כשהטופס החליף אותו. נשאר להשוואה, וכלל העצירה לא חל עליו.'; }
+  else if (!s.spend) { st = 'idle'; why = 'הקמפיין עוד לא הוציא כסף.'; }
   else if (s.spend >= RULES.swapAt && !S.length) { st = 'stop'; why = 'עבר ' + nis(RULES.swapAt) + ' בלי סיור שנקבע. לפי הכלל עם תום: לעצור את המודעה ולהחליף לנכס אחר.'; }
   else if (S.length && cpt > RULES.tourAvg * 2) { st = 'warn'; why = 'עלות לסיור ' + nis(cpt) + ', פי 2 מהממוצע ההיסטורי של תום (' + nis(RULES.tourAvg) + '). לבדוק את המודעה והקהל לפני שממשיכים.'; }
   else if (!S.length && s.spend >= RULES.swapAt * 0.6) { st = 'warn'; why = 'כבר ' + nis(s.spend) + ' בלי סיור שנקבע. נשארו ' + nis(RULES.swapAt - s.spend) + ' עד נקודת ההחלטה. לוודא שרז חוזר לכל ליד.'; }
   else if (L.length >= 5 && cpl > RULES.leadAvg * 2) { st = 'warn'; why = 'עלות לליד ' + nis(cpl) + ', כפולה מהממוצע ההיסטורי (' + nis(RULES.leadAvg) + '). לבדוק את המודעה, הקהל והשאלון.'; }
   else { st = 'go'; why = S.length ? 'יש סיורים והעלות בטווח. ממשיכים.' : 'בתוך תקציב ההחלטה (' + nis(RULES.swapAt) + ' בלי סיור). ממשיכים, ועוקבים אחרי בקשות הסיור.'; }
-  var stName = { idle: 'עוד לא רץ', go: 'ממשיכים', warn: 'שימו לב', stop: 'לעצור ולהחליף' }[st];
+  var stName = v && v.id === 'x' ? 'לא בטסט' : v && v.closed ? 'נסגר' : { idle: 'עוד לא רץ', go: 'ממשיכים', warn: 'שימו לב', stop: 'לעצור ולהחליף' }[st];
   var delta = function(a, b, money){ if (!b) return ''; var p = Math.round(100 * (a - b) / b); return ' <small class="' + (money ? (p > 0 ? 'dn' : 'up') : (p >= 0 ? 'up' : 'dn')) + '">' + (p > 0 ? '+' : '') + p + '%</small>'; };
-  var bar = (!S.length && s.spend) ? '<div class="pbar">' + nis(s.spend) + ' מתוך ' + nis(RULES.swapAt) + ' בלי סיור שנקבע<i><em style="width:' + Math.min(100, Math.round(100 * s.spend / RULES.swapAt)) + '%"></em></i></div>' : '';
-  return '<div class="pc ' + st + '"><div class="pch"><b>' + esc(propLabel(k)) + '</b><span class="pst">' + stName + '</span></div><div class="pwhy">' + esc(why) + '</div>'
+  var bar = (!S.length && s.spend && !(v && (v.closed || v.id === 'x'))) ? '<div class="pbar">' + nis(s.spend) + ' מתוך ' + nis(RULES.swapAt) + ' בלי סיור שנקבע<i><em style="width:' + Math.min(100, Math.round(100 * s.spend / RULES.swapAt)) + '%"></em></i></div>' : '';
+  return '<div class="pc ' + st + '"><div class="pch"><b>' + esc(propLabel(k) + (v ? ' · ' + v.label : '')) + '</b><span class="pst">' + stName + '</span></div><div class="pwhy">' + esc(why) + '</div>'
     + '<div class="pg">'
     + '<div><b>' + nis(s.spend) + '</b><span>הוצאה סה״כ' + (active ? ' · ' + active + ' ימים · ' + nis(s.spend / active) + ' ליום' : '') + '</span></div>'
     + '<div><b>' + L.length + '</b><span>לידים אצלנו' + (s.meta_leads != null ? ' · לפי מטא ' + s.meta_leads : '') + '</span></div>'
@@ -358,6 +367,9 @@ function perfCard(k, s, real){
     + '<div><b>' + T.length + '</b><span>ביקשו סיור' + (T.length ? ' · ' + nis(s.spend / T.length) + ' לבקשה' : '') + '</span></div>'
     + '<div><b>' + S.length + '</b><span>סיורים נקבעו · הגיעו ' + V.length + '</span></div>'
     + '<div' + (cpt > RULES.tourAvg * 2 ? ' class="hi"' : '') + '><b>' + (S.length ? nis(cpt) : '–') + '</b><span>עלות לסיור · ייחוס ' + nis(RULES.tourAvg) + '</span></div>'
+    + (v && v.id !== 'x' ? '<div><b>' + v.inBudget.length + ' / ' + v.answered.length + '</b><span>בתוך התקציב, מתוך מי שענו</span></div>'
+      + '<div><b>' + (v.inBudget.length ? nis(s.spend / v.inBudget.length) : '–') + '</b><span>עלות לליד בתוך התקציב</span></div>'
+      + (v.id === 'b' ? '<div><b>' + v.returns.length + '</b><span>חזרו דרך הטופס, לא נספרים כחדשים</span></div>' : '') : '')
     + '</div>' + bar
     + '<div class="pwk"><span>7 ימים: ' + nis(sp7) + delta(sp7, spP, true) + '</span><span>לידים: ' + l7 + delta(l7, lP) + '</span><span>עלות לליד: ' + (l7 ? nis(sp7 / l7) : '–') + (l7 && lP ? delta(sp7 / l7, spP / lP, true) : '') + '</span><span>7 הקודמים: ' + nis(spP) + ' · ' + lP + ' לידים</span></div>'
     + '</div>';
@@ -367,7 +379,11 @@ function renderPerf(m){
   api('/yad2/stats?days=90').then(function(j){
     var real = LEADS.filter(function(l){ return !l.qa && l.kind !== 'referral'; });
     var camps = j.campaigns || [], sp = j.spend || {};
-    var cards = camps.map(function(k){ return perfCard(k, sp[k] || { spend: 0, days: [], meta_leads: 0 }, real); }).join('');
+    var tests = j.tests || {}, moved = [];
+    Object.keys(tests).forEach(function(k){ (tests[k].variants || []).forEach(function(v){ v.tourReq.concat(v.tourSet, v.toured).forEach(function(id){ if (v.returns.indexOf(id) >= 0) moved.push(id); }); }); });
+    var cards = camps.map(function(k){ var vs = tests[k] && tests[k].variants;
+      return vs ? vs.map(function(v){ return perfCard(k, v, real, v); }).join('') : perfCard(k, sp[k] || { spend: 0, days: [], meta_leads: 0 }, real, null, moved); }).join('');
+    if (tests._error) cards = '<p class="note">הפרדת הטסט של בן צבי לא חושבה כרגע, והכרטיס שלו מאחד אתר וטופס.</p>' + cards;
     var rules = '<div class="rules"><b>איך מחליטים (מה שסוכם עם תום):</b><ul>'
       + '<li>כל נכס רץ על ' + nis(RULES.daily) + ' ליום. המדד הוא <b>עלות לסיור</b>, לא עלות לליד.</li>'
       + '<li>נכס שהוציא <b>' + nis(RULES.swapAt) + ' בלי סיור שנקבע</b> עוצרים ומחליפים לנכס אחר מהמלאי.</li>'
@@ -401,7 +417,7 @@ function openCard(l){
   var hist = (l.history || []).slice().reverse().map(function(h){ return '<li>' + esc(h.text) + '<small>' + esc(when(h.at)) + (h.by && h.by !== 'system' ? ' · ' + esc(h.by) : '') + '</small></li>'; }).join('');
   $('#md').innerHTML = '<button class="x" id="mx" aria-label="סגירה">×</button>'
     + '<h2 id="mdTitle">' + esc(l.displayName || l.name) + (l.qa ? ' <span class="tag qa">ליד בדיקה</span>' : '') + '</h2>'
-    + '<div class="tags" style="margin-top:6px"><span class="st ' + esc(l.status) + '">' + esc(STATUSES[l.status] || l.status) + '</span>' + ms + '</div>'
+    + '<div class="tags" style="margin-top:6px"><span class="st ' + esc(l.status) + '">' + esc(STATUSES[l.status] || l.status) + '</span>' + testTag(l) + ms + '</div>'
     + '<div class="act"><a class="call" href="tel:' + esc(l.phone) + '">חייג ' + esc(l.phone) + '</a><a class="wa" href="https://wa.me/' + esc(intl(l.phone)) + '" target="_blank" rel="noopener">וואטסאפ</a>'
     + '<a class="smv" href="https://studio-ui.admin.smoove.io/whatsapp-chat" target="_blank" rel="noopener" data-phone="' + esc(l.phone) + '" title="פותח את הצ׳אט בסמוב ומעתיק את הטלפון. להדביק בחיפוש איש קשר">השיחה בסמוב</a>'
     + (l.code ? '<a class="lnk" href="https://land.tom-harush.co.il/dira/m/?c=' + esc(l.code) + '" target="_blank" rel="noopener">הדף האישי שלו</a>' : '') + '</div>'
