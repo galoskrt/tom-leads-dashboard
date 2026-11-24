@@ -87,6 +87,19 @@ main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
 .pwk{margin-top:10px;font-size:13px;display:flex;gap:10px;flex-wrap:wrap}
 .pwk span{background:#F7F7F7;border-radius:999px;padding:3px 10px}
 .pwk .up{color:var(--green)}.pwk .dn{color:var(--red2)}
+/* 24/11 (גל): "קרא עוד" בכל כרטיס, משפך ומגמה של הכרטיס הזה בלבד */
+.pmore{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.pmore summary{cursor:pointer;font-size:14px;font-weight:800;color:var(--red2);list-style:none;padding:4px 0}
+.pmore summary::-webkit-details-marker{display:none}
+.pmore summary:after{content:' ▾'}.pmore[open] summary:after{content:' ▴'}
+.pmore h4{margin:10px 0 6px;font-size:14px}
+.pmore table{width:100%;font-size:12.5px;border-collapse:collapse}
+.pmore th,.pmore td{padding:5px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.pmore th{color:var(--muted);font-weight:600}
+.pmore td:first-child{white-space:normal}
+.pmore small{color:var(--muted)}
+.pmore .tscroll{overflow-x:auto}
+.pmore .sb{display:inline-block;height:8px;border-radius:999px;background:var(--grad);vertical-align:middle;margin-inline-start:6px}
 @media (max-width:640px){.pg{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:760px){.row{grid-template-columns:1fr auto}.row .sr,.row .src{grid-column:1/-1}}
 /* כרטיס ליד */
@@ -299,7 +312,7 @@ function renderLeads(m){
   var opts = '<option value="">כל הסטטוסים</option>' + Object.keys(STATUSES).filter(function(s){ return s !== 'referral' && s !== 'referred'; }).map(function(s){ return '<option value="' + s + '"' + (F.st === s ? ' selected' : '') + '>' + esc(STATUSES[s]) + '</option>'; }).join('');
   var props = '<option value="">כל המודעות</option>' + ['kr', 'dv', 'bz'].concat(PROPS.map(function(p){ return p.key; })).filter(function(v, i, a){ return a.indexOf(v) === i; })
     .filter(function(k2){ return all.some(function(l){ return l.prop === k2; }); }).map(function(k2){ return '<option value="' + esc(k2) + '"' + (F.prop === k2 ? ' selected' : '') + '>' + esc(propLabel(k2)) + '</option>'; }).join('');
-  if (Object.keys(TESTS).length) props += [['b', 'טסט ב׳ · טופס (בן צבי)'], ['a', 'א׳ · אתר (בן צבי)']].map(function(o){ return '<option value="test:' + o[0] + '"' + (F.prop === 'test:' + o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+  if (Object.keys(TESTS).length) props += [['b', 'טסט ב׳ · טופס (כל הנכסים)'], ['a', 'א׳ · אתר (כל הנכסים)']].map(function(o){ return '<option value="test:' + o[0] + '"' + (F.prop === 'test:' + o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
   var list = all.filter(function(l){
     if (F.st && l.status !== F.st) return false; if (F.prop && (F.prop.indexOf('test:') === 0 ? !testHit(l, F.prop.slice(5)) : l.prop !== F.prop)) return false;
     if (F.q) { var t = (l.name + ' ' + (l.displayName || '') + ' ' + l.phone + ' ' + (l.search || '')).toLowerCase(); if (t.indexOf(F.q.toLowerCase()) < 0) return false; }
@@ -334,7 +347,33 @@ function renderProps(m){
    הייחוס = ההיסטוריה של תום עצמו (40 קמפיינים 2023-2025, מטא + BMBY): 55 ₪ לליד, 617 ₪ לפגישה. */
 var RULES = { daily: 60, swapAt: 1000, leadAvg: 55, tourAvg: 617 };
 function ilDay(off, t){ return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date((t ? Date.parse(t) : Date.now()) + (off || 0) * 864e5)); }
-function perfCard(k, s, real, v, moved){
+/* 24/11 (גל: "אין לי מדידה לטופס לידים... לכל נכס טבלה משלו, כמו READ MORE בכל כרטיסייה"):
+   רז דיבר = אותו כלל כמו האירוע y2_talked שנשלח למטא (stageEvents בשרת). */
+var TALKED = ['talked', 'tour_req', 'tour_set', 'toured', 'offer', 'deal'];
+function talked(l){ var m = l.milestones || {};
+  return TALKED.indexOf(l.status) >= 0 || !!(m.tourReqAt || m.tourSetAt || m.touredAt || m.offerAt || m.dealAt)
+    || (['na1', 'na2', 'na3', 'not_relevant', 'referred'].indexOf(l.status) >= 0 && (l.history || []).some(function(h){ return h.kind === 'status' && /דיבר איתו/.test(h.text || ''); })); }
+function moreBox(k, s, v, L, T, S, V, P){
+  var form = v && v.id === 'b', spend = s.spend || 0;
+  var rows = [['חשיפות', s.impressions || 0, false]];
+  if (form) rows.push(['פתחו את הטופס', s.link || 0, true], ['השאירו פרטים · לפי מטא', s.meta_leads || 0, true]);
+  else { rows.push(['הקליקו למודעה', s.link || 0, true]); if (P && P.p_view && !v) rows.push(['נכנסו לדף הנכס', P.p_view, true], ['השאירו פרטים באתר', P.p_done || 0, true]); }
+  rows.push(['לידים אצלנו', L.length, true], ['רז דיבר איתם', L.filter(talked).length, true], ['ביקשו סיור', T.length, true], ['סיור נקבע', S.length, true], ['הגיעו לסיור', V.length, true]);
+  var f = '<div class="tscroll"><table><thead><tr><th>שלב</th><th>כמה <small>(%)</small></th><th>עלות לשלב</th></tr></thead><tbody>' + rows.map(function(r, i){
+    var prev = i ? rows[i - 1][1] : 0;
+    return '<tr><td>' + r[0] + '</td><td><b>' + r[1].toLocaleString('he-IL') + '</b>' + (i && prev ? ' <small>(' + Math.round(100 * r[1] / prev) + '%)</small>' : '') + '</td><td>' + (r[2] && r[1] && spend ? nis(spend / r[1]) : '–') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  var byDay = {}; (s.days || []).forEach(function(d){ byDay[d.d] = { sp: d.spend || 0, lk: d.link || 0, ml: d.meta_leads || 0, l: 0 }; });
+  L.forEach(function(l){ var d = ilDay(0, l.ts); (byDay[d] = byDay[d] || { sp: 0, lk: 0, ml: 0, l: 0 }).l++; });
+  var ds = Object.keys(byDay).sort().reverse().slice(0, 14), mx = Math.max.apply(null, ds.map(function(d){ return byDay[d].sp; }).concat([1]));
+  var t = ds.length ? '<div class="tscroll"><table><thead><tr><th>יום</th><th>הוצאה</th><th>' + (form ? 'פתחו' : 'קליקים') + '</th><th>לידים</th><th>לליד</th></tr></thead><tbody>' + ds.map(function(d){ var x = byDay[d];
+      return '<tr><td>' + d.slice(8, 10) + '/' + d.slice(5, 7) + '</td><td>' + nis(x.sp) + '<i class="sb" style="width:' + Math.round(24 * x.sp / mx) + 'px"></i></td><td>' + x.lk + '</td><td><b>' + x.l + '</b></td><td>' + (x.l ? nis(x.sp / x.l) : '–') + '</td></tr>'; }).join('') + '</tbody></table></div>'
+    : '<p class="note">עוד אין ימים עם הוצאה.</p>';
+  var note = form ? 'מטא לא מדווחת על מי שהתחיל למלא את הטופס ויצא באמצע, ולכן אין שלב כזה. "פתחו את הטופס" = לחיצות על המודעה.'
+    : 'קליקים = לחיצות על הקישור במודעה. דף הנכס והשאלון נמדדים לנכס כולו, לכן מופיעים רק בכרטיס בלי טסט.';
+  return '<details class="pmore"><summary>קרא עוד · המשפך והמגמה של ' + esc(propLabel(k).split(',')[0] + (v ? ' ' + v.label.split(' · ')[0] : '')) + '</summary>'
+    + '<h4>מהמודעה ועד סיור</h4>' + f + '<h4>יום אחרי יום · 14 ימים אחרונים</h4>' + t + '<p class="note">' + note + '</p></details>';
+}
+function perfCard(k, s, real, v, moved, pt, P){
   var pick = function(ids){ return real.filter(function(l){ return ids.indexOf(l.id) >= 0; }); };
   var stay = function(l){ return !moved || moved.indexOf(l.id) < 0; };
   var L = v ? pick(v.leads) : real.filter(function(l){ return l.prop === k; });
@@ -347,18 +386,20 @@ function perfCard(k, s, real, v, moved){
   var cnt = function(arr, from, to){ return arr.filter(function(l){ var d = ilDay(0, l.ts); return d >= from && (!to || d < to); }).length; };
   var sp7 = sum(d7), spP = sum(d14, d7), l7 = cnt(L, d7), lP = cnt(L, d14, d7);
   var cpl = L.length ? s.spend / L.length : 0, cpt = S.length ? s.spend / S.length : 0;
+  // 24/11 (גל: "המונה של כל נכס ממשיך"): בכרטיס הטופס, כלל ה-1,000 ₪ נספר על הנכס כולו, אתר + טופס
+  var cs = pt ? pt.spend : s.spend, cS = pt ? pt.S : S.length, both = pt ? ' על הנכס (אתר + טופס)' : '';
   var st, why;
-  if (v && v.id === 'x') { st = 'idle'; why = 'לידים של בן צבי שלא באו מהמודעות של הטסט. לא נכנסים לעלות לליד.'; }
+  if (v && v.id === 'x') { st = 'idle'; why = 'לידים של ' + propLabel(k).split(',')[0] + ' שלא באו מהמודעות של הטסט. לא נכנסים לעלות לליד.'; }
   else if (v && v.closed) { st = 'idle'; why = 'נסגר ' + when(v.closed) + ' כשהטופס החליף אותו. נשאר להשוואה, וכלל העצירה לא חל עליו.'; }
   else if (!s.spend) { st = 'idle'; why = 'הקמפיין עוד לא הוציא כסף.'; }
-  else if (s.spend >= RULES.swapAt && !S.length) { st = 'stop'; why = 'עבר ' + nis(RULES.swapAt) + ' בלי סיור שנקבע. לפי הכלל עם תום: לעצור את המודעה ולהחליף לנכס אחר.'; }
+  else if (cs >= RULES.swapAt && !cS) { st = 'stop'; why = 'עבר ' + nis(RULES.swapAt) + both + ' בלי סיור שנקבע. לפי הכלל עם תום: לעצור את המודעה ולהחליף לנכס אחר.'; }
   else if (S.length && cpt > RULES.tourAvg * 2) { st = 'warn'; why = 'עלות לסיור ' + nis(cpt) + ', פי 2 מהממוצע ההיסטורי של תום (' + nis(RULES.tourAvg) + '). לבדוק את המודעה והקהל לפני שממשיכים.'; }
-  else if (!S.length && s.spend >= RULES.swapAt * 0.6) { st = 'warn'; why = 'כבר ' + nis(s.spend) + ' בלי סיור שנקבע. נשארו ' + nis(RULES.swapAt - s.spend) + ' עד נקודת ההחלטה. לוודא שרז חוזר לכל ליד.'; }
+  else if (!cS && cs >= RULES.swapAt * 0.6) { st = 'warn'; why = 'כבר ' + nis(cs) + both + ' בלי סיור שנקבע. נשארו ' + nis(RULES.swapAt - cs) + ' עד נקודת ההחלטה. לוודא שרז חוזר לכל ליד.'; }
   else if (L.length >= 5 && cpl > RULES.leadAvg * 2) { st = 'warn'; why = 'עלות לליד ' + nis(cpl) + ', כפולה מהממוצע ההיסטורי (' + nis(RULES.leadAvg) + '). לבדוק את המודעה, הקהל והשאלון.'; }
   else { st = 'go'; why = S.length ? 'יש סיורים והעלות בטווח. ממשיכים.' : 'בתוך תקציב ההחלטה (' + nis(RULES.swapAt) + ' בלי סיור). ממשיכים, ועוקבים אחרי בקשות הסיור.'; }
   var stName = v && v.id === 'x' ? 'לא בטסט' : v && v.closed ? 'נסגר' : { idle: 'עוד לא רץ', go: 'ממשיכים', warn: 'שימו לב', stop: 'לעצור ולהחליף' }[st];
   var delta = function(a, b, money){ if (!b) return ''; var p = Math.round(100 * (a - b) / b); return ' <small class="' + (money ? (p > 0 ? 'dn' : 'up') : (p >= 0 ? 'up' : 'dn')) + '">' + (p > 0 ? '+' : '') + p + '%</small>'; };
-  var bar = (!S.length && s.spend && !(v && (v.closed || v.id === 'x'))) ? '<div class="pbar">' + nis(s.spend) + ' מתוך ' + nis(RULES.swapAt) + ' בלי סיור שנקבע<i><em style="width:' + Math.min(100, Math.round(100 * s.spend / RULES.swapAt)) + '%"></em></i></div>' : '';
+  var bar = (!cS && cs && !(v && (v.closed || v.id === 'x'))) ? '<div class="pbar">' + nis(cs) + ' מתוך ' + nis(RULES.swapAt) + both + ' בלי סיור שנקבע<i><em style="width:' + Math.min(100, Math.round(100 * cs / RULES.swapAt)) + '%"></em></i></div>' : '';
   return '<div class="pc ' + st + '"><div class="pch"><b>' + esc(propLabel(k) + (v ? ' · ' + v.label : '')) + '</b><span class="pst">' + stName + '</span></div><div class="pwhy">' + esc(why) + '</div>'
     + '<div class="pg">'
     + '<div><b>' + nis(s.spend) + '</b><span>הוצאה סה״כ' + (active ? ' · ' + active + ' ימים · ' + nis(s.spend / active) + ' ליום' : '') + '</span></div>'
@@ -372,6 +413,7 @@ function perfCard(k, s, real, v, moved){
       + (v.id === 'b' ? '<div><b>' + v.returns.length + '</b><span>חזרו דרך הטופס, לא נספרים כחדשים</span></div>' : '') : '')
     + '</div>' + bar
     + '<div class="pwk"><span>7 ימים: ' + nis(sp7) + delta(sp7, spP, true) + '</span><span>לידים: ' + l7 + delta(l7, lP) + '</span><span>עלות לליד: ' + (l7 ? nis(sp7 / l7) : '–') + (l7 && lP ? delta(sp7 / l7, spP / lP, true) : '') + '</span><span>7 הקודמים: ' + nis(spP) + ' · ' + lP + ' לידים</span></div>'
+    + (v && v.id === 'x' ? '' : moreBox(k, s, v, L, T, S, V, P))
     + '</div>';
 }
 function renderPerf(m){
@@ -381,9 +423,29 @@ function renderPerf(m){
     var camps = j.campaigns || [], sp = j.spend || {};
     var tests = j.tests || {}, moved = [];
     Object.keys(tests).forEach(function(k){ (tests[k].variants || []).forEach(function(v){ v.tourReq.concat(v.tourSet, v.toured).forEach(function(id){ if (v.returns.indexOf(id) >= 0) moved.push(id); }); }); });
+    var PP = {}; (j.steps || []).forEach(function(s){ if (s.src !== 'paid' || s.step.indexOf('p_') !== 0) return; (PP[s.prop] = PP[s.prop] || {})[s.step] = ((PP[s.prop] || {})[s.step] || 0) + s.n; });
+    var pick = function(ids){ return real.filter(function(l){ return ids.indexOf(l.id) >= 0; }); };
     var cards = camps.map(function(k){ var vs = tests[k] && tests[k].variants;
-      return vs ? vs.map(function(v){ return perfCard(k, v, real, v); }).join('') : perfCard(k, sp[k] || { spend: 0, days: [], meta_leads: 0 }, real, null, moved); }).join('');
-    if (tests._error) cards = '<p class="note">הפרדת הטסט של בן צבי לא חושבה כרגע, והכרטיס שלו מאחד אתר וטופס.</p>' + cards;
+      if (!vs) return perfCard(k, sp[k] || { spend: 0, days: [], meta_leads: 0 }, real, null, moved, null, PP[k]);
+      var ab = vs.filter(function(v){ return v.id !== 'x'; }), setIds = [];
+      ab.forEach(function(v){ v.tourSet.forEach(function(id){ if (setIds.indexOf(id) < 0) setIds.push(id); }); });
+      var pt = { spend: Math.round(ab.reduce(function(a, v){ return a + (v.spend || 0); }, 0) * 100) / 100, S: pick(setIds).length };
+      return vs.map(function(v){ return perfCard(k, v, real, v, null, v.id === 'b' ? pt : null, PP[k]); }).join(''); }).join('');
+    if (tests._error) cards = '<p class="note">ההפרדה בין אתר לטופס לא חושבה כרגע, והכרטיסים מאחדים אתר וטופס.</p>' + cards;
+    // 24/11 (גל: "טוב שיש טבלה אחת מרכזית"): טופסי הלידים של מטא, כל נכס בעמודה, מהמודעה ועד סיור
+    var FB = camps.filter(function(k){ return tests[k] && tests[k].variants; }).map(function(k){ var b = tests[k].variants.filter(function(v){ return v.id === 'b'; })[0]; return b ? [k, b] : null; }).filter(Boolean);
+    var fRows = [['חשיפות', function(b){ return b.impressions || 0; }], ['פתחו את הטופס', function(b){ return b.link || 0; }], ['השאירו פרטים · לפי מטא', function(b){ return b.meta_leads || 0; }],
+      ['לידים אצלנו', function(b){ return pick(b.leads).length; }], ['רז דיבר איתם', function(b){ return pick(b.leads).filter(talked).length; }],
+      ['ביקשו סיור', function(b){ return pick(b.tourReq).length; }], ['סיור נקבע', function(b){ return pick(b.tourSet).length; }], ['הגיעו לסיור', function(b){ return pick(b.toured).length; }]];
+    var fAll = { spend: 0, impressions: 0, link: 0, meta_leads: 0, leads: [], tourReq: [], tourSet: [], toured: [] };
+    FB.forEach(function(x){ var b = x[1]; fAll.spend += b.spend || 0; fAll.impressions += b.impressions || 0; fAll.link += b.link || 0; fAll.meta_leads += b.meta_leads || 0; ['leads', 'tourReq', 'tourSet', 'toured'].forEach(function(f){ fAll[f] = fAll[f].concat(b[f]); }); });
+    var fCols = [fAll].concat(FB.map(function(x){ return x[1]; }));
+    var fTable = FB.length ? '<h3 style="margin:18px 0 8px">טופסי הלידים במטא · מהמודעה ועד סיור · כל נכס בעמודה</h3><div style="overflow-x:auto"><table><thead><tr><th>שלב</th><th>הכול</th>' + FB.map(function(x){ return '<th>' + esc(propLabel(x[0]).split(',')[0]) + '</th>'; }).join('') + '</tr></thead><tbody>'
+      + fRows.map(function(r, i){ return '<tr><td>' + r[0] + '</td>' + fCols.map(function(b){ var n = r[1](b), p = i ? fRows[i - 1][1](b) : 0; return '<td>' + n.toLocaleString('he-IL') + (i && p ? ' <small style="color:var(--muted)">(' + Math.round(100 * n / p) + '%)</small>' : '') + '</td>'; }).join('') + '</tr>'; }).join('')
+      + '<tr><td>הוצאה</td>' + fCols.map(function(b){ return '<td>' + nis(b.spend || 0) + '</td>'; }).join('') + '</tr>'
+      + '<tr><td>עלות לליד</td>' + fCols.map(function(b){ var n = pick(b.leads).length; return '<td>' + (n ? nis(b.spend / n) : '–') + '</td>'; }).join('') + '</tr>'
+      + '<tr><td>עלות לסיור שנקבע</td>' + fCols.map(function(b){ var n = pick(b.tourSet).length; return '<td>' + (n ? nis(b.spend / n) : '–') + '</td>'; }).join('') + '</tr>'
+      + '</tbody></table></div><p class="note">באחוזים: מתוך השלב הקודם. נספר מרגע ההחלפה לטופס בכל נכס. מטא לא מדווחת על מי שהתחיל למלא ויצא באמצע. הפירוט לכל נכס ויום אחרי יום: "קרא עוד" בכרטיס.</p>' : '';
     var rules = '<div class="rules"><b>איך מחליטים (מה שסוכם עם תום):</b><ul>'
       + '<li>כל נכס רץ על ' + nis(RULES.daily) + ' ליום. המדד הוא <b>עלות לסיור</b>, לא עלות לליד.</li>'
       + '<li>נכס שהוציא <b>' + nis(RULES.swapAt) + ' בלי סיור שנקבע</b> עוצרים ומחליפים לנכס אחר מהמלאי.</li>'
@@ -402,7 +464,7 @@ function renderPerf(m){
     m.innerHTML = '<h3 style="margin:4px 0 8px">ביצועים ועלויות לפי נכס · מאז העלייה לאוויר</h3>' + rules
       + (cards ? '<div class="pcs">' + cards + '</div>' : '<div class="empty">הקמפיינים עוד לא מחוברים. ההוצאה תופיע כאן מהיום שהם עולים.</div>')
       + (sp._error ? '<p class="note">מטא לא החזירה נתונים כרגע (' + esc(sp._error) + '). הלידים נכונים, ההוצאה תתעדכן ברענון הבא.</p>' : '')
-      + pTable
+      + fTable + pTable
       + '<h3 style="margin:18px 0 8px">איפה עוצרים בשאלון (הישן, עד 16/11) · תנועה ממומנת · 90 יום</h3><table><thead><tr><th>שלב</th><th>אנשים</th><th>מהשלב הקודם</th></tr></thead><tbody>' + rows + '</tbody></table>'
       + '<p class="note">מחוץ לאזור: ' + ((j.steps || []).filter(function(s){ return s.step === 'other'; }).reduce(function(a, s){ return a + s.n; }, 0)) + ' בחרו "אזור אחר", ' + LEADS.filter(function(l){ return l.kind === 'referral'; }).length + ' ביקשו הפניה.</p>';
   }).catch(function(){ m.innerHTML = '<div class="empty">לא הצלחתי לטעון את הביצועים.</div>'; });
