@@ -378,6 +378,32 @@ table.shp-t tr.dnc td{color:var(--text2)}
 ::-webkit-scrollbar-thumb{background:rgba(194,21,28,.3);border-radius:10px}
 ::-webkit-scrollbar-thumb:hover{background:rgba(194,21,28,.55)}
 
+/* שיחות הבוט (גל 27/11): הלשונית של הבוט הטלפוני. משתמשת בעיצוב של מחזור משכל, ומוסיפה מדדים ותגיות סטטוס */
+#botCardOv{z-index:230}
+.bot-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin:0 0 10px}
+.bot-kpi{border:1px solid var(--border);border-radius:12px;padding:9px 12px;background:#fff}
+.bot-kpi b{display:block;font-size:22px;font-weight:900;line-height:1.15;color:var(--text)}
+.bot-kpi span{font-size:11.5px;color:var(--text2);font-weight:700;line-height:1.35;display:block}
+.bot-kpi.warn b{color:var(--accent)}
+.bot-st{display:inline-block;font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;background:#f1f1f1;color:#555}
+.bot-st.hot{background:#C2151C;color:#fff}.bot-st.future{background:rgba(214,120,0,.14);color:#8a4b00}.bot-st.dnc{background:#0f1216;color:#fff}
+.bot-team{font-weight:700}.bot-team.new{color:var(--accent)}
+.bot-ban-test{background:#fff4d6;border:1px solid #efc24a;border-radius:12px;padding:9px 12px;font-size:13px;line-height:1.55;margin:0 0 10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.bot-envsw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text2);cursor:pointer;user-select:none}
+.bot-stamp{font-size:12px;color:var(--text2);margin:-2px 0 10px}
+.bot-stamp b{color:var(--accent)}
+.bot-facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 14px;font-size:13.5px;line-height:1.5}
+.bot-facts div span{display:block;font-size:11.5px;color:var(--text2);font-weight:700}
+.bot-sum{font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;margin:0 0 10px}
+.shp-tags span.ok{background:rgba(21,122,58,.10);color:#0f6b31}
+.bot-call{border:1px solid var(--border);border-radius:12px;padding:9px 12px;margin:0 0 8px;font-size:13.5px;line-height:1.6}
+.bot-call .d{font-size:11.5px;color:var(--text2);font-weight:700;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bot-call audio{width:100%;height:36px;margin-top:6px}
+.bot-call details{margin-top:6px}.bot-call summary{cursor:pointer;font-weight:700;color:var(--accent2);font-size:12.5px}
+.bot-call pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:13px;margin:6px 0 0;max-height:320px;overflow:auto}
+.bot-ms{font-size:12.5px;color:var(--text2);margin:0 0 10px}.bot-ms b{color:#0f6b31}
+.bot-err{color:var(--accent);font-size:12.5px;font-weight:700}
+@media (max-width:640px){.bot-kpis{grid-template-columns:repeat(3,1fr);gap:6px}.bot-kpi{padding:8px 9px}.bot-kpi b{font-size:19px}.bot-kpi span{font-size:11px}}
 /* לשוניות המאגרים (גל 09/11): קדימה צורן, מחזור משכל, נכסי יד שנייה. לבנה עם טקסט שחור וקו תחתון מודגש, פעילה או בריחוף אדומה עם טקסט לבן */
 .dtabs{display:flex;gap:8px;align-items:flex-end;padding:16px 20px 0;flex-wrap:wrap}
 .dtab{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-width:180px;min-height:52px;padding:0 26px;font-family:inherit;font-size:17px;font-weight:800;line-height:1;color:#0f1216;background:#fff;border:1px solid rgba(15,18,22,.14);border-bottom:4px solid #0f1216;border-radius:12px 12px 0 0;text-decoration:none;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
@@ -422,8 +448,9 @@ table.shp-t tr.dnc td{color:var(--text2)}
   </div>
 </header>
 <div class="dtabs" role="navigation" aria-label="המאגרים">
-  <button type="button" class="dtab on" id="tabKadima" aria-current="page" onclick="closeSehelTab()">קדימה צורן</button>
-  <button type="button" class="dtab" id="tabPool" onclick="openSehelPool()">מחזור משכל</button>
+  <button type="button" class="dtab on" id="tabKadima" aria-current="page" onclick="closeSehelTab();closeBotTab()">קדימה צורן</button>
+  <button type="button" class="dtab" id="tabPool" onclick="closeBotTab();openSehelPool()">מחזור משכל</button>
+  <button type="button" class="dtab" id="tabBot" onclick="openBotTab()">שיחות הבוט</button>
   <a class="dtab" href="yad2/">נכסי יד שנייה</a>
 </div>
 
@@ -825,6 +852,31 @@ table.shp-t tr.dnc td{color:var(--text2)}
 </div>
 <div class="overlay" id="shpCardOv" onclick="bgClose(event,'shpCardOv')">
 <div class="modal shp-card" id="shpCard"></div>
+</div>
+
+<!-- שיחות הבוט הטלפוני (גל 27/11) -->
+<div class="overlay" id="botOv" onclick="bgClose(event,'botOv')">
+<div class="modal shp-modal">
+  <h2>שיחות הבוט <button class="modal-close" onclick="closeOv('botOv')">✕</button></h2>
+  <p class="tr-note">כל שיחה שהבוט עושה ללידים הישנים נכנסת לכאן תוך שניות: מה הליד אמר, מה הוא מחפש, מה חשוב לו, ותוצאת השיחה. לכל טלפון כרטיס אחד עם כל השיחות שלו. <b>"לא חזרנו אליהם"</b> = חמים ולעתיד שעוד אף אחד מהצוות לא עדכן. ליד שחם, חוזרים אליו באותו יום. המאגר נפרד מטבלת הלידים: לא נספר בעלות לליד ובדוח הבוקר, ושום הודעה אוטומטית לא יוצאת אליו.</p>
+  <div id="botTestBan"></div>
+  <div class="bot-kpis" id="botKpis"></div>
+  <div class="bot-stamp" id="botStamp"></div>
+  <div class="shp-chips" id="botChips"></div>
+  <div class="tr-top">
+    <input class="search" id="botQ" placeholder="חיפוש לפי שם, טלפון, אזור, תקציב או מה אמר" oninput="botSearch()" style="max-width:340px">
+    <select class="sel" id="botTeamF" onchange="botLoad(true)" style="width:auto;font-size:13px"></select>
+    <select class="sel" id="botSort" onchange="botLoad(true)" style="width:auto;font-size:13px">
+      <option value="last">שיחה אחרונה</option><option value="hot">מתי נהיה חם</option><option value="rem">תזכורת קרובה</option><option value="upd">עודכן לאחרונה</option><option value="calls">הכי הרבה שיחות</option>
+    </select>
+    <button class="btn btn-outline btn-sm" onclick="botLoad(true)">רענון</button>
+    <label class="bot-envsw"><input type="checkbox" id="botEnvT" onchange="botEnv=this.checked?'test':'live';botLoad(true)"> שיחות בדיקה</label>
+  </div>
+  <div id="botBody"><div class="shp-load">טוען...</div></div>
+</div>
+</div>
+<div class="overlay" id="botCardOv" onclick="bgClose(event,'botCardOv')">
+<div class="modal shp-card" id="botCard"></div>
 </div>
 
 <!-- WHATSAPP MODAL -->
@@ -3052,6 +3104,140 @@ async function saveShp(){
     renderSehelPool();
     if(st==='refused')openShp(c.id);
   }catch(e){b.disabled=false;b.textContent='שמירה';toast('השמירה נכשלה. שום דבר לא נמחק, נסו שוב.',6000);console.warn('sehel pool save',e);}
+}
+
+// ═══════════ שיחות הבוט הטלפוני (גל 27/11) ═══════════
+// הבוט של מיכאל שולח כל שיחה לוורקר (/bot/call). כאן רק קוראים (/bot/leads, /bot/lead, /bot/stats) ומעדכנים את עבודת הצוות (/bot/lead/edit).
+// הדפדוף והסינון בשרת, כי המאגר יכול להגיע לאלפים. env=live כברירת מחדל; "שיחות בדיקה" מציג את מה שמיכאל שלח עם מפתח הבדיקה.
+const BOT_ST={hot:'רלוונטי חם',future:'רלוונטי לעתיד',not_relevant:'לא רלוונטי',unknown:'ענה, בלי סיווג',no_answer:'לא ענה',wrong_number:'מספר שגוי',dnc:'ביקש שלא יתקשרו'};
+const BOT_TEAM={new:'חדש מהבוט',contacted:'חזרנו, דיברנו',noanswer:'חזרנו, אין מענה',meeting:'נקבעה פגישה',attended:'הגיע לפגישה',deal:'עסקה',not_relevant:'לא רלוונטי',dnc:'לא פונים'};
+const BOT_OUT={answered:'ענה',no_answer:'לא ענה',busy:'תפוס',voicemail:'תא קולי',wrong_number:'מספר שגוי'};
+const BOT_TABS=[['waiting','לא חזרנו אליהם'],['hot','חמים'],['future','לעתיד'],['rem','תזכורות'],['progress','בטיפול'],['all','הכל'],['noans','לא ענו'],['notrel','לא רלוונטי'],['dnc','לא פונים']];
+const BOT_MS=[['contactedAt','דיברנו'],['meetingAt','פגישה'],['attendedAt','הגיע'],['dealAt','עסקה']];
+let botEnv='live',botTab='waiting',botRows=[],botTotal=0,botCounts={},botStats=null,botSeq=0,botQT=null,botCur=null;
+function botDt(s){if(!s)return'';const d=new Date(s);if(isNaN(d))return String(s);return d.toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function botN(n){return Number(n||0).toLocaleString('he-IL');}
+function botPill(st){return `<span class="bot-st ${esc(st||'')}">${esc(BOT_ST[st]||st||'')}</span>`;}
+function botDur(s){s=Number(s);if(!isFinite(s)||s<=0)return'';return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' דק\'';}
+function openBotTab(){closeSehelTab();document.getElementById('botOv').classList.add('open');botLoad(true);}
+function closeBotTab(){document.getElementById('botOv').classList.remove('open');}
+(function(){const ov=document.getElementById('botOv'),tk=document.getElementById('tabKadima'),tp=document.getElementById('tabPool'),tb=document.getElementById('tabBot'),so=document.getElementById('shpOv');if(!ov||!tk||!tb)return;
+  const tabs=tk.parentElement;
+  const sync=()=>{const o=ov.classList.contains('open'),sp=so&&so.classList.contains('open');tb.classList.toggle('on',o);
+    if(o){tk.classList.remove('on');tp&&tp.classList.remove('on');tb.setAttribute('aria-current','page');tk.removeAttribute('aria-current');
+      tabs.style.position='relative';tabs.style.zIndex='210';ov.style.paddingTop=Math.max(16,Math.round(tabs.getBoundingClientRect().bottom)+8)+'px';}
+    else{tb.removeAttribute('aria-current');ov.style.paddingTop='';if(!sp){tk.classList.add('on');tk.setAttribute('aria-current','page');tabs.style.zIndex='';}}};
+  new MutationObserver(sync).observe(ov,{attributes:true,attributeFilter:['class']});sync();
+  const tf=document.getElementById('botTeamF');tf.innerHTML='<option value="">כל הסטטוסים אצלנו</option>'+Object.entries(BOT_TEAM).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');})();
+function botSearch(){clearTimeout(botQT);botQT=setTimeout(()=>botLoad(true),300);}
+function botSetTab(t){botTab=t;botLoad(true);}
+async function botLoad(reset){
+  const seq=++botSeq,b=document.getElementById('botBody');
+  if(reset){botRows=[];b.innerHTML='<div class="shp-load">טוען את שיחות הבוט...</div>';}
+  const qs=new URLSearchParams({env:botEnv,tab:botTab,q:document.getElementById('botQ').value.trim(),team:document.getElementById('botTeamF').value,sort:document.getElementById('botSort').value,offset:String(botRows.length),limit:'100'});
+  try{
+    const [lr,sr]=await Promise.all([fetch(`${WORKER_URL}/bot/leads?${qs}`,{headers:authH(),cache:'no-store'}),reset?fetch(`${WORKER_URL}/bot/stats?env=${botEnv}`,{headers:authH(),cache:'no-store'}):null]);
+    if(!lr.ok)throw new Error('http '+lr.status);
+    const j=await lr.json();if(seq!==botSeq)return;
+    botRows=botRows.concat(j.rows||[]);botTotal=j.total||0;botCounts=j.counts||{};
+    if(sr&&sr.ok)botStats=await sr.json();
+    botRender();
+  }catch(e){if(seq!==botSeq)return;b.innerHTML='<div class="shp-load">לא הצלחתי לטעון את שיחות הבוט. נסו שוב בעוד רגע.</div>';console.warn('bot load',e);}
+}
+function botRender(){
+  const S=botStats||{},C=S.calls||{},L=S.leads||{},test=botEnv==='test';
+  document.getElementById('botTestBan').innerHTML=test?`<div class="bot-ban-test"><span><b>מצב בדיקה:</b> אלה שיחות שנשלחו עם מפתח הבדיקה, לא לידים אמיתיים. הן לא מופיעות במצב הרגיל.</span><button class="btn btn-outline btn-sm" onclick="botClearTest()">מחיקת כל שיחות הבדיקה</button></div>`:'';
+  const pct=(a,b)=>b?Math.round(a*100/b)+'%':'—';
+  const k=[[botN(C.calls),'שיחות שהתקבלו'+(C.today?` · ${botN(C.today)} היום`:'')],[botN(C.answered),'ענו ('+pct(C.answered,C.calls)+')'],[botN(L.hot),'רלוונטיים חמים'],[botN(L.future),'רלוונטיים לעתיד'],
+    [botN(L.waiting),'מחכים שנחזור אליהם',L.waiting>0],[L.hot_ever?pct(L.hot_24h,L.hot_ever):'—','מהחמים קיבלו חזרה תוך 24 שעות'],[botN(L.meetings),'פגישות'+(L.attended?` · ${botN(L.attended)} הגיעו`:'')],[botN(L.deals),'עסקאות']];
+  document.getElementById('botKpis').innerHTML=k.map(([v,t,w])=>`<div class="bot-kpi${w?' warn':''}"><b>${v}</b><span>${esc(t)}</span></div>`).join('');
+  const rj=S.rejects24h||{};
+  document.getElementById('botStamp').innerHTML=(C.last_at?'שיחה אחרונה התקבלה '+botDt(C.last_at):'עוד לא התקבלה שיחה')+(L.known?` · ${botN(L.known)} מהם כבר מוכרים לנו (ליד או שכל)`:'')+(rj.n?` · <b>${botN(rj.n)} שליחות נדחו ב־24 שעות</b> <a href="#" onclick="botRejects();return false" style="color:var(--accent)">למה?</a>`:'');
+  document.getElementById('botChips').innerHTML=BOT_TABS.map(([t,v])=>`<button class="${t===botTab?'on':''}${t==='dnc'?' dnc':''}" onclick="botSetTab('${t}')">${esc(v)}<b>${botN(botCounts[t])}</b></button>`).join('');
+  const b=document.getElementById('botBody');
+  if(!botRows.length){
+    b.innerHTML=`<div class="shp-load">${!C.calls?(test?'עוד לא נשלחו שיחות בדיקה.':'עוד לא הגיעו שיחות מהבוט. החיבור מוכן: ברגע שהבוט יתחיל להתקשר, כל שיחה תופיע כאן תוך שניות.'):'אין לידים בלשונית הזו.'}</div>`;return;}
+  const now=shpNowLocal();
+  const rows=botRows.map(r=>{
+    const dnc=r.dnc||r.team_status==='dnc',m=r.match||{};
+    const known=[m.lead?'ליד בקדימה':'',m.sehel?'בשכל':'',m.y2?'ביד שנייה':''].filter(Boolean).join(' · ');
+    return `<tr class="${dnc?'dnc':''}" onclick="openBot('${esc(r.phone)}')"><td data-label="שם">${esc(r.name||'ללא שם')}</td><td data-label="טלפון" style="direction:ltr;text-align:right">${esc(r.phone)}</td><td data-label="תוצאת הבוט">${botPill(dnc&&r.bot_status!=='dnc'?'dnc':r.bot_status)}</td><td data-label="סטטוס אצלנו"><span class="bot-team ${esc(r.team_status)}">${esc(BOT_TEAM[r.team_status]||r.team_status)}</span>${r.rem_at?` · <span class="shp-due${r.rem_at<now?' late':''}">${shpD(r.rem_at,true)}</span>`:''}</td><td data-label="מה מחפש" class="shp-wide">${esc([r.looking_for,r.area].filter(Boolean).join(' · ')||r.summary||'')}</td><td data-label="תקציב">${esc(r.budget||'')}</td><td data-label="שיחה אחרונה">${botDt(r.last_call_at)}${r.calls>1?` · ${r.calls} שיחות`:''}</td><td data-label="מוכר לנו">${esc(known)}</td></tr>`;
+  }).join('');
+  b.innerHTML=`<div class="shp-count">מציג ${botN(botRows.length)} מתוך ${botN(botTotal)}</div><div class="tr-wrap"><table class="shp-t"><thead><tr><th>שם</th><th>טלפון</th><th>תוצאת הבוט</th><th>סטטוס אצלנו</th><th>מה מחפש</th><th>תקציב</th><th>שיחה אחרונה</th><th>מוכר לנו</th></tr></thead><tbody>${rows}</tbody></table></div>`+(botTotal>botRows.length?`<div style="text-align:center;margin:12px 0"><button class="btn btn-outline btn-sm" onclick="botLoad(false)">הצג עוד ${botN(Math.min(100,botTotal-botRows.length))}</button></div>`:'');
+}
+async function botClearTest(){
+  if(!confirm('למחוק את כל שיחות הבדיקה? הלידים האמיתיים לא נפגעים.'))return;
+  try{const r=await fetch(`${WORKER_URL}/bot/test-clear`,{method:'POST',headers:authH()});const j=await r.json();if(!r.ok||!j.ok)throw new Error('http '+r.status);toast(`נמחקו ${botN(j.deleted.calls)} שיחות בדיקה`,4000);botLoad(true);}
+  catch(e){toast('המחיקה נכשלה, נסו שוב',5000);}
+}
+async function botRejects(){
+  try{const r=await fetch(`${WORKER_URL}/bot/rejects`,{headers:authH(),cache:'no-store'});const j=await r.json();
+    const c=document.getElementById('botCard');botCur=null;
+    c.innerHTML=`<h2>שליחות שנדחו <button class="modal-close" onclick="closeOv('botCardOv')">✕</button></h2><p class="tr-note">שליחות מהבוט שלא נשמרו, ולמה. את השגיאה אפשר להעביר כמו שהיא למיכאל.</p>`+((j.rejects||[]).map(x=>`<div class="shp-it"><span class="d">${botDt(x.at)} · ${x.env==='test'?'בדיקה':'אמיתי'}</span>${esc((x.errors||[]).join('\n'))}</div>`).join('')||'<div class="shp-load">אין דחיות</div>');
+    document.getElementById('botCardOv').classList.add('open');}catch(e){toast('לא נטען',4000);}
+}
+function botSec(t,h){return h?`<div class="shp-sec"><h3>${esc(t)}</h3>${h}</div>`:'';}
+async function openBot(phone){
+  const c=document.getElementById('botCard');botCur={phone};
+  c.innerHTML=`<h2>טוען... <button class="modal-close" onclick="closeOv('botCardOv')">✕</button></h2>`;
+  document.getElementById('botCardOv').classList.add('open');
+  try{
+    const r=await fetch(`${WORKER_URL}/bot/lead?env=${botEnv}&phone=${encodeURIComponent(phone)}`,{headers:authH(),cache:'no-store'});
+    if(!r.ok)throw new Error('http '+r.status);
+    const j=await r.json();if(!botCur||botCur.phone!==phone)return;
+    botCur={phone,lead:j.lead,calls:j.calls||[]};botCard();
+  }catch(e){c.innerHTML=`<h2>לא נטען <button class="modal-close" onclick="closeOv('botCardOv')">✕</button></h2><div class="shp-load">לא הצלחתי לטעון את הכרטיס. סגרו ופתחו שוב.</div>`;}
+}
+function botCard(){
+  const l=botCur.lead,calls=botCur.calls,m=l.match||{},rec=l.rec||{},dnc=!!l.dnc||l.team_status==='dnc';
+  const tel=l.phone?'972'+l.phone.replace(/^0/,''):'';
+  const why=[calls.some(x=>x.do_not_call)?'ביקש מהבוט שלא יתקשרו אליו':'',m.sehel&&m.sehel.dnc?'ביקש הסרה בשכל':'',l.team_status==='dnc'?'סומן אצלנו "לא פונים"':''].filter(Boolean).join(' · ');
+  const bans=[dnc?`<div class="shp-ban dnc">לא פונים לליד הזה: לא שיחה, לא וואטסאפ ולא מייל.${why?' '+esc(why):''}</div>`:'',
+    m.lead?`<div class="shp-ban">כבר ליד בטבלת קדימה צורן (סטטוס שם: ${esc(((ST[m.lead.status]||{}).l||(typeof ST[m.lead.status]==='string'?ST[m.lead.status]:''))||m.lead.status)}). לבדוק את הכרטיס שם לפני שחוזרים.</div>`:'',
+    m.sehel&&!m.sehel.dnc?`<div class="shp-ban">איש קשר במחזור משכל: ${esc(SHP_SEG[m.sehel.seg]||'')}.</div>`:'',
+    m.y2?`<div class="shp-ban">ליד גם בנכסי יד שנייה.</div>`:''].join('');
+  const meta=[botPill(dnc&&l.bot_status!=='dnc'?'dnc':l.bot_status),
+    l.phone?(dnc?`<span style="direction:ltr">${esc(l.phone)}</span>`:`<a href="tel:${esc(l.phone)}" style="direction:ltr">${esc(l.phone)}</a> <a href="https://wa.me/${tel}" target="_blank" rel="noopener">וואטסאפ</a>`):'',
+    `<span>${l.calls===1?'שיחה אחת':botN(l.calls)+' שיחות'} מהבוט${l.answered&&l.answered!==l.calls?` (${botN(l.answered)} נענו)`:''}</span>`,`<span>אחרונה ${botDt(l.last_call_at)}</span>`].filter(Boolean).join('');
+  const ms=rec.milestones||{},msTxt=BOT_MS.filter(([k])=>ms[k]).map(([k,t])=>`<b>${t}</b> ${botDt(ms[k])}`).join(' · ');
+  const last=calls.find(x=>x.outcome==='answered'||(!x.outcome&&(x.summary||x.relevance)))||calls[0]||{};
+  const yn=v=>v===true?'כן':v===false?'לא':'';
+  const facts=[['עדיין מחפש',yn(last.still_looking)],['מה מחפש',last.looking_for],['אזור',last.area],['תקציב',last.budget],['מתי',last.timeline],['ביקש שיחזרו אליו',last.callback_requested?('כן'+(last.callback_time?', '+last.callback_time:'')):''],['התנגדויות',last.objections]].filter(([,v])=>v);
+  const tags=[].concat((last.important||[]).map(t=>`<span class="ok">${esc(t)}</span>`),(last.not_important||[]).map(t=>`<span>לא חשוב: ${esc(t)}</span>`)).join('');
+  const now1=`${last.summary?`<div class="bot-sum">${esc(last.summary)}</div>`:''}${facts.length?`<div class="bot-facts">${facts.map(([k,v])=>`<div><span>${esc(k)}</span>${esc(v)}</div>`).join('')}</div>`:''}${tags?`<div class="shp-tags" style="margin-top:10px">${tags}</div>`:''}`;
+  const qa=(last.answers||[]).map(a=>`<div class="shp-it"><span class="d">${esc(a.q||'')}</span>${esc(a.a||'')}</div>`).join('');
+  const callsH=calls.map(x=>{const ex=x.extra&&Object.keys(x.extra).length?`<details><summary>שדות נוספים מהבוט</summary><pre>${esc(Object.entries(x.extra).map(([k,v])=>k+': '+v).join('\n'))}</pre></details>`:'';
+    return `<div class="bot-call"><div class="d">${botDt(x.called_at||x.received_at)} · ${esc(BOT_OUT[x.outcome]||x.outcome||'בלי תוצאה')}${x.relevance?' · '+botPill(x.relevance):''}${botDur(x.duration_sec)?' · '+botDur(x.duration_sec):''}</div>${x.summary&&x!==last?esc(x.summary):''}${/^https?:\/\//i.test(x.recording_url||'')?`<audio controls preload="none" src="${esc(x.recording_url)}"></audio>`:''}${x.transcript?`<details><summary>תמלול מלא</summary><pre>${esc(x.transcript)}</pre></details>`:''}${ex}</div>`;}).join('');
+  const notes=(rec.notes||[]).map(n=>`<div class="shp-it"><span class="d">${botDt(n.at)} · ${esc(n.by||'')}</span>${esc(n.t)}</div>`).join('');
+  const logH=(rec.log||[]).map(n=>`<div class="shp-it"><span class="d">${botDt(n.at)} · ${esc(n.by||'')}</span>${esc(n.t)}</div>`).join('');
+  document.getElementById('botCard').innerHTML=`<h2>${esc(l.name||'ללא שם')} <button class="modal-close" onclick="closeOv('botCardOv')">✕</button></h2>${bans}<div class="shp-meta">${meta}</div>${msTxt?`<div class="bot-ms">עבר: ${msTxt}</div>`:''}
+  <div class="shp-edit"><div class="row"><select id="botSt">${Object.entries(BOT_TEAM).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('')}</select>
+  <label style="font-size:12.5px;color:var(--text2)">תזכורת</label><input type="datetime-local" id="botRemAt"><input type="text" id="botRemT" placeholder="על מה לחזור" maxlength="200"></div>
+  <textarea id="botNote" placeholder="הערה: מה נאמר כשחזרנו אליו, מה סוכם. חובה כשמשנים סטטוס" maxlength="3000"></textarea>
+  <div class="row"><button class="btn btn-primary btn-sm" id="botSave" onclick="saveBot()">שמירה</button><span class="tr-k" id="botSaved"></span><span class="bot-err" id="botErr"></span></div></div>
+  ${botSec('מה עלה בשיחה'+(last.called_at?' · '+botDt(last.called_at):''),now1)}${botSec('שאלות ותשובות',qa)}${botSec('ההערות שלנו',notes)}${botSec(calls.length===1?'השיחה':'כל השיחות ('+calls.length+')',callsH)}${botSec('היסטוריה',logH)}`;
+  document.getElementById('botSt').value=l.team_status||'new';
+  document.getElementById('botRemAt').value=(rec.rem&&rec.rem.at)||'';
+  document.getElementById('botRemT').value=(rec.rem&&rec.rem.t)||'';
+}
+async function saveBot(){
+  const c=botCur;if(!c||!c.lead)return;
+  const b=document.getElementById('botSave'),err=document.getElementById('botErr');err.textContent='';
+  const st=document.getElementById('botSt').value,note=document.getElementById('botNote').value.trim();
+  const ra=document.getElementById('botRemAt').value,rt=document.getElementById('botRemT').value.trim();
+  if(st!==c.lead.team_status&&!note){err.textContent='כדי לשנות סטטוס צריך לכתוב הערה: מה נאמר בשיחה';document.getElementById('botNote').focus();return;}
+  const body={env:botEnv,phone:c.phone,rem:ra?{at:ra,t:rt}:null};
+  if(st!==c.lead.team_status)body.team_status=st;
+  if(note)body.note=note;
+  b.disabled=true;b.textContent='שומר...';
+  try{
+    const r=await fetch(`${WORKER_URL}/bot/lead/edit`,{method:'POST',headers:authH({'Content-Type':'application/json'}),body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok)throw new Error(j.msg||j.error||('http '+r.status));
+    c.lead=j.lead;botCard();
+    document.getElementById('botSaved').textContent='נשמר '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    const row=botRows.find(x=>x.phone===c.phone);if(row){row.team_status=j.lead.team_status;row.rem_at=j.lead.rem_at;botRender();}
+  }catch(e){b.disabled=false;b.textContent='שמירה';toast('השמירה נכשלה. שום דבר לא נמחק, נסו שוב.',6000);console.warn('bot save',e);}
 }
 
 let trData=null;
